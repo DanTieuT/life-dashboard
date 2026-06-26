@@ -374,6 +374,7 @@
     .setup-card { padding: 28px 20px; }
   }
 </style>
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 </head>
 <body>
 
@@ -577,6 +578,8 @@
         <div style="display:flex;gap:8px">
           <button class="btn sm" onclick="openTxnModal()">+ Add Transaction</button>
           <button class="btn sm ghost" onclick="openBudgetModal()">⚙ Budget</button>
+          <button class="btn sm ghost" onclick="connectBank()" id="connectBankBtn">🏦 Connect Bank</button>
+          <button class="btn sm ghost" onclick="syncTransactions()" id="syncBtn" style="display:none">🔄 Sync Bank</button>
         </div>
       </div>
       <div class="finance-grid">
@@ -886,6 +889,7 @@ function initUI() {
     if (e.key === 'Enter') addFocusTask();
     if (e.key === 'Escape') cancelAddFocus();
   });
+  checkBankConnection();
 }
 
 // ─── ROUTING ──────────────────────────────────────────────────────────────────
@@ -1288,6 +1292,76 @@ function parseCommand(raw) {
   }
 
   return null;
+}
+
+// ─── PLAID BANK SYNC ─────────────────────────────────────────────────────────
+window.connectBank = async function() {
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch('/.netlify/functions/create-link-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: auth.currentUser.uid })
+    });
+    const { link_token, error } = await res.json();
+    if (error) { toast('Failed to connect bank: ' + error, 'error'); return; }
+    const handler = Plaid.create({
+      token: link_token,
+      onSuccess: async (publicToken) => {
+        const freshToken = await auth.currentUser.getIdToken();
+        const ex = await fetch('/.netlify/functions/exchange-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ publicToken, idToken: freshToken })
+        });
+        const exRes = await ex.json();
+        if (exRes.error) { toast('Failed to link bank: ' + exRes.error, 'error'); return; }
+        toast('🏦 Bank linked! Syncing transactions…');
+        await syncTransactions();
+      },
+      onExit: (err) => { if (err) toast('Bank connection cancelled.', 'error'); }
+    });
+    handler.open();
+  } catch(e) { toast('Error connecting bank: ' + e.message, 'error'); }
+};
+
+window.syncTransactions = async function() {
+  const syncBtn = document.getElementById('syncBtn');
+  if (syncBtn) syncBtn.textContent = '⟳ Syncing…';
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch('/.netlify/functions/get-transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, days: 30 })
+    });
+    const { transactions, error } = await res.json();
+    if (error) { toast('Sync failed: ' + error, 'error'); return; }
+    appData.transactions = appData.transactions.filter(t => !t.fromPlaid);
+    appData.transactions = appData.transactions.concat(transactions);
+    saveData();
+    renderFinances();
+    toast(`✅ Synced ${transactions.length} bank transaction${transactions.length !== 1 ? 's' : ''}`);
+    document.getElementById('connectBankBtn').style.display = 'none';
+    document.getElementById('syncBtn').style.display = '';
+  } catch(e) { toast('Sync error: ' + e.message, 'error'); }
+  finally { if (syncBtn) syncBtn.textContent = '🔄 Sync Bank'; }
+};
+
+async function checkBankConnection() {
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch('/.netlify/functions/get-transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, days: 1 })
+    });
+    const { transactions } = await res.json();
+    if (transactions) {
+      document.getElementById('syncBtn').style.display = '';
+      document.getElementById('connectBankBtn').style.display = 'none';
+    }
+  } catch(e) { /* silently fail — bank not connected yet */ }
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
