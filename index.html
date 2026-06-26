@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Dashboard">
+<title>My Life Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --text: #e8eaf6;
+    --text-muted: #7b82a8;
+    --accent: #6c8fff;
+    --accent-glow: rgba(108,143,255,0.15);
+    --green: #4caf7d;
+    --green-glow: rgba(76,175,125,0.15);
+    --orange: #ff9f4a;
+    --orange-glow: rgba(255,159,74,0.15);
+    --red: #ff5f6d;
+    --red-glow: rgba(255,95,109,0.12);
+    --purple: #b47eff;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+
+  /* ── SETUP SCREEN ── */
+  #setupScreen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+  }
+  .setup-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 40px; width: 100%; max-width: 520px;
+  }
+  .setup-card h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+  .setup-card .sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
+  .step { display: flex; gap: 14px; margin-bottom: 24px; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-glow); color: var(--accent);
+    font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    min-width: 28px; margin-top: 2px;
+  }
+  .step-content h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .step-content p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .step-content a { color: var(--accent); text-decoration: none; }
+  .step-content a:hover { text-decoration: underline; }
+  .config-area {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px;
+    font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--green); width: 100%; min-height: 80px;
+    resize: vertical; outline: none;
+    transition: border-color 0.15s;
+  }
+  .config-area:focus { border-color: var(--accent); }
+  .setup-btn {
+    width: 100%; margin-top: 16px; padding: 14px;
+    background: var(--accent); border: none; border-radius: var(--radius-sm);
+    color: white; font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .setup-btn:hover { opacity: 0.85; }
+  .setup-error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* ── AUTH SCREEN ── */
+  #authScreen {
+    display: none; align-items: center; justify-content: center; min-height: 100vh; padding: 24px;
+  }
+  .auth-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 48px 40px; text-align: center; max-width: 400px; width: 100%;
+  }
+  .auth-card .logo { font-size: 48px; margin-bottom: 16px; }
+  .auth-card h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .auth-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 32px; }
+  .google-btn {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; padding: 14px; background: white; border: none;
+    border-radius: var(--radius-sm); color: #333; font-size: 15px;
+    font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+  }
+  .google-btn:hover { opacity: 0.9; }
+  .google-logo { width: 20px; height: 20px; }
+  .reconfigure-btn {
+    margin-top: 16px; background: none; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-muted); padding: 8px 16px;
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
+  }
+  .reconfigure-btn:hover { color: var(--text); border-color: var(--text-muted); }
+
+  /* ── LOADING ── */
+  #loadingScreen {
+    display: none; align-items: center; justify-content: center; min-height: 100vh;
+    flex-direction: column; gap: 16px;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── MAIN APP ── */
+  #appScreen { display: none; }
+  .header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left h1 { font-size: 18px; font-weight: 700; }
+  .header-left .date { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent-glow); border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: var(--accent); cursor: pointer;
+    overflow: hidden;
+  }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .sync-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .tab-bar { display: flex; gap: 4px; }
+  .tab-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-muted);
+    padding: 6px 14px; font-size: 13px; cursor: pointer; transition: all 0.15s;
+  }
+  .tab-btn:hover { background: var(--surface2); color: var(--text); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── TODAY ── */
+  .today-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .focus-mode-card {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--surface), var(--surface2));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px 28px; display: flex; align-items: center; gap: 24px;
+  }
+  .focus-mode-left { flex: 1; }
+  .focus-mode-left h2 { font-size: 21px; font-weight: 700; margin-bottom: 4px; }
+  .focus-mode-left p { color: var(--text-muted); font-size: 14px; }
+  .progress-ring { position: relative; }
+  .ring-label {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+  .ring-label .num { font-size: 22px; }
+  .ring-label .sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+  }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); }
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: var(--surface2); color: var(--text-muted); }
+  .badge.accent { background: var(--accent-glow); color: var(--accent); }
+  .badge.green { background: var(--green-glow); color: var(--green); }
+
+  .focus-list { display: flex; flex-direction: column; gap: 9px; }
+  .focus-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 11px 13px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); transition: all 0.15s;
+  }
+  .focus-item.done { opacity: 0.4; }
+  .focus-item.done .focus-text { text-decoration: line-through; }
+  .check-btn {
+    width: 22px; height: 22px; min-width: 22px; border-radius: 50%;
+    border: 2px solid var(--border); background: none; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .check-btn:hover { border-color: var(--green); background: var(--green-glow); }
+  .check-btn.checked { background: var(--green); border-color: var(--green); }
+  .check-btn.checked::after { content: '✓'; color: white; font-size: 12px; font-weight: 700; }
+  .focus-text { font-size: 14px; font-weight: 500; flex: 1; }
+  .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 5px; border-radius: 4px; transition: all 0.15s; }
+  .icon-btn:hover { color: var(--text); background: var(--surface); }
+  .add-focus-row { display: flex; gap: 8px; margin-top: 10px; }
+  .add-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text); padding: 9px 12px;
+    font-size: 14px; outline: none; transition: border-color 0.15s;
+  }
+  .add-input:focus { border-color: var(--accent); }
+  .add-input::placeholder { color: var(--text-muted); }
+  select.add-input { appearance: none; cursor: pointer; }
+  .btn { background: var(--accent); border: none; border-radius: var(--radius-sm); color: white; padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .btn:hover { opacity: 0.85; }
+  .btn.ghost { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+  .btn.ghost:hover { color: var(--text); }
+  .btn.sm { padding: 6px 12px; font-size: 13px; }
+
+  .habit-grid { display: flex; flex-direction: column; gap: 12px; }
+  .habit-item {
+    display: flex; align-items: center; gap: 12px; padding: 13px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .habit-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 19px; background: var(--surface); }
+  .habit-info { flex: 1; }
+  .habit-name { font-size: 14px; font-weight: 600; }
+  .habit-streak { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .habit-dots { display: flex; gap: 4px; margin-top: 6px; }
+  .habit-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); }
+  .habit-dot.done { background: var(--green); }
+  .habit-dot.today-empty { background: var(--orange); opacity: 0.4; }
+  .log-btn { background: none; border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text-muted); padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .log-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-glow); }
+  .log-btn.logged { border-color: var(--green); color: var(--green); background: var(--green-glow); }
+
+  /* ── PROJECTS ── */
+  .projects-toolbar { display: flex; gap: 8px; margin-bottom: 18px; align-items: center; flex-wrap: wrap; }
+  .filter-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); padding: 5px 14px; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .spacer { flex: 1; }
+  .project-list { display: flex; flex-direction: column; gap: 8px; }
+  .project-item {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); transition: all 0.15s;
+  }
+  .project-item:hover { border-color: #3a3f60; }
+  .project-item.done { opacity: 0.4; }
+  .priority-dot { width: 9px; height: 9px; border-radius: 50%; min-width: 9px; }
+  .p-high { background: var(--red); }
+  .p-med { background: var(--orange); }
+  .p-low { background: var(--accent); }
+  .project-name { flex: 1; font-size: 14px; font-weight: 500; }
+  .project-category { font-size: 12px; padding: 2px 8px; border-radius: 20px; background: var(--surface2); color: var(--text-muted); }
+  .priority-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .tag-high { background: var(--red-glow); color: var(--red); }
+  .tag-med { background: var(--orange-glow); color: var(--orange); }
+  .tag-low { background: var(--accent-glow); color: var(--accent); }
+  .add-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 18px; display: none; }
+  .add-form.open { display: block; }
+  .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 150px; }
+  .form-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+
+  /* ── FINANCES ── */
+  .finance-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.accent { color: var(--accent); }
+  .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .budget-section { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .budget-category { margin-bottom: 14px; }
+  .budget-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .budget-cat-name { font-size: 13px; font-weight: 500; }
+  .budget-amounts { font-size: 12px; color: var(--text-muted); }
+  .budget-bar-track { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .budget-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.3s; }
+  .budget-bar-fill.over { background: var(--red); }
+  .budget-bar-fill.warn { background: var(--orange); }
+  .txn-item { display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 7px; }
+  .txn-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; background: var(--surface2); }
+  .txn-name { flex: 1; font-size: 13px; font-weight: 500; }
+  .txn-cat { font-size: 11px; color: var(--text-muted); }
+  .txn-amount { font-size: 14px; font-weight: 700; }
+  .txn-amount.out { color: var(--red); }
+  .txn-amount.in { color: var(--green); }
+  .month-nav { display: flex; align-items: center; gap: 10px; }
+  .month-nav button { background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 5px 10px; cursor: pointer; }
+  .month-nav button:hover { background: var(--surface2); }
+  .month-label { font-size: 14px; font-weight: 700; min-width: 120px; text-align: center; }
+
+  /* ── MODALS ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; width: 420px; max-width: 100%; }
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+  .modal-footer { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .empty .emoji { font-size: 32px; margin-bottom: 10px; }
+  .empty p { font-size: 13px; }
+
+  /* ── COMMAND BAR ── */
+  #commandBar {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    width: min(600px, calc(100vw - 32px));
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 10px 10px 10px 20px;
+    display: none; align-items: center; gap: 10px;
+    z-index: 400;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transition: border-color 0.15s;
+  }
+  #commandBar.visible { display: flex; }
+  #commandBar:focus-within { border-color: var(--accent); }
+  #commandInput {
+    flex: 1; background: none; border: none; color: var(--text);
+    font-size: 15px; outline: none;
+  }
+  #commandInput::placeholder { color: var(--text-muted); }
+  #commandSend {
+    background: var(--accent); border: none; border-radius: 999px;
+    color: white; padding: 8px 18px; font-size: 13px; font-weight: 700;
+    cursor: pointer; white-space: nowrap; transition: opacity 0.15s;
+  }
+  #commandSend:hover { opacity: 0.85; }
+  #commandToggle {
+    position: fixed; bottom: 24px; right: 24px;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--accent); border: none; color: white;
+    font-size: 22px; cursor: pointer; z-index: 400;
+    box-shadow: 0 4px 16px rgba(108,143,255,0.4);
+    display: none; align-items: center; justify-content: center;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  #commandToggle.visible { display: flex; }
+  #commandToggle:hover { transform: scale(1.08); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 18px;
+    font-size: 14px; font-weight: 500;
+    z-index: 500; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  /* ── SAVING INDICATOR ── */
+  #saveIndicator {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 14px;
+    font-size: 13px; color: var(--text-muted);
+    display: none; align-items: center; gap: 8px;
+    z-index: 300;
+  }
+  #saveIndicator.show { display: flex; }
+  #saveIndicator.saved { color: var(--green); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .main { padding: 14px; }
+    .today-grid, .finance-grid, .budget-section { grid-template-columns: 1fr; }
+    .focus-mode-card { flex-direction: column; }
+    .header { padding: 12px 16px; }
+    .tab-btn { padding: 5px 10px; font-size: 12px; }
+    .setup-card { padding: 28px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── SETUP SCREEN (disabled — config is hardcoded) ── -->
+<div id="setupScreen" style="display:none!important">
+  <div class="setup-card">
+    <h1>⚡ Setup Your Dashboard</h1>
+    <p class="sub">This takes about 5 minutes. You only do it once — after that, just sign in with Google on any device and everything syncs automatically.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Create a free Firebase project</h3>
+        <p>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>, click <strong>"Add project"</strong>, give it a name like "My Dashboard", and click through (you can disable Google Analytics).</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Add a Web App</h3>
+        <p>In your new project, click the <strong>&lt;/&gt; Web</strong> icon. Give the app a nickname (e.g. "Dashboard"), click <strong>"Register app"</strong>. You'll see a <code>firebaseConfig</code> object — copy it.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Enable Firestore + Google Sign-In</h3>
+        <p>In the left sidebar, go to <strong>Build → Firestore Database</strong> → Create database → Start in test mode. Then go to <strong>Build → Authentication</strong> → Get started → Google → Enable it.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Paste your config below</h3>
+        <p>Paste the entire <code>firebaseConfig = { ... }</code> block (or just the JSON object) below and click Connect.</p>
+      </div>
+    </div>
+
+    <textarea class="config-area" id="configInput" placeholder='Paste your firebaseConfig here, e.g.:
+{
+  "apiKey": "AIza...",
+  "authDomain": "your-app.firebaseapp.com",
+  "projectId": "your-app",
+  "storageBucket": "your-app.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abc123"
+}'></textarea>
+    <div class="setup-error" id="setupError"></div>
+    <button class="setup-btn" onclick="connectFirebase()">🔗 Connect & Sign In</button>
+  </div>
+</div>
+
+<!-- ── AUTH SCREEN ── -->
+<div id="authScreen" style="display:flex;display:none">
+  <div class="auth-card">
+    <div class="logo">🗓️</div>
+    <h1>My Life Dashboard</h1>
+    <p>Sign in with your Google account to access your synced tasks, habits, and finances.</p>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg class="google-logo" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.5 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.4-4z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.8 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.5 29.4 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.3 0-9.7-3-11.3-7.3l-6.6 4.9C9.6 39.7 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.7 2.1-2 3.8-3.7 5l6.2 5.2C41 34.7 44 29.7 44 24c0-1.3-.2-2.7-.4-4z"/></svg>
+      Continue with Google
+    </button>
+    <button class="reconfigure-btn" onclick="resetConfig()">Reconfigure Firebase</button>
+  </div>
+</div>
+
+<!-- ── LOADING ── -->
+<div id="loadingScreen" style="display:none">
+  <div class="spinner"></div>
+  <span style="color:var(--text-muted);font-size:14px">Loading your dashboard…</span>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="appScreen">
+  <div class="header">
+    <div class="header-left">
+      <h1>My Dashboard</h1>
+      <div class="date" id="headerDate"></div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showPage('today',this)">Today</button>
+      <button class="tab-btn" onclick="showPage('projects',this)">Projects</button>
+      <button class="tab-btn" onclick="showPage('finances',this)">Finances</button>
+    </div>
+    <div class="header-right">
+      <div class="sync-dot" id="syncDot" title="Synced"></div>
+      <div class="user-avatar" id="userAvatar" onclick="handleSignOut()" title="Sign out">?</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- TODAY -->
+    <div class="page active" id="page-today">
+      <div class="today-grid">
+        <div class="focus-mode-card">
+          <div class="focus-mode-left">
+            <h2 id="greetingText">Good morning 👋</h2>
+            <p id="focusSummary">Loading your day…</p>
+          </div>
+          <div class="progress-ring">
+            <svg width="86" height="86" viewBox="0 0 86 86">
+              <circle cx="43" cy="43" r="34" fill="none" stroke="var(--border)" stroke-width="6"/>
+              <circle id="progressArc" cx="43" cy="43" r="34" fill="none"
+                stroke="var(--accent)" stroke-width="6"
+                stroke-dasharray="214" stroke-dashoffset="214"
+                stroke-linecap="round" transform="rotate(-90 43 43)"
+                style="transition:stroke-dashoffset 0.5s"/>
+            </svg>
+            <div class="ring-label">
+              <span class="num" id="ringNum">0</span>
+              <span class="sub">done</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" style="color:var(--accent)">🎯 Today's Top 3</span>
+            <span class="badge accent" id="focusBadge">0 / 3</span>
+          </div>
+          <div class="focus-list" id="focusList"></div>
+          <div class="add-focus-row" id="addFocusRow" style="display:none">
+            <input class="add-input" id="focusInput" placeholder="What needs to happen today?" maxlength="120"/>
+            <button class="btn sm" onclick="addFocusTask()">Add</button>
+            <button class="btn sm ghost" onclick="cancelAddFocus()">✕</button>
+          </div>
+          <button class="btn ghost sm" style="margin-top:10px;width:100%" id="addFocusBtn" onclick="showAddFocus()">+ Add focus task</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" style="color:var(--green)">💪 Habits</span>
+            <span class="badge" id="habitBadge">Last 7 days</span>
+          </div>
+          <div class="habit-grid" id="habitGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="page" id="page-projects">
+      <div class="projects-toolbar">
+        <button class="filter-btn active" onclick="filterProjects('all',this)">All</button>
+        <button class="filter-btn" onclick="filterProjects('high',this)">🔴 High</button>
+        <button class="filter-btn" onclick="filterProjects('medium',this)">🟠 Medium</button>
+        <button class="filter-btn" onclick="filterProjects('low',this)">🔵 Low</button>
+        <button class="filter-btn" onclick="filterProjects('done',this)">✓ Done</button>
+        <div class="spacer"></div>
+        <button class="btn sm" onclick="toggleAddForm()">+ New Task / Project</button>
+      </div>
+      <div class="add-form" id="addForm">
+        <div class="form-row">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Name</label>
+            <input class="add-input" id="projName" placeholder="Project or task name"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="add-input" id="projPriority">
+              <option value="high">🔴 High</option>
+              <option value="medium" selected>🟠 Medium</option>
+              <option value="low">🔵 Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <input class="add-input" id="projCategory" placeholder="e.g. Work, Personal, Health"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Due date (optional)</label>
+            <input class="add-input" type="date" id="projDue"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <input class="add-input" id="projNotes" placeholder="Next action or context…"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn ghost sm" onclick="toggleAddForm()">Cancel</button>
+          <button class="btn sm" onclick="addProject()">Save</button>
+        </div>
+      </div>
+      <div class="project-list" id="projectList"></div>
+    </div>
+
+    <!-- FINANCES -->
+    <div class="page" id="page-finances">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div class="month-nav">
+          <button onclick="changeMonth(-1)">◀</button>
+          <span class="month-label" id="monthLabel"></span>
+          <button onclick="changeMonth(1)">▶</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="openTxnModal()">+ Add Transaction</button>
+          <button class="btn sm ghost" onclick="openBudgetModal()">⚙ Budget</button>
+        </div>
+      </div>
+      <div class="finance-grid">
+        <div class="stat-card">
+          <div class="stat-label">Monthly Income</div>
+          <div class="stat-value green" id="statIncome">$0</div>
+          <div class="stat-sub" id="statIncomeSub">Set via ⚙ Budget</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Spent</div>
+          <div class="stat-value red" id="statSpent">$0</div>
+          <div class="stat-sub">This month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Remaining</div>
+          <div class="stat-value accent" id="statRemaining">$0</div>
+          <div class="stat-sub" id="statRemainingSub">Budget left</div>
+        </div>
+      </div>
+      <div class="budget-section">
+        <div class="card">
+          <div class="card-header"><span class="card-title" style="color:var(--orange)">📊 Budget by Category</span></div>
+          <div id="budgetCategories"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" style="color:var(--accent)">📋 Transactions</span>
+            <span class="badge" id="txnCount">0 this month</span>
+          </div>
+          <div id="transactionList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Transaction Modal -->
+<div class="modal-overlay" id="txnModal">
+  <div class="modal">
+    <h3>Add Transaction</h3>
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label class="form-label">Description</label>
+        <input class="add-input" id="txnName" placeholder="e.g. Groceries, Gym membership"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount ($)</label>
+        <input class="add-input" type="number" id="txnAmount" placeholder="0" min="0" step="0.01"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="add-input" id="txnCategory">
+          <option>Housing</option><option>Food</option><option>Transport</option>
+          <option>Health & Fitness</option><option>Entertainment</option>
+          <option>Shopping</option><option>Savings</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="add-input" id="txnType">
+          <option value="out">Expense</option><option value="in">Income</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:2px">
+      <label class="form-label">Date</label>
+      <input class="add-input" type="date" id="txnDate"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeTxnModal()">Cancel</button>
+      <button class="btn" onclick="saveTxn()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Budget Modal -->
+<div class="modal-overlay" id="budgetModal">
+  <div class="modal">
+    <h3>⚙ Monthly Budget</h3>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Monthly Take-Home Income ($)</label>
+      <input class="add-input" type="number" id="budgetIncome" placeholder="e.g. 5000"/>
+    </div>
+    <div id="budgetInputs"></div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeBudgetModal()">Cancel</button>
+      <button class="btn" onclick="saveBudget()">Save Budget</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sign out confirm -->
+<div class="modal-overlay" id="signOutModal">
+  <div class="modal" style="max-width:320px">
+    <h3>Sign out?</h3>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:0">Your data is saved in the cloud — it'll be here when you come back.</p>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="document.getElementById('signOutModal').classList.remove('open')">Cancel</button>
+      <button class="btn" onclick="doSignOut()">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<div id="saveIndicator">
+  <span id="saveIcon">⟳</span>
+  <span id="saveText">Saving…</span>
+</div>
+
+<!-- Command Bar -->
+<div id="commandBar">
+  <span style="font-size:18px">⚡</span>
+  <input id="commandInput" placeholder="e.g. gym done · spent $40 food · add project learn Spanish high · today: email boss, gym, read"/>
+  <button id="commandSend" onclick="runCommand()">Go</button>
+</div>
+<button id="commandToggle" title="Quick command">⚡</button>
+<div id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const CATS_EMOJI = { Housing:'🏠', Food:'🍔', Transport:'🚗', 'Health & Fitness':'💪', Entertainment:'🎬', Shopping:'🛍️', Savings:'💰', Other:'📦' };
+const DEFAULT_BUDGET = { income:0, categories:{ Housing:1500, Food:600, Transport:300, 'Health & Fitness':100, Entertainment:150, Shopping:200, Savings:500, Other:150 } };
+const DEFAULT_HABITS = [{ id:'gym', name:'Gym', emoji:'🏋️', log:{} }, { id:'tennis', name:'Tennis', emoji:'🎾', log:{} }];
+
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function fmt(n) { return '$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let db, auth, userRef, unsubscribe;
+let appData = { focusTasks:[], projects:[], habits:DEFAULT_HABITS, transactions:[], budget:DEFAULT_BUDGET };
+let currentFilter = 'all';
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let saveTimer = null;
+
+// ─── CONFIG MANAGEMENT ───────────────────────────────────────────────────────
+function getConfig() {
+  try { return JSON.parse(localStorage.getItem('fb_config')); } catch { return null; }
+}
+function show(id) {
+  ['setupScreen','authScreen','loadingScreen','appScreen'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? (id === 'appScreen' ? 'block' : 'flex') : 'none';
+  });
+}
+
+// ─── CONNECT FIREBASE ─────────────────────────────────────────────────────────
+window.connectFirebase = function() {
+  const raw = document.getElementById('configInput').value.trim();
+  const errEl = document.getElementById('setupError');
+  errEl.style.display = 'none';
+  let cfg;
+  try {
+    // Strip "const firebaseConfig =" wrapper and trailing semicolon if present
+    const jsonStr = raw.replace(/^[\s\S]*?const\s+\w+\s*=\s*/, '').replace(/;?\s*$/, '').trim();
+    // Use Function eval to handle JS object literals (unquoted keys) as well as JSON
+    cfg = Function('return (' + jsonStr + ')')();
+  } catch(e) {
+    errEl.textContent = '⚠ Could not parse config. Make sure you pasted the full { ... } block from Firebase.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!cfg.apiKey || !cfg.projectId) {
+    errEl.textContent = '⚠ Config looks incomplete — make sure it includes apiKey and projectId.';
+    errEl.style.display = 'block';
+    return;
+  }
+  localStorage.setItem('fb_config', JSON.stringify(cfg));
+  initApp(cfg);
+};
+
+function initApp(cfg) {
+  try {
+    const app = initializeApp(cfg);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    show('loadingScreen');
+    onAuthStateChanged(auth, async user => {
+      if (user) {
+        await loadUserData(user);
+        setupUser(user);
+        show('appScreen');
+        initUI();
+      } else {
+        show('authScreen');
+      }
+    });
+  } catch(e) {
+    show('setupScreen');
+    document.getElementById('setupError').textContent = '⚠ Firebase init failed: ' + e.message;
+    document.getElementById('setupError').style.display = 'block';
+  }
+}
+
+window.resetConfig = function() {
+  localStorage.removeItem('fb_config');
+  show('setupScreen');
+};
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+window.signInWithGoogle = async function() {
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  } catch(e) { console.error(e); }
+};
+
+window.handleSignOut = function() {
+  document.getElementById('signOutModal').classList.add('open');
+};
+window.doSignOut = async function() {
+  if (unsubscribe) unsubscribe();
+  await signOut(auth);
+  document.getElementById('signOutModal').classList.remove('open');
+  show('authScreen');
+};
+
+// ─── DATA SYNC ────────────────────────────────────────────────────────────────
+async function loadUserData(user) {
+  userRef = doc(db, 'users', user.uid);
+  const snap = await getDoc(userRef);
+  if (snap.exists()) {
+    const d = snap.data();
+    appData = {
+      focusTasks: d.focusTasks || [],
+      projects: d.projects || [],
+      habits: d.habits || DEFAULT_HABITS,
+      transactions: d.transactions || [],
+      budget: d.budget || DEFAULT_BUDGET
+    };
+  }
+  // Listen for real-time updates from other devices
+  if (unsubscribe) unsubscribe();
+  unsubscribe = onSnapshot(userRef, snap => {
+    if (snap.exists() && snap.metadata.hasPendingWrites === false) {
+      const d = snap.data();
+      appData = {
+        focusTasks: d.focusTasks || [],
+        projects: d.projects || [],
+        habits: d.habits || DEFAULT_HABITS,
+        transactions: d.transactions || [],
+        budget: d.budget || DEFAULT_BUDGET
+      };
+      // Re-render active page quietly
+      const activePage = document.querySelector('.page.active');
+      if (activePage) {
+        const id = activePage.id.replace('page-','');
+        if (id === 'today') { renderFocus(); renderHabits(); }
+        else if (id === 'projects') renderProjects();
+        else if (id === 'finances') renderFinances();
+      }
+    }
+  });
+}
+
+function saveData() {
+  clearTimeout(saveTimer);
+  showSave('saving');
+  saveTimer = setTimeout(async () => {
+    try {
+      await setDoc(userRef, appData);
+      showSave('saved');
+    } catch(e) { showSave(null); console.error(e); }
+  }, 600);
+}
+
+function showSave(state) {
+  const el = document.getElementById('saveIndicator');
+  if (!state) { el.classList.remove('show','saved'); return; }
+  el.classList.add('show');
+  if (state === 'saving') {
+    el.classList.remove('saved');
+    document.getElementById('saveIcon').textContent = '⟳';
+    document.getElementById('saveText').textContent = 'Saving…';
+  } else {
+    el.classList.add('saved');
+    document.getElementById('saveIcon').textContent = '✓';
+    document.getElementById('saveText').textContent = 'Saved';
+    setTimeout(() => el.classList.remove('show','saved'), 2000);
+  }
+}
+
+function setupUser(user) {
+  const av = document.getElementById('userAvatar');
+  if (user.photoURL) {
+    av.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}">`;
+  } else {
+    av.textContent = (user.displayName || user.email || '?')[0].toUpperCase();
+  }
+}
+
+// ─── UI INIT ──────────────────────────────────────────────────────────────────
+function initUI() {
+  updateDate();
+  renderFocus();
+  renderHabits();
+  initCommandBar();
+  document.getElementById('focusInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addFocusTask();
+    if (e.key === 'Escape') cancelAddFocus();
+  });
+}
+
+// ─── ROUTING ──────────────────────────────────────────────────────────────────
+window.showPage = function(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else document.querySelectorAll('.tab-btn')[['today','projects','finances'].indexOf(id)]?.classList.add('active');
+  if (id === 'finances') renderFinances();
+  if (id === 'projects') renderProjects();
+};
+
+// ─── DATE ─────────────────────────────────────────────────────────────────────
+function updateDate() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('headerDate').textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+  const h = now.getHours();
+  document.getElementById('greetingText').textContent = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon ☀️' : 'Good evening 🌙';
+}
+
+// ─── FOCUS TASKS ──────────────────────────────────────────────────────────────
+function renderFocus() {
+  const today = todayStr();
+  const list = appData.focusTasks.filter(t => t.date === today);
+  const done = list.filter(t => t.done).length;
+  const total = list.length;
+  document.getElementById('focusBadge').textContent = done+' / '+Math.max(total,3);
+  const circ = 2*Math.PI*34;
+  const arc = document.getElementById('progressArc');
+  const pct = total ? done/total : 0;
+  arc.style.strokeDashoffset = circ*(1-pct);
+  arc.style.stroke = pct === 1 ? 'var(--green)' : 'var(--accent)';
+  document.getElementById('ringNum').textContent = done;
+  document.getElementById('focusSummary').textContent = total===0 ? 'No focus tasks yet — add up to 3 things to accomplish today.' : done===total ? '🎉 All done! You crushed it today.' : (total-done)+' task'+(total-done!==1?'s':'')+' remaining. Keep going!';
+  const container = document.getElementById('focusList');
+  container.innerHTML = '';
+  if (!list.length) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 0">No tasks yet. Add your top 3 priorities for today.</div>';
+  } else {
+    list.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'focus-item'+(t.done?' done':'');
+      el.innerHTML = `<button class="check-btn ${t.done?'checked':''}" onclick="toggleFocus('${t.id}')"></button><div class="focus-text" style="flex:1">${t.text}</div><button class="icon-btn" onclick="deleteFocus('${t.id}')">✕</button>`;
+      container.appendChild(el);
+    });
+  }
+  const addBtn = document.getElementById('addFocusBtn');
+  addBtn.style.display = list.length >= 3 ? 'none' : '';
+}
+
+window.showAddFocus = function() {
+  document.getElementById('addFocusRow').style.display = 'flex';
+  document.getElementById('addFocusBtn').style.display = 'none';
+  document.getElementById('focusInput').focus();
+};
+window.cancelAddFocus = function() {
+  document.getElementById('addFocusRow').style.display = 'none';
+  document.getElementById('focusInput').value = '';
+  renderFocus();
+};
+window.addFocusTask = function() {
+  const val = document.getElementById('focusInput').value.trim();
+  if (!val) return;
+  const today = todayStr();
+  if (appData.focusTasks.filter(t=>t.date===today).length >= 3) return;
+  appData.focusTasks.push({ id:uid(), text:val, date:today, done:false });
+  saveData(); renderFocus();
+  document.getElementById('focusInput').value = '';
+  document.getElementById('addFocusRow').style.display = 'none';
+};
+window.toggleFocus = function(id) {
+  const t = appData.focusTasks.find(t=>t.id===id);
+  if (t) { t.done = !t.done; saveData(); renderFocus(); }
+};
+window.deleteFocus = function(id) {
+  appData.focusTasks = appData.focusTasks.filter(t=>t.id!==id);
+  saveData(); renderFocus();
+};
+
+// ─── HABITS ───────────────────────────────────────────────────────────────────
+function renderHabits() {
+  const today = todayStr();
+  const week = Array.from({length:7},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(6-i)); return d.toISOString().slice(0,10); });
+  const grid = document.getElementById('habitGrid');
+  grid.innerHTML = '';
+  appData.habits.forEach(h => {
+    const todayDone = h.log && h.log[today];
+    const streak = calcStreak(h);
+    const dots = week.map(d => `<div class="habit-dot ${h.log&&h.log[d]?'done':(d===today?'today-empty':'')}"></div>`).join('');
+    const el = document.createElement('div');
+    el.className = 'habit-item';
+    el.innerHTML = `<div class="habit-icon">${h.emoji}</div><div class="habit-info"><div class="habit-name">${h.name}</div><div class="habit-streak">${streak>0?'🔥 '+streak+' day streak':'Start your streak today!'}</div><div class="habit-dots">${dots}</div></div><button class="log-btn ${todayDone?'logged':''}" onclick="logHabit('${h.id}')">${todayDone?'✓ Done':'Log'}</button>`;
+    grid.appendChild(el);
+  });
+}
+function calcStreak(h) {
+  let streak = 0, d = new Date();
+  const today = todayStr();
+  if (!h.log || !h.log[today]) d.setDate(d.getDate()-1);
+  for (let i=0;i<365;i++) {
+    const key = d.toISOString().slice(0,10);
+    if (h.log && h.log[key]) { streak++; d.setDate(d.getDate()-1); } else break;
+  }
+  return streak;
+}
+window.logHabit = function(id) {
+  const h = appData.habits.find(h=>h.id===id);
+  if (!h) return;
+  if (!h.log) h.log = {};
+  const today = todayStr();
+  h.log[today] = !h.log[today];
+  saveData(); renderHabits();
+};
+
+// ─── PROJECTS ─────────────────────────────────────────────────────────────────
+function renderProjects() {
+  const order = {high:0,medium:1,low:2};
+  let items = [...appData.projects];
+  if (currentFilter === 'done') items = items.filter(p=>p.done);
+  else if (currentFilter !== 'all') items = items.filter(p=>!p.done&&p.priority===currentFilter);
+  else items = items.filter(p=>!p.done);
+  items.sort((a,b)=>(order[a.priority]||1)-(order[b.priority]||1));
+  const list = document.getElementById('projectList');
+  if (!items.length) {
+    list.innerHTML = `<div class="empty"><div class="emoji">📋</div><p>${currentFilter==='done'?'No completed items yet.':'No items here. Add one above!'}</p></div>`;
+    return;
+  }
+  const tagMap = {high:'tag-high',medium:'tag-med',low:'tag-low'};
+  const dotMap = {high:'p-high',medium:'p-med',low:'p-low'};
+  const labelMap = {high:'High',medium:'Medium',low:'Low'};
+  list.innerHTML = items.map(p => `
+    <div class="project-item${p.done?' done':''}">
+      <div class="priority-dot ${dotMap[p.priority]||'p-low'}"></div>
+      <span class="project-name">${p.name}${p.notes?`<br><span style="font-size:12px;color:var(--text-muted)">${p.notes}</span>`:''}</span>
+      ${p.category?`<span class="project-category">${p.category}</span>`:''}
+      <span class="priority-tag ${tagMap[p.priority]||'tag-low'}">${labelMap[p.priority]||'Low'}</span>
+      ${p.due?`<span style="font-size:12px;color:var(--text-muted)">${p.due}</span>`:''}
+      <div style="display:flex;gap:4px">
+        <button class="icon-btn" onclick="toggleProjectDone('${p.id}')" title="${p.done?'Reopen':'Done'}">✓</button>
+        <button class="icon-btn" onclick="deleteProject('${p.id}')" title="Delete">✕</button>
+      </div>
+    </div>`).join('');
+}
+window.filterProjects = function(f,btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderProjects();
+};
+window.toggleAddForm = function() { document.getElementById('addForm').classList.toggle('open'); };
+window.addProject = function() {
+  const name = document.getElementById('projName').value.trim();
+  if (!name) return;
+  appData.projects.push({ id:uid(), name, priority:document.getElementById('projPriority').value, category:document.getElementById('projCategory').value.trim(), due:document.getElementById('projDue').value, notes:document.getElementById('projNotes').value.trim(), done:false, created:todayStr() });
+  saveData();
+  ['projName','projCategory','projDue','projNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('projPriority').value='medium';
+  document.getElementById('addForm').classList.remove('open');
+  renderProjects();
+};
+window.toggleProjectDone = function(id) {
+  const p = appData.projects.find(p=>p.id===id);
+  if (p) { p.done=!p.done; saveData(); renderProjects(); }
+};
+window.deleteProject = function(id) {
+  appData.projects = appData.projects.filter(p=>p.id!==id);
+  saveData(); renderProjects();
+};
+
+// ─── FINANCES ─────────────────────────────────────────────────────────────────
+function renderFinances() {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('monthLabel').textContent = months[currentMonth]+' '+currentYear;
+  const mt = appData.transactions.filter(t=>{ const d=new Date(t.date); return d.getMonth()===currentMonth&&d.getFullYear()===currentYear; });
+  const spent = mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+  const incomeIn = mt.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
+  const total = (appData.budget.income||0)+incomeIn;
+  const remaining = total-spent;
+  document.getElementById('statIncome').textContent = fmt(total);
+  document.getElementById('statIncomeSub').textContent = appData.budget.income>0?'Base: '+fmt(appData.budget.income):'Set via ⚙ Budget';
+  document.getElementById('statSpent').textContent = fmt(spent);
+  document.getElementById('txnCount').textContent = mt.length+' this month';
+  document.getElementById('statRemaining').textContent = fmt(remaining);
+  document.getElementById('statRemaining').className = 'stat-value '+(remaining>=0?'accent':'red');
+  document.getElementById('statRemainingSub').textContent = remaining>=0?'Looking good 👍':'Over budget ⚠';
+  const cats = document.getElementById('budgetCategories');
+  cats.innerHTML = '';
+  Object.entries(appData.budget.categories||{}).forEach(([cat,limit])=>{
+    const catSpent = mt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0);
+    const pct = limit>0?Math.min((catSpent/limit)*100,100):0;
+    const fillCls = pct>=100?'over':pct>=80?'warn':'';
+    cats.innerHTML += `<div class="budget-category"><div class="budget-row"><span class="budget-cat-name">${CATS_EMOJI[cat]||'📦'} ${cat}</span><span class="budget-amounts">${fmt(catSpent)} / ${fmt(limit)}</span></div><div class="budget-bar-track"><div class="budget-bar-fill ${fillCls}" style="width:${pct}%"></div></div></div>`;
+  });
+  const txList = document.getElementById('transactionList');
+  const sorted = [...mt].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,25);
+  if (!sorted.length) { txList.innerHTML = '<div class="empty" style="padding:20px"><div class="emoji">💳</div><p>No transactions yet this month.</p></div>'; return; }
+  txList.innerHTML = sorted.map(t=>`<div class="txn-item"><div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div><div style="flex:1"><div class="txn-name">${t.name}</div><div class="txn-cat">${t.category} · ${t.date}</div></div><span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmt(t.amount)}</span><button class="icon-btn" onclick="deleteTxn('${t.id}')">✕</button></div>`).join('');
+}
+window.changeMonth = function(dir) {
+  currentMonth+=dir;
+  if(currentMonth<0){currentMonth=11;currentYear--;}
+  if(currentMonth>11){currentMonth=0;currentYear++;}
+  renderFinances();
+};
+window.openTxnModal = function() {
+  document.getElementById('txnDate').value = todayStr();
+  document.getElementById('txnModal').classList.add('open');
+};
+window.closeTxnModal = function() { document.getElementById('txnModal').classList.remove('open'); };
+window.saveTxn = function() {
+  const name = document.getElementById('txnName').value.trim();
+  const amount = parseFloat(document.getElementById('txnAmount').value);
+  if (!name||isNaN(amount)||amount<=0) return;
+  appData.transactions.push({ id:uid(), name, amount, category:document.getElementById('txnCategory').value, type:document.getElementById('txnType').value, date:document.getElementById('txnDate').value });
+  saveData();
+  ['txnName','txnAmount'].forEach(id=>document.getElementById(id).value='');
+  closeTxnModal(); renderFinances();
+};
+window.deleteTxn = function(id) {
+  appData.transactions = appData.transactions.filter(t=>t.id!==id);
+  saveData(); renderFinances();
+};
+window.openBudgetModal = function() {
+  document.getElementById('budgetIncome').value = appData.budget.income||'';
+  const inp = document.getElementById('budgetInputs');
+  inp.innerHTML = Object.entries(appData.budget.categories||{}).map(([cat,val])=>`<div class="form-group" style="margin-bottom:10px"><label class="form-label">${CATS_EMOJI[cat]||''} ${cat} ($)</label><input class="add-input" type="number" id="bcat_${cat.replace(/[^a-z]/gi,'_')}" value="${val}" min="0"/></div>`).join('');
+  document.getElementById('budgetModal').classList.add('open');
+};
+window.closeBudgetModal = function() { document.getElementById('budgetModal').classList.remove('open'); };
+window.saveBudget = function() {
+  appData.budget.income = parseFloat(document.getElementById('budgetIncome').value)||0;
+  Object.keys(appData.budget.categories||{}).forEach(cat=>{ const el=document.getElementById('bcat_'+cat.replace(/[^a-z]/gi,'_')); if(el) appData.budget.categories[cat]=parseFloat(el.value)||0; });
+  saveData(); closeBudgetModal(); renderFinances();
+};
+
+// Modal overlay close
+['txnModal','budgetModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget) document.getElementById(id).classList.remove('open');});
+});
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+// ─── COMMAND BAR ──────────────────────────────────────────────────────────────
+function initCommandBar() {
+  const bar = document.getElementById('commandBar');
+  const toggle = document.getElementById('commandToggle');
+  bar.classList.add('visible');
+  toggle.classList.add('visible');
+  toggle.addEventListener('click', () => {
+    bar.classList.toggle('visible');
+    if (bar.classList.contains('visible')) document.getElementById('commandInput').focus();
+  });
+  document.getElementById('commandInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runCommand();
+    if (e.key === 'Escape') bar.classList.remove('visible');
+  });
+}
+
+window.runCommand = function() {
+  const input = document.getElementById('commandInput');
+  const raw = input.value.trim();
+  if (!raw) return;
+  const result = parseCommand(raw);
+  if (result) {
+    input.value = '';
+    saveData();
+    toast(result.msg);
+    // Re-render relevant page
+    const active = document.querySelector('.page.active')?.id?.replace('page-','');
+    if (active === 'today') { renderFocus(); renderHabits(); }
+    else if (active === 'projects') renderProjects();
+    else if (active === 'finances') renderFinances();
+    // Always re-render today in background
+    renderFocus(); renderHabits();
+  } else {
+    toast('❓ Didn\'t understand that. Try: "gym done", "add project X high", "spent $50 food"', 'error');
+  }
+};
+
+// Exposed globally so Claude can call it via browser injection
+window.claudeCommand = function(text) {
+  const result = parseCommand(text);
+  if (result) { saveData(); renderFocus(); renderHabits(); renderProjects(); renderFinances(); return '✓ ' + result.msg; }
+  return '✗ Command not understood: ' + text;
+};
+
+// Claude can read current data
+window.claudeGetData = function() {
+  return JSON.stringify({
+    focusTasks: appData.focusTasks,
+    projects: appData.projects.map(p => ({ name: p.name, priority: p.priority, category: p.category, done: p.done, notes: p.notes })),
+    habits: appData.habits.map(h => ({ name: h.name, streak: calcStreak(h), loggedToday: !!(h.log && h.log[todayStr()]) })),
+    budget: appData.budget,
+    transactionCount: appData.transactions.length
+  });
+};
+
+// Claude can set budget directly
+window.claudeSetBudget = function(income, categories) {
+  appData.budget = { income, categories };
+  saveData(); renderFinances();
+  return '✓ Budget set — income $' + income;
+};
+
+function parseCommand(raw) {
+  const t = raw.toLowerCase().trim();
+  const today = todayStr();
+
+  // ── HABITS ──
+  // "gym", "gym done", "hit the gym", "went to gym", "worked out"
+  if (/\bgym\b|workout|worked out|hit the gym|lifting|weights/i.test(raw)) {
+    const h = appData.habits.find(h => h.id === 'gym');
+    if (h) { if (!h.log) h.log = {}; h.log[today] = true; return { msg: '💪 Gym logged! Keep that streak going.' }; }
+  }
+  // "tennis", "played tennis", "tennis done"
+  if (/\btennis\b|on the court|played tennis/i.test(raw)) {
+    const h = appData.habits.find(h => h.id === 'tennis');
+    if (h) { if (!h.log) h.log = {}; h.log[today] = true; return { msg: '🎾 Tennis logged!' }; }
+  }
+
+  // ── FOCUS TASKS ──
+  // "today: task1, task2, task3" or "focus: ..." or "my 3 for today: ..."
+  const focusMatch = raw.match(/(?:today|focus|top\s*3|my\s+3)[:\s]+(.+)/i);
+  if (focusMatch) {
+    const tasks = focusMatch[1].split(/[,;]+/).map(s => s.trim()).filter(Boolean).slice(0, 3);
+    // Remove existing today tasks
+    appData.focusTasks = appData.focusTasks.filter(t => t.date !== today);
+    tasks.forEach(text => appData.focusTasks.push({ id: uid(), text, date: today, done: false }));
+    return { msg: `🎯 Set ${tasks.length} focus task${tasks.length !== 1 ? 's' : ''} for today.` };
+  }
+  // "add focus: X" or "focus task: X"
+  const addFocusMatch = raw.match(/(?:add\s+)?(?:focus|task)[:\s]+(.+)/i);
+  if (addFocusMatch) {
+    const existing = appData.focusTasks.filter(t => t.date === today);
+    if (existing.length < 3) {
+      appData.focusTasks.push({ id: uid(), text: addFocusMatch[1].trim(), date: today, done: false });
+      return { msg: `🎯 Added focus task: "${addFocusMatch[1].trim()}"` };
+    } else {
+      return { msg: '⚠ Already have 3 focus tasks today.' };
+    }
+  }
+
+  // ── PROJECTS ──
+  // "add project X" / "add task X" / "new project X high"
+  const addProjMatch = raw.match(/(?:add|new|create)\s+(?:project|task|item)[:\s]+(.+)/i);
+  if (addProjMatch) {
+    const rest = addProjMatch[1];
+    let priority = 'medium';
+    if (/\bhigh\b/i.test(rest)) priority = 'high';
+    else if (/\blow\b/i.test(rest)) priority = 'low';
+    const name = rest.replace(/\b(high|medium|low|priority)\b/gi, '').trim();
+    appData.projects.push({ id: uid(), name, priority, category: '', due: '', notes: '', done: false, created: today });
+    return { msg: `📋 Added "${name}" (${priority} priority)` };
+  }
+  // "done X" — mark a project complete by partial name
+  const doneMatch = raw.match(/^(?:done|completed?|finished?)[:\s]+(.+)/i);
+  if (doneMatch) {
+    const search = doneMatch[1].toLowerCase();
+    const proj = appData.projects.find(p => !p.done && p.name.toLowerCase().includes(search));
+    if (proj) { proj.done = true; return { msg: `✅ Marked "${proj.name}" as done!` }; }
+  }
+
+  // ── FINANCES ──
+  // "spent $50 on food" / "$50 groceries" / "50 dollars food" / "spent 50 on X"
+  const spendMatch = raw.match(/(?:spent?|paid?|bought?|spend)?\s*\$?(\d+(?:\.\d{1,2})?)\s*(?:dollars?)?\s*(?:on\s+)?(.+)/i);
+  if (spendMatch && parseFloat(spendMatch[1]) > 0) {
+    const amount = parseFloat(spendMatch[1]);
+    const desc = spendMatch[2].trim();
+    // Detect category
+    const catMap = [
+      [/\b(rent|mortgage|utilities|electric|gas bill|internet|phone bill|house)\b/i, 'Housing'],
+      [/\b(food|grocery|groceries|restaurant|lunch|dinner|breakfast|coffee|eat|uber eats|doordash)\b/i, 'Food'],
+      [/\b(uber|lyft|gas|parking|car|transit|subway|bus|train|transport|fuel)\b/i, 'Transport'],
+      [/\b(gym|tennis|sport|health|doctor|medicine|pharmacy|fitness)\b/i, 'Health & Fitness'],
+      [/\b(movie|netflix|spotify|concert|games|game|entertainment|bar|drinks)\b/i, 'Entertainment'],
+      [/\b(clothes|amazon|shopping|store|mall|shoes|apple)\b/i, 'Shopping'],
+      [/\b(savings?|invest|investment|transfer)\b/i, 'Savings'],
+    ];
+    let category = 'Other';
+    for (const [re, cat] of catMap) { if (re.test(desc)) { category = cat; break; } }
+    appData.transactions.push({ id: uid(), name: desc, amount, category, type: 'out', date: today });
+    return { msg: `💰 Logged $${amount} → ${category}` };
+  }
+
+  // ── INCOME ──
+  const incomeMatch = raw.match(/(?:got paid|received?|income|salary|earned?)\s*\$?(\d+(?:\.\d{1,2})?)/i);
+  if (incomeMatch) {
+    const amount = parseFloat(incomeMatch[1]);
+    appData.transactions.push({ id: uid(), name: 'Income', amount, category: 'Other', type: 'in', date: today });
+    return { msg: `💵 Logged income: $${amount}` };
+  }
+
+  return null;
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBxha20jT2FO2wIze_hgVP6SDzy6yI9QD0",
+  authDomain: "my-dashboard-7d8b2.firebaseapp.com",
+  projectId: "my-dashboard-7d8b2",
+  storageBucket: "my-dashboard-7d8b2.firebasestorage.app",
+  messagingSenderId: "959767882750",
+  appId: "1:959767882750:web:1b612e426cca9c7c752eaf"
+};
+initApp(FIREBASE_CONFIG);
+</script>
+</body>
+</html>
