@@ -172,7 +172,7 @@ function sendPhoto(chatId, pngBuffer, caption) {
 const uidGen = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
 }
 
 // ── Weather (Open-Meteo, no API key needed) ───────────────────────
@@ -446,12 +446,12 @@ function applyActions(data, actions) {
   for (const action of (actions || [])) {
     switch (action.type) {
       case 'add_task':
-        data.projects = data.projects || [];
-        data.projects.push({ id: uidGen(), name: action.name, due: action.due || '', done: false, created: today });
+        data.focusTasks = data.focusTasks || [];
+        data.focusTasks.push({ id: uidGen(), name: action.name, due: action.due || '', done: false, created: today });
         labels.push(`Added task: ${action.name}`);
         break;
       case 'update_task': {
-        const t = findById(data.projects, action.id, action.name);
+        const t = findById(data.focusTasks, action.id, action.name);
         if (t) {
           if (action.due) t.due = action.due;
           if (action.newName) t.name = action.newName;
@@ -460,21 +460,19 @@ function applyActions(data, actions) {
         break;
       }
       case 'complete_task': {
-        const t = findById(data.projects, action.id, action.name);
-        if (t) { t.done = true; t.doneAt = today; labels.push(`Completed: ${t.name}`); }
+        const t = findById(data.focusTasks, action.id, action.name);
+        if (t) { t.done = true; t.completedDate = today; labels.push(`Completed: ${t.name}`); }
         else { console.warn('complete_task: no match for id=%s name=%s', action.id, action.name); }
         break;
       }
       case 'delete_task': {
-        const before = (data.projects || []).length;
-        // Try id match first
-        data.projects = (data.projects || []).filter(t => t.id !== action.id);
-        // If nothing removed, fall back to name match
-        if (data.projects.length === before && action.name) {
+        const before = (data.focusTasks || []).length;
+        data.focusTasks = (data.focusTasks || []).filter(t => t.id !== action.id);
+        if (data.focusTasks.length === before && action.name) {
           const lc = action.name.toLowerCase();
-          data.projects = data.projects.filter(t => !t.name || !t.name.toLowerCase().includes(lc));
+          data.focusTasks = data.focusTasks.filter(t => !t.name || !t.name.toLowerCase().includes(lc));
         }
-        const removed = before - (data.projects || []).length;
+        const removed = before - (data.focusTasks || []).length;
         if (removed > 0) labels.push(`Task removed`);
         else { console.warn('delete_task: no match for id=%s name=%s', action.id, action.name); labels.push(`Warning: could not find task to delete`); }
         break;
