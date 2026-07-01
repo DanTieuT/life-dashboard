@@ -58,10 +58,15 @@ exports.handler = async () => {
       { merge: true }
     );
 
+    const syncedAt = Date.now();
     console.log(`[sync-timetree] synced ${events.length} events`);
-    return { statusCode: 200, body: `synced ${events.length} events` };
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ events, syncedAt }),
+    };
   } catch (e) {
     console.error('[sync-timetree] error:', e.message);
-    return { statusCode: 500, body: e.message };
+    return { statusCode: 500, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: e.message }) };
   }
 };

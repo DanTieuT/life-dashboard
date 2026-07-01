@@ -92,11 +92,23 @@ async function authenticate() {
 
   _session = { cookie: null, csrfToken: null, calendarId: null };
 
+  // Get CSRF token before login
+  await extractCsrf();
+  console.log('[tt] csrf after extractCsrf:', _session.csrfToken ? 'found' : 'MISSING');
+
   const uuid = randomUUID().replace(/-/g, '');
-  await apiReq('PUT', '/auth/email/signin', { uid: email, password, uuid });
+
+  // v1 email signin — try both field names the private API has used
+  let signinRes;
+  try {
+    signinRes = await apiReq('PUT', '/auth/email/signin', { uid: email, email, password, uuid }, true);
+    console.log('[tt] signin status:', signinRes.status, 'cookie:', _session.cookie ? 'set' : 'missing');
+  } catch (e) {
+    console.error('[tt] signin error:', e.statusCode, e.body);
+    throw e;
+  }
 
   if (!_session.cookie) throw new Error('TimeTree auth failed — no session cookie');
-  await extractCsrf();
 }
 
 async function ensureAuth() {

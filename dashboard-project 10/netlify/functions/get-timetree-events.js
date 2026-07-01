@@ -40,8 +40,8 @@ exports.handler = async (event) => {
 
     return { statusCode: 200, headers, body: JSON.stringify({ events }) };
   } catch (e) {
-    console.error('get-timetree-events error:', e.message);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
+    console.error('get-timetree-events error:', e.message, e.body);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: e.message, detail: e.body }) };
   }
 };
 

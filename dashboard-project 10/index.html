@@ -1453,6 +1453,8 @@ async function loadData(){
         savings:d.savings||{...DEFAULT_SAVINGS},
         accounts:d.accounts||migrateOldSavings(d.savings),
         goals:d.goals||[],
+        timetreeEvents:d.timetreeEvents||[],
+        timetreeSyncedAt:d.timetreeSyncedAt||0,
       };
     }
   }catch(e){console.error('Load error',e);}
@@ -1473,7 +1475,7 @@ function renderAll(){
   renderStats();
   renderFocusTasks();
   renderTodaySchedule();
-  loadDashTTEvents();
+  syncTimetreeEvents();
   renderFinanceRing();
   renderHabitsGrid('habitsGridDash');
   renderHabitsGrid('habitsGridTab');
@@ -1692,7 +1694,7 @@ function renderTodaySchedule(){
   const local=(appData.events||[]).filter(e=>e.date===today).map(e=>({
     id:e.id, name:e.name, time:e.time||'', source:'local',
   }));
-  const tt=dashTTEvents.map(e=>({
+  const tt=(appData.timetreeEvents||[]).filter(e=>e.startDate===today).map(e=>({
     id:e.id, name:e.title, time:e.time||'', allDay:e.allDay, source:'timetree',
   }));
   const events=[...local,...tt].sort((a,b)=>{
@@ -2796,14 +2798,13 @@ window.switchTab=function(tab){
   document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>{
     if(b.dataset.tab===tab)b.classList.add('active');
   });
-  if(tab==='dashboard'){renderTodaySchedule();renderStats();loadDashTTEvents();}
+  if(tab==='dashboard'){renderTodaySchedule();renderStats();syncTimetreeEvents();}
   if(tab==='finance')renderFinanceTab();
   if(tab==='habits'){renderHabitsGrid('habitsGridTab');updateHabitsSummary();}
   if(tab==='tasks')renderTasks();
   if(tab==='projects')renderProjects();
   if(tab==='goals')renderGoals();
   if(tab==='calendar')renderCalendar();
-  else clearInterval(calRefreshTimer);
 };
 
 // ── CALENDAR ─────────────────────────────────────────────────────
@@ -2819,55 +2820,39 @@ const CAL_COLORS=[
 ];
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let calEditId=null;
-let calTTEvents=[];
-let calTTLoading=false;
-let calRefreshTimer=null;
+let ttSyncing=false;
 
-// Dashboard today-card TT cache
-let dashTTEvents=[];
-let dashTTLoadedDate='';
-
-async function loadDashTTEvents(){
-  const today=todayStr();
-  if(dashTTLoadedDate===today)return; // already fresh for today
+async function syncTimetreeEvents(force=false){
+  const SIX_HOURS=6*60*60*1000;
+  if(!force&&Date.now()-(appData.timetreeSyncedAt||0)<SIX_HOURS)return;
+  if(ttSyncing)return;
+  ttSyncing=true;
+  const btn=document.getElementById('calRefreshBtn');
+  if(btn){btn.style.opacity='.5';btn.style.pointerEvents='none';}
   try{
-    const y=new Date().getFullYear(), m=new Date().getMonth();
-    const res=await fetch(`/.netlify/functions/get-timetree-events?year=${y}&month=${m}`);
-    const data=await res.json();
-    dashTTEvents=(data.events||[]).filter(e=>e.startDate===today);
-    dashTTLoadedDate=today;
-  }catch(e){dashTTEvents=[];}
-  renderTodaySchedule();
+    const res=await fetch('/.netlify/functions/sync-timetree',{method:'POST'});
+    if(res.ok){
+      const data=await res.json();
+      if(data.events){
+        appData.timetreeEvents=data.events;
+        appData.timetreeSyncedAt=data.syncedAt||Date.now();
+        renderTodaySchedule();
+        renderCalendarGrid();
+      }
+    }
+  }catch(e){console.warn('[tt] sync failed',e.message);}
+  ttSyncing=false;
+  if(btn){btn.style.opacity='';btn.style.pointerEvents='';}
 }
 
 function calDateStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
-async function loadTTEvents(){
-  calTTLoading=true;
-  const btn=document.getElementById('calRefreshBtn');
-  if(btn){btn.style.opacity='.5';btn.style.pointerEvents='none';btn.textContent='↻';}
-  try{
-    const res=await fetch(`/.netlify/functions/get-timetree-events?year=${calYear}&month=${calMonth}`);
-    const data=await res.json();
-    calTTEvents=data.events||[];
-  }catch(e){calTTEvents=[];}
-  calTTLoading=false;
-  if(btn){btn.style.opacity='';btn.style.pointerEvents='';btn.textContent='↻';}
-  renderCalendarGrid();
-}
-
 function renderCalendar(){
-  calTTEvents=[];
   renderCalendarGrid();
-  loadTTEvents();
-  // Auto-refresh every 5 minutes while calendar is active
-  clearInterval(calRefreshTimer);
-  calRefreshTimer=setInterval(()=>{
-    if(document.getElementById('page-calendar')?.classList.contains('active')) loadTTEvents();
-  }, 5*60*1000);
+  syncTimetreeEvents();
 }
 
-window.calRefresh=function(){loadTTEvents();};
+window.calRefresh=function(){syncTimetreeEvents(true);};
 
 function renderCalendarGrid(){
   const today=todayStr();
@@ -2877,24 +2862,18 @@ function renderCalendarGrid(){
   const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('calMonthLabel').textContent=MONTHS[calMonth]+' '+calYear;
 
-  // Merge local dashboard events + TimeTree events into unified list
+  // Merge local dashboard events + TimeTree events (from Firestore cache) into unified list
   const localEvents=(appData.events||[]).map(e=>({
     id:e.id, name:e.name, date:e.date, endDate:e.endDate||null,
     time:e.time||'', colorIdx:e.colorIdx||0, source:'local',
   }));
-  const ttEventsNorm=calTTEvents.map(e=>({
+  const ttEventsNorm=(appData.timetreeEvents||[]).map(e=>({
     id:e.id, name:e.title, date:e.startDate, endDate:e.endDate||null,
     time:e.time||'', colorIdx:ttColorIdx(e), source:'timetree',
   }));
   const allEvents=[...localEvents,...ttEventsNorm];
 
-  // Loading indicator
   const grid=document.getElementById('calGrid');
-  if(calTTLoading){
-    // Show shimmer / spinner in header
-    const lbl=document.getElementById('calMonthLabel');
-    if(!lbl.textContent.includes('…')) lbl.textContent+=' …';
-  }
 
   // Build 6-row × 7-col cell array
   const cells=[];
