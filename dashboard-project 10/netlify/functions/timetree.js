@@ -1,88 +1,61 @@
-const https = require('https');
 const { randomUUID } = require('crypto');
 const { RRule, RRuleSet, rrulestr } = require('rrule');
 
 const API_BASE = 'https://timetreeapp.com/api/v1';
-const HEADERS = {
+// Minimal headers matching the TimeTree-MCP reference implementation
+const BASE_HEADERS = {
   'Content-Type': 'application/json',
   'X-Timetreea': 'web/2.1.0/en',
-  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'application/json',
-  'Origin': 'https://timetreeapp.com',
-  'Referer': 'https://timetreeapp.com/',
 };
 const TZ = 'America/Los_Angeles';
 
 // Module-level session cache (survives warm invocations)
-let _session = null;   // { cookie, csrfToken, calendarId }
+let _session = null;   // { cookie, csrfToken, calendarId, memberMap }
 
-function httpsReq(options, body) {
-  return new Promise((resolve, reject) => {
-    const payload = body ? JSON.stringify(body) : null;
-    const headers = { ...HEADERS, ...options.headers };
-    if (payload) headers['Content-Length'] = Buffer.byteLength(payload);
-
-    const req = https.request({ ...options, headers }, (res) => {
-      // Capture updated session cookie
-      const setCookie = res.headers['set-cookie'];
-      if (setCookie && _session) {
-        const arr = Array.isArray(setCookie) ? setCookie : [setCookie];
-        const m = arr.join(';').match(/_session_id=([^;]+)/);
-        if (m) _session.cookie = m[1];
-      }
-      // Capture CSRF token from response header
-      const csrf = res.headers['x-csrf-token'];
-      if (csrf && _session) _session.csrfToken = csrf;
-
-      let d = '';
-      res.on('data', c => d += c);
-      res.on('end', () => {
-        if (res.statusCode >= 400) {
-          const err = new Error(`HTTP ${res.statusCode}`);
-          err.statusCode = res.statusCode;
-          err.body = d;
-          return reject(err);
-        }
-        try { resolve({ status: res.statusCode, body: d ? JSON.parse(d) : {}, rawHeaders: res.headers }); }
-        catch { resolve({ status: res.statusCode, body: d, rawHeaders: res.headers }); }
-      });
-    });
-    req.on('error', reject);
-    if (payload) req.write(payload);
-    req.end();
-  });
-}
-
-function apiReq(method, path, body, requireCsrf = false) {
-  const url = new URL(API_BASE + path);
-  const headers = {};
-  if (_session?.cookie) headers['Cookie'] = `_session_id=${_session.cookie}`;
+async function apiReq(method, path, body, requireCsrf = false) {
+  const url = API_BASE + path;
+  const headers = { ...BASE_HEADERS };
+  if (_session?.cookie)   headers['Cookie']       = `_session_id=${_session.cookie}`;
   if (requireCsrf && _session?.csrfToken) headers['x-csrf-token'] = _session.csrfToken;
-  return httpsReq({ hostname: url.hostname, path: url.pathname + url.search, method, headers }, body);
+
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  // Capture session cookie from response
+  const setCookie = res.headers.get('set-cookie');
+  if (setCookie && _session) {
+    const m = setCookie.match(/_session_id=([^;]+)/);
+    if (m) _session.cookie = m[1];
+  }
+  // Capture CSRF token from response header
+  const csrf = res.headers.get('x-csrf-token');
+  if (csrf && _session) _session.csrfToken = csrf;
+
+  const text = await res.text();
+  if (!res.ok) {
+    const err = new Error(`HTTP ${res.status}`);
+    err.statusCode = res.status;
+    err.body = text;
+    throw err;
+  }
+  try { return { status: res.status, body: text ? JSON.parse(text) : {} }; }
+  catch { return { status: res.status, body: text }; }
 }
 
 async function extractCsrf() {
-  return new Promise((resolve) => {
-    const headers = { ...HEADERS };
+  try {
+    const headers = { ...BASE_HEADERS };
     if (_session?.cookie) headers['Cookie'] = `_session_id=${_session.cookie}`;
-    const req = https.request({ hostname: 'timetreeapp.com', path: '/', method: 'GET', headers }, (res) => {
-      // Grab CSRF from response header first
-      const csrf = res.headers['x-csrf-token'];
-      if (csrf && _session) { _session.csrfToken = csrf; }
-      let d = '';
-      res.on('data', c => d += c);
-      res.on('end', () => {
-        if (!_session?.csrfToken) {
-          const m = d.match(/<meta\s+name="csrf-token"\s+content="([^"]+)"/i);
-          if (m && _session) _session.csrfToken = m[1];
-        }
-        resolve();
-      });
-    });
-    req.on('error', () => resolve());
-    req.setTimeout(10000, () => { req.destroy(); resolve(); });
-    req.end();
-  });
+    const res = await fetch('https://timetreeapp.com/', { headers });
+    const csrf = res.headers.get('x-csrf-token');
+    if (csrf && _session) { _session.csrfToken = csrf; return; }
+    const html = await res.text();
+    const m = html.match(/<meta\s+name="csrf-token"\s+content="([^"]+)"/i);
+    if (m && _session) _session.csrfToken = m[1];
+  } catch { /* non-fatal */ }
 }
 
 async function authenticate() {
@@ -92,23 +65,11 @@ async function authenticate() {
 
   _session = { cookie: null, csrfToken: null, calendarId: null };
 
-  // Get CSRF token before login
-  await extractCsrf();
-  console.log('[tt] csrf after extractCsrf:', _session.csrfToken ? 'found' : 'MISSING');
-
   const uuid = randomUUID().replace(/-/g, '');
-
-  // v1 email signin — try both field names the private API has used
-  let signinRes;
-  try {
-    signinRes = await apiReq('PUT', '/auth/email/signin', { uid: email, email, password, uuid }, true);
-    console.log('[tt] signin status:', signinRes.status, 'cookie:', _session.cookie ? 'set' : 'missing');
-  } catch (e) {
-    console.error('[tt] signin error:', e.statusCode, e.body);
-    throw e;
-  }
+  await apiReq('PUT', '/auth/email/signin', { uid: email, password, uuid });
 
   if (!_session.cookie) throw new Error('TimeTree auth failed — no session cookie');
+  await extractCsrf();
 }
 
 async function ensureAuth() {
