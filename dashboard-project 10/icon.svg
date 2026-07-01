@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Near-black background (F6 · Near-black) -->
+  <rect width="1024" height="1024" rx="230" ry="230" fill="#1C1C1E"/>
+
+  <!--
+    Gauge arc: 270° arc with 90° gap on the lower-left (7–10 o'clock area)
+    Circle r=272 centred at (512, 530). Circumference ≈ 1709.
+    dasharray: arc=1282 (270°), gap=427 (90°)
+    Without rotation the stroke starts at 3-o'clock; rotate(-150°) shifts the
+    gap centre from 315° → 165°  ≈  lower-left / 8 o'clock.
+  -->
+  <circle
+    cx="512" cy="530" r="272"
+    fill="none"
+    stroke="#E8E8ED"
+    stroke-width="92"
+    stroke-linecap="round"
+    stroke-dasharray="1282 427"
+    transform="rotate(-150 512 530)"
+  />
+
+  <!-- Centre pivot dot -->
+  <circle cx="512" cy="530" r="46" fill="#E8E8ED"/>
+</svg>
