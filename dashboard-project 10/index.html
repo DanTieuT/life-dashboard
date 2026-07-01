@@ -8,88 +8,118 @@
 /* ── RESET & BASE ──────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0a0c;--card:#111115;--card2:#18181d;--border:rgba(255,255,255,0.07);
-  --text:#ffffff;--sub:#888;--muted:#444;
-  --green:#37d99a;--green-dim:rgba(55,217,154,0.12);
-  --yellow:#f5c518;--yellow-dim:rgba(245,197,24,0.12);
-  --red:#ff4d4d;--red-dim:rgba(255,77,77,0.12);
-  --radius:16px;--radius-sm:10px;}
+  --bg:#000;--card:#161618;--card2:#1c1c1e;--card3:#0d0d0f;
+  --border:#232327;--border2:#1f1f23;
+  --text:#fff;--sub:#8e8e93;--muted:#48484a;
+  --green:#30d158;--green-dim:rgba(48,209,88,.15);
+  --blue:#0a84ff;--blue-dim:rgba(10,132,255,.15);
+  --cyan:#64d2ff;--orange:#ff9f0a;
+  --red:#ff453a;--red-dim:rgba(255,69,58,.15);
+  --yellow:#ffd60a;--yellow-dim:rgba(255,214,10,.12);
+  --purple:#bf5af2;
+  --track:#242428;--seg-active:#38383c;
+  --radius:20px;--radius-lg:26px;--radius-sm:10px;}
 [data-theme="light"]{
-  --bg:#f5f5f7;--card:#ffffff;--card2:#eeeef0;--border:rgba(0,0,0,0.09);
-  --text:#0a0a0c;--sub:#666;--muted:#bbb;
-  --green:#1a9e6a;--green-dim:rgba(26,158,106,0.1);
-  --yellow:#c9a000;--yellow-dim:rgba(201,160,0,0.1);
-  --red:#d93636;--red-dim:rgba(217,54,54,0.1);}
-[data-theme="light"] .sidebar-logo-gem,[data-theme="light"] .auth-logo-gem{background:#d4edda;}
-[data-theme="light"] .sbadge.done{background:#d4edda;color:#1a9e6a;}
-[data-theme="light"] .sbadge.now{background:#fef9c3;color:#a07800;}
-[data-theme="light"] .sbadge.next{background:#eeeef0;color:#555;}
-[data-theme="light"] .sbadge.upcoming{background:#f0f0f2;color:#888;}
+  --bg:#f5f5f7;--card:#fff;--card2:#f2f2f7;--card3:#f9f9fb;
+  --border:#e5e5ea;--border2:#d1d1d6;
+  --text:#1d1d1f;--sub:#6e6e73;--muted:#aeaeb2;
+  --green:#28b348;--green-dim:rgba(40,179,72,.12);
+  --red:#e03530;--red-dim:rgba(224,53,48,.12);
+  --yellow:#c89b00;--yellow-dim:rgba(200,155,0,.12);
+  --track:rgba(0,0,0,.09);--seg-active:#fff;}
+[data-theme="light"] .auth-logo-gem{background:#d1f2e0;}
+[data-theme="light"] .sbadge.done{background:#d1f2e0;color:#1a9e6a;}
+[data-theme="light"] .sbadge.now{background:#fff3c4;color:#a07800;}
+[data-theme="light"] .sbadge.next{background:#f2f2f7;color:#555;}
+[data-theme="light"] .sbadge.upcoming{background:#f0f0f5;color:#888;}
 [data-theme="light"] .mc-today .mc-num{color:#fff;}
 [data-theme="light"] .chat-panel{box-shadow:0 12px 48px rgba(0,0,0,.15);}
 [data-theme="light"] .modal-overlay{background:rgba(0,0,0,0.35);}
 [data-theme="light"] input::placeholder,[data-theme="light"] textarea::placeholder{color:#aaa;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased}
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit}
 
-/* ── SIDEBAR ─────────────────────────────────────────────────────── */
-.app-layout{display:flex;min-height:100vh}
-.sidebar{width:200px;min-width:200px;background:var(--bg);border-right:none;display:flex;flex-direction:column;padding:18px 10px 16px;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
-.sidebar-logo{display:flex;align-items:center;gap:10px;padding:4px 10px 22px;font-size:15px;font-weight:700;color:var(--text)}
-.sidebar-logo-gem{width:32px;height:32px;background:#0e3320;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.sidebar-logo-gem svg{width:17px;height:17px}
-.sidebar-nav{flex:1;display:flex;flex-direction:column;gap:2px}
-.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:14px;font-weight:500;color:var(--sub);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:all .15s;font-family:inherit}
-.sidebar-item:hover{color:var(--text);background:var(--card)}
-.sidebar-item.active{background:var(--card2);color:var(--text)}
-.sidebar-item svg{width:16px;height:16px;flex-shrink:0;opacity:.65}
-.sidebar-item.active svg{opacity:1}
-.sidebar-footer{border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:2px;margin-top:8px}
-.sidebar-user{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-radius:10px;transition:background .15s;border:none;background:none;width:100%;font-family:inherit}
-.sidebar-user:hover{background:var(--card)}
-.sidebar-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f5a623,#e05a22);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
-.sidebar-user-info{min-width:0;text-align:left}
-.sidebar-user-name{font-size:13px;font-weight:600;color:var(--text)}
-.sidebar-user-sub{font-size:11px;color:var(--muted)}
+/* ── TOP NAV ─────────────────────────────────────────────────────── */
+.app-layout{display:flex;flex-direction:column;min-height:100vh}
+.top-nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;gap:16px}
+[data-theme="light"] .top-nav{background:rgba(245,245,247,.82);}
+.nav-logo{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--text);text-decoration:none;flex-shrink:0}
+.nav-logo-gem{width:28px;height:28px;background:rgba(48,209,88,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-logo-gem svg{width:15px;height:15px}
+.nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:9px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;border:none;background:none;white-space:nowrap;transition:all .15s;font-family:inherit;flex-shrink:0}
+.nav-tab:hover{color:var(--text);background:var(--card2)}
+.nav-tab.active{background:var(--seg-active);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.nav-tab svg{width:14px;height:14px;opacity:.7;flex-shrink:0}
+.nav-tab.active svg{opacity:1}
+.nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto}
+.nav-clock{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
+.nav-theme-btn{background:none;border:1px solid var(--border);border-radius:9px;padding:5px 10px;color:var(--sub);font-size:13px;cursor:pointer;transition:all .15s}
+.nav-theme-btn:hover{color:var(--text);border-color:var(--sub)}
+.nav-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ff9f0a,#e05a22);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer}
 .btn-new{background:var(--green);color:#000;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
-.btn-new:hover{background:#2bcf8a}
+.btn-new:hover{filter:brightness(1.1)}
 
 /* ── MAIN LAYOUT ─────────────────────────────────────────────────── */
-.main-with-sidebar{margin-left:200px;flex:1;min-width:0}
-.main{padding:40px 40px 60px;max-width:880px;margin:0 auto;width:100%}
+.main-with-sidebar{flex:1;min-width:0}
+.main{padding:32px 32px 60px;max-width:960px;margin:0 auto;width:100%}
 .page{display:none}
 .page.active{display:block}
+
+/* ── PAGE SUB-HEADER ─────────────────────────────────────────────── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
+.page-title{font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1.1}
+.page-sub{font-size:14px;color:var(--sub);margin-top:4px}
 
 /* ── AUTH SCREEN ─────────────────────────────────────────────────── */
 #auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:24px}
 .auth-logo{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:700}
-.auth-logo-gem{width:48px;height:48px;background:#0e3320;border-radius:14px;display:flex;align-items:center;justify-content:center}
+.auth-logo-gem{width:48px;height:48px;background:rgba(48,209,88,.15);border-radius:14px;display:flex;align-items:center;justify-content:center}
 .auth-logo-gem svg{width:26px;height:26px}
 .auth-sub{color:var(--sub);font-size:15px;text-align:center}
 .btn-google{background:#fff;color:#000;border:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px;margin-top:8px}
 .btn-google:hover{background:#f0f0f0}
 .btn-google svg{width:20px;height:20px}
 
-/* ── GREETING ────────────────────────────────────────────────────── */
+/* ── HERO CARD ───────────────────────────────────────────────────── */
+.hero-card{background:var(--card3);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:36px 40px;display:flex;align-items:center;gap:32px;margin-bottom:16px;position:relative;overflow:hidden}
+.hero-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(48,209,88,.05) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(10,132,255,.05) 0%,transparent 60%);pointer-events:none}
+.hero-gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0}
+.hero-gauge-label{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--sub)}
+.hero-gauge-val{font-size:13px;font-weight:700;color:var(--text)}
+.hero-center{flex:1;text-align:center;z-index:1}
+.hero-greeting{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
+.hero-date{font-size:13px;color:var(--sub);margin-bottom:14px}
+.hero-intention{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;padding:10px 16px;color:var(--text);font-size:14px;width:100%;max-width:400px;outline:none;text-align:center;font-family:inherit}
+.hero-intention:focus{border-color:var(--green)}
+.hero-intention::placeholder{color:var(--muted)}
+[data-theme="light"] .hero-intention{background:rgba(0,0,0,.04)}
+[data-theme="light"] .hero-card::before{background:radial-gradient(ellipse at 20% 50%,rgba(40,179,72,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(10,132,255,.06) 0%,transparent 60%)}
+
+/* ── GAUGE RING ──────────────────────────────────────────────────── */
+.gauge-svg{overflow:visible}
+
+/* ── STAT TILES ──────────────────────────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.stat-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+
+/* ── GREETING (legacy, used in sub-pages) ────────────────────────── */
 .greeting-wrap{margin-bottom:22px}
-.greeting{font-size:38px;font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:5px}
+.greeting{font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1.1;margin-bottom:5px}
 .greeting-sub{color:var(--sub);font-size:14px}
 
-/* ── INTENTION ───────────────────────────────────────────────────── */
+/* ── INTENTION (legacy fallback) ────────────────────────────────── */
 .intention-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:22px}
 .intention-bar input{background:none;border:none;outline:none;color:var(--text);font-size:14px;flex:1}
 .intention-bar input::placeholder{color:var(--muted)}
-
-/* ── STAT CARDS ──────────────────────────────────────────────────── */
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px 16px}
-.stat-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.stat-label{font-size:13px;color:var(--sub)}
+.stat-label{font-size:12px;font-weight:600;letter-spacing:.3px;color:var(--sub)}
 .stat-dots{color:var(--muted);font-size:16px;letter-spacing:1px;line-height:1;background:none;border:none;padding:2px 4px}
 .stat-val-row{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
-.stat-val{font-size:34px;font-weight:700;letter-spacing:-1px}
-.stat-val-unit{font-size:18px;font-weight:400;color:var(--sub)}
+.stat-val{font-size:32px;font-weight:700;letter-spacing:-1px}
+.stat-val-unit{font-size:16px;font-weight:400;color:var(--sub)}
 .stat-badge{background:var(--green-dim);color:var(--green);font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px}
 .stat-badge.red{background:var(--red-dim);color:var(--red)}
 .stat-context{font-size:12px;color:var(--muted);margin-bottom:14px}
@@ -101,13 +131,13 @@ input,select,textarea{font-family:inherit}
 
 /* ── FOCUS TASKS ─────────────────────────────────────────────────── */
 .focus-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px}
-.card-title{font-size:18px;font-weight:600;margin-bottom:4px}
-.card-sub{font-size:13px;color:var(--sub);margin-bottom:22px}
-.focus-item{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .15s}
+.card-title{font-size:16px;font-weight:600;margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--sub);margin-bottom:18px}
+.focus-item{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .15s}
 .focus-item:last-child{border-bottom:none;padding-bottom:4px}
-.focus-num{width:28px;height:28px;border-radius:50%;background:var(--card2);color:var(--sub);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.focus-num{width:26px;height:26px;border-radius:50%;background:var(--card2);color:var(--sub);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
 .focus-num.done{background:var(--green-dim);color:var(--green)}
-.focus-text{font-size:15px;color:var(--sub);flex:1;outline:none;background:none;border:none;caret-color:var(--green)}
+.focus-text{font-size:14px;color:var(--sub);flex:1;outline:none;background:none;border:none;caret-color:var(--green)}
 .focus-text.has-text{color:var(--text)}
 .focus-text.done-text{text-decoration:line-through;color:var(--muted)}
 .focus-text::placeholder{color:var(--muted)}
@@ -118,8 +148,8 @@ input,select,textarea{font-family:inherit}
 .finance-month{font-size:13px;color:var(--sub)}
 .ring-wrap{position:relative;width:180px;height:180px}
 .ring-svg{width:180px;height:180px;transform:rotate(-90deg)}
-.ring-track{fill:none;stroke:#1c1c24;stroke-width:16}
-.ring-progress{fill:none;stroke-width:16;stroke-linecap:round;transition:stroke-dashoffset .8s ease,stroke .4s}
+.ring-track{fill:none;stroke:var(--track);stroke-width:14}
+.ring-progress{fill:none;stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .8s ease,stroke .4s}
 .ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
 .ring-status{font-size:11px;color:var(--sub);margin-bottom:1px}
 .ring-amount{font-size:24px;font-weight:700;line-height:1.1}
@@ -148,10 +178,10 @@ input,select,textarea{font-family:inherit}
 .evt-name.muted{color:var(--sub)}
 .evt-status{text-align:right}
 .sbadge{display:inline-flex;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:600}
-.sbadge.done{background:#0c3520;color:#37d99a}
-.sbadge.now{background:#332b0a;color:#f5c518}
-.sbadge.next{background:#1a1a20;color:#777}
-.sbadge.upcoming{background:#141418;color:#555}
+.sbadge.done{background:rgba(48,209,88,.12);color:var(--green)}
+.sbadge.now{background:rgba(255,214,10,.12);color:var(--yellow)}
+.sbadge.next{background:var(--card2);color:var(--sub)}
+.sbadge.upcoming{background:var(--card2);color:var(--muted)}
 .evt-empty{color:var(--muted);font-size:13px;padding:20px 6px;text-align:center}
 .add-evt-btn{margin-top:14px;background:none;border:1px dashed var(--border);border-radius:10px;padding:9px;width:100%;color:var(--muted);font-size:13px;transition:all .2s}
 .add-evt-btn:hover{border-color:var(--green);color:var(--green)}
@@ -222,22 +252,26 @@ input,select,textarea{font-family:inherit}
 .tasks-add-input:focus{border-color:var(--green)}
 .tasks-add-date{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;color:var(--sub);font-size:14px;outline:none;min-width:148px}
 .tasks-add-date:focus{border-color:var(--green);color:var(--text)}
-.tasks-add-btn{background:var(--yellow);color:#000;border:none;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:600;flex-shrink:0}
-.tasks-add-btn:hover{background:#e0b510}
-.tasks-section{margin-bottom:22px}
+.tasks-add-btn{background:var(--green);color:#000;border:none;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:600;flex-shrink:0}
+.tasks-add-btn:hover{filter:brightness(1.1)}
+.tasks-section{margin-bottom:20px}
 .tasks-section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.tasks-section-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
-.tasks-section-count{font-size:11px;color:var(--muted);background:var(--card2);border-radius:8px;padding:2px 7px}
-.task-row{display:flex;align-items:center;gap:12px;padding:9px 4px}
-.task-row.done-row{opacity:.45}
-.task-row.recent-done-row{opacity:.7}
-.task-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s;cursor:pointer}
+.tasks-section-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tasks-section-label{font-size:13px;font-weight:600;color:var(--text)}
+.tasks-section-count{font-size:12px;color:var(--muted);background:var(--card2);border-radius:8px;padding:2px 8px}
+.tasks-section-body{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.task-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);transition:background .1s}
+.task-row:last-child{border-bottom:none}
+.task-row:hover{background:rgba(255,255,255,.02)}
+.task-row.done-row{opacity:.4}
+.task-row.recent-done-row{opacity:.65}
+.task-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s;cursor:pointer}
 .task-check.checked{background:var(--green);border-color:var(--green);color:#000}
 .task-label{flex:1;font-size:14px;font-weight:500;outline:none;background:none;border:none;color:var(--text)}
 .task-label.done-text{text-decoration:line-through;color:var(--muted)}
-.due-pill{font-size:12px;padding:3px 10px;border-radius:6px;font-weight:500;flex-shrink:0}
+.due-pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;flex-shrink:0}
 .due-pill.overdue{background:var(--red-dim);color:var(--red)}
-.due-pill.today{background:var(--yellow-dim);color:var(--yellow)}
+.due-pill.today{background:var(--blue-dim);color:var(--blue)}
 .due-pill.upcoming{background:var(--card2);color:var(--sub)}
 .task-row-del,.task-row-edit{background:none;border:none;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px;flex-shrink:0;opacity:0;transition:opacity .15s;cursor:pointer}
 .task-row:hover .task-row-del,.task-row:hover .task-row-edit{opacity:.6}
@@ -245,7 +279,7 @@ input,select,textarea{font-family:inherit}
 .task-row-edit:hover{color:var(--text);opacity:1}
 .done-toggle-btn{background:none;border:none;color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;padding:0}
 .done-toggle-btn:hover{color:var(--sub)}
-.tasks-empty{color:var(--muted);font-size:13px;padding:14px 0;text-align:center}
+.tasks-empty{color:var(--muted);font-size:13px;padding:14px 16px;text-align:center}
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
 .nav-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
 
@@ -337,14 +371,14 @@ input,select,textarea{font-family:inherit}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
 .btn-cancel{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 18px;color:var(--sub);font-size:14px}
 .btn-save{background:var(--green);border:none;border-radius:10px;padding:10px 20px;color:#000;font-size:14px;font-weight:600}
-.btn-save:hover{background:#2bcf8a}
+.btn-save:hover{background:#27c24e}
 .habit-color-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .color-swatch{width:32px;height:32px;border-radius:8px;border:2px solid transparent;cursor:pointer;transition:all .15s}
 .color-swatch.selected{border-color:#fff}
 
 /* ── AI CHAT ─────────────────────────────────────────────────────── */
 .chat-fab{position:fixed;bottom:28px;right:28px;width:54px;height:54px;border-radius:50%;background:var(--green);border:none;color:#000;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(55,217,154,.35);z-index:150;transition:all .2s;cursor:pointer}
-.chat-fab:hover{transform:scale(1.08);background:#2bcf8a}
+.chat-fab:hover{transform:scale(1.08);background:#27c24e}
 .chat-panel{position:fixed;bottom:96px;right:28px;width:360px;max-width:calc(100vw - 56px);background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,.6);z-index:150;display:none;flex-direction:column;height:480px}
 .chat-panel.open{display:flex}
 .chat-panel-hdr{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
@@ -365,7 +399,7 @@ input,select,textarea{font-family:inherit}
 .chat-text-input:focus{border-color:var(--green)}
 .chat-text-input::placeholder{color:var(--muted)}
 .chat-send-btn{background:var(--green);border:none;border-radius:10px;padding:9px 15px;color:#000;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;transition:background .15s}
-.chat-send-btn:hover{background:#2bcf8a}
+.chat-send-btn:hover{background:#27c24e}
 .chat-send-btn:disabled{background:var(--card2);color:var(--muted);cursor:default}
 .chat-mic-btn{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;color:var(--sub);font-size:15px;cursor:pointer;flex-shrink:0;transition:all .15s;display:flex;align-items:center;justify-content:center}
 .chat-mic-btn:hover{border-color:var(--green);color:var(--green)}
@@ -385,7 +419,7 @@ input,select,textarea{font-family:inherit}
 .proj-sort-btn{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit}
 .proj-sort-btn:hover{color:var(--text)}
 .proj-new-btn{background:var(--green);color:#000;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-left:auto}
-.proj-new-btn:hover{background:#2bcf8a}
+.proj-new-btn:hover{background:#27c24e}
 .proj-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 .proj-table-head{display:grid;grid-template-columns:1fr 170px 110px 60px;gap:12px;padding:12px 20px;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
 .proj-group-hdr{display:flex;align-items:center;gap:8px;padding:14px 20px 10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;background:none;border:none;width:100%;font-family:inherit}
@@ -415,7 +449,7 @@ input,select,textarea{font-family:inherit}
 .dash-proj-title{font-size:17px;font-weight:600}
 .dash-proj-sub{font-size:12px;color:var(--sub);margin-top:3px}
 .dash-proj-viewall{background:none;border:none;color:var(--green);font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;white-space:nowrap}
-.dash-proj-viewall:hover{color:#2bcf8a}
+.dash-proj-viewall:hover{color:#27c24e}
 .dash-proj-cols{display:grid;grid-template-columns:1fr 160px 100px;gap:12px;padding:0 20px 8px;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
 .dash-proj-row{display:grid;grid-template-columns:1fr 160px 100px;gap:12px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center}
 .dash-proj-row:last-child{border-bottom:none}
@@ -423,7 +457,7 @@ input,select,textarea{font-family:inherit}
 .dash-proj-cat{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
 
 /* ── CALENDAR ────────────────────────────────────────────────────── */
-.cal-fullpage{position:fixed;top:0;left:200px;right:0;bottom:0;overflow-y:auto;padding:28px;background:var(--bg);z-index:50}
+.cal-fullpage{position:fixed;top:56px;left:0;right:0;bottom:0;overflow-y:auto;padding:28px;background:var(--bg);z-index:50}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .cal-month-nav{display:flex;align-items:center;gap:6px}
 .cal-nav-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 14px;color:var(--text);font-size:17px;line-height:1;cursor:pointer;transition:border-color .15s}
@@ -458,16 +492,14 @@ input,select,textarea{font-family:inherit}
 
 /* ── MOBILE ──────────────────────────────────────────────────────── */
 @media(max-width:768px){
-  .sidebar{width:100%;height:auto;position:fixed;top:auto;bottom:0;left:0;right:0;flex-direction:row;padding:8px 16px;border-right:none;border-top:1px solid var(--border);z-index:200;background:var(--bg)}
-  .sidebar-logo{display:none}
-  .sidebar-nav{flex-direction:row;gap:0;justify-content:space-around;flex:1}
-  .sidebar-item{flex-direction:column;gap:3px;padding:6px 8px;font-size:10px;text-align:center;border-radius:8px}
-  .sidebar-item svg{width:20px;height:20px}
-  .sidebar-footer{display:none}
-  .main-with-sidebar{margin-left:0;padding-bottom:70px}
-  .main{padding:20px 16px 80px}
-  .greeting{font-size:26px;letter-spacing:-.5px}
-  .stats-row{grid-template-columns:1fr}
+  .top-nav{padding:0 16px;gap:8px}
+  .nav-tabs{gap:1px}
+  .nav-tab{padding:6px 10px;font-size:12px}
+  .nav-clock{display:none}
+  .main{padding:20px 16px 60px}
+  .hero-card{flex-direction:column;padding:24px 20px;gap:20px}
+  .hero-greeting{font-size:22px}
+  .stats-row{grid-template-columns:1fr 1fr}
   .mid-row{grid-template-columns:1fr}
   .evt-row{grid-template-columns:58px 1fr auto;gap:8px;padding:12px 4px}
   .evt-table-head{grid-template-columns:58px 1fr auto;padding:0 4px 8px}
@@ -486,7 +518,7 @@ input,select,textarea{font-family:inherit}
   .toast{right:12px;left:12px;max-width:none;bottom:90px}
   .section-title{font-size:18px}
   .month-nav{margin-bottom:12px}
-  .cal-fullpage{left:0;padding:16px 12px 80px}
+  .cal-fullpage{top:56px;padding:16px 12px 60px}
   .cal-cell{min-height:72px}
   .cal-dow-row div{font-size:9px;padding:4px 0}
 }
@@ -512,60 +544,44 @@ input,select,textarea{font-family:inherit}
 <!-- APP -->
 <div id="app" style="display:none" class="app-layout">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-gem"><svg viewBox="0 0 26 26" fill="none"><path d="M13 2L24 13L13 24L2 13Z" fill="#37d99a"/></svg></div>
+  <!-- TOP NAV -->
+  <header class="top-nav">
+    <div class="nav-logo">
+      <div class="nav-logo-gem"><svg viewBox="0 0 26 26" fill="none"><path d="M13 2L24 13L13 24L2 13Z" fill="#30d158"/></svg></div>
       Command Center
     </div>
-    <nav class="sidebar-nav">
-      <button class="sidebar-item active" onclick="switchTab('dashboard')" data-tab="dashboard">
+    <nav class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('dashboard')" data-tab="dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </button>
-      <button class="sidebar-item" onclick="switchTab('tasks')" data-tab="tasks">
+      <button class="nav-tab" onclick="switchTab('tasks')" data-tab="tasks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         Tasks
       </button>
-      <button class="sidebar-item" onclick="switchTab('projects')" data-tab="projects">
+      <button class="nav-tab" onclick="switchTab('projects')" data-tab="projects">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         Projects
       </button>
-      <button class="sidebar-item" onclick="switchTab('habits')" data-tab="habits">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        Habits
-      </button>
-      <button class="sidebar-item" onclick="switchTab('finance')" data-tab="finance">
+      <button class="nav-tab" onclick="switchTab('finance')" data-tab="finance">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
         Finance
       </button>
-      <button class="sidebar-item" onclick="switchTab('goals')" data-tab="goals">
+      <button class="nav-tab" onclick="switchTab('goals')" data-tab="goals">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
         Goals
       </button>
-      <button class="sidebar-item" onclick="switchTab('calendar')" data-tab="calendar">
+      <button class="nav-tab" onclick="switchTab('calendar')" data-tab="calendar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Calendar
       </button>
     </nav>
-    <div class="sidebar-footer">
-      <button class="sidebar-item" onclick="toggleTheme()" id="themeToggleBtn">
-        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        <span id="themeLabel">Light Mode</span>
-      </button>
-      <button class="sidebar-item" onclick="openModal('signOutModal')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
-        Settings
-      </button>
-      <button class="sidebar-user" onclick="openModal('signOutModal')">
-        <div class="sidebar-avatar" id="userAvatar"></div>
-        <div class="sidebar-user-info">
-          <div class="sidebar-user-name" id="sidebarUserName">Dan</div>
-          <div class="sidebar-user-sub">Solo workspace</div>
-        </div>
-      </button>
+    <div class="nav-right">
+      <span class="nav-clock" id="navClock"></span>
+      <button class="nav-theme-btn" onclick="toggleTheme()" id="themeToggleBtn"><span id="themeLabel">Light</span></button>
+      <div class="nav-avatar" id="userAvatar" onclick="openModal('signOutModal')"></div>
     </div>
-  </aside>
+  </header>
 
   <!-- MAIN -->
   <div class="main-with-sidebar">
@@ -574,25 +590,27 @@ input,select,textarea{font-family:inherit}
     <!-- ── DASHBOARD TAB ── -->
     <div class="page active" id="page-dashboard">
 
-      <!-- Greeting -->
-      <div class="greeting-wrap">
-        <div class="greeting" id="greetingText">Good evening, Dan</div>
-        <div class="greeting-sub">Your productivity control room — tasks, focus, and habits at a glance.</div>
+      <!-- Hero Card -->
+      <div class="hero-card">
+        <div class="hero-gauge-wrap" id="heroGaugeLeft">
+          <!-- rendered by renderStats() -->
+        </div>
+        <div class="hero-center">
+          <div class="hero-greeting" id="greetingText">Good morning, Dan</div>
+          <div class="hero-date" id="heroDate"></div>
+          <input class="hero-intention" id="intentionInput" type="text" placeholder="What's your intention today?" onblur="saveIntention()" onkeydown="if(event.key==='Enter')this.blur()">
+        </div>
+        <div class="hero-gauge-wrap" id="heroGaugeRight">
+          <!-- rendered by renderStats() -->
+        </div>
       </div>
 
-      <!-- Intention -->
-      <div class="intention-bar">
-        <span>☀️</span>
-        <input id="intentionInput" type="text" placeholder="Today's intention — what do you want to feel or finish?" onblur="saveIntention()" onkeydown="if(event.key==='Enter')this.blur()">
-      </div>
-
-      <!-- Stats -->
+      <!-- Stats Row -->
       <div class="stats-row">
         <div class="stat-card">
-          <div class="stat-label-row"><span class="stat-label">Tasks Done</span><button class="stat-dots">···</button></div>
+          <div class="stat-label-row"><span class="stat-label">Tasks Done</span><span class="stat-badge" id="tasksBadge">↑ 0</span></div>
           <div class="stat-val-row">
             <span class="stat-val"><span id="tasksDoneNum">0</span><span class="stat-val-unit">/<span id="tasksTotalNum">0</span></span></span>
-            <span class="stat-badge" id="tasksBadge">↑ 0</span>
           </div>
           <div class="stat-context">vs yesterday</div>
           <div class="mini-chart" id="tasksChart"></div>
@@ -635,7 +653,7 @@ input,select,textarea{font-family:inherit}
             <div class="ring-wrap">
               <svg class="ring-svg" viewBox="0 0 180 180">
                 <circle class="ring-track" cx="90" cy="90" r="70"/>
-                <circle class="ring-progress" id="ringArc" cx="90" cy="90" r="70" stroke="#37d99a" stroke-dasharray="439.8" stroke-dashoffset="439.8"/>
+                <circle class="ring-progress" id="ringArc" cx="90" cy="90" r="70" stroke="#30d158" stroke-dasharray="439.8" stroke-dashoffset="439.8"/>
                 <circle id="paceMark" cx="90" cy="20" r="5" fill="white"/>
               </svg>
               <div class="ring-center">
@@ -693,10 +711,10 @@ input,select,textarea{font-family:inherit}
 
     <!-- ── TASKS TAB ── -->
     <div class="page" id="page-tasks">
-      <div class="section-hdr" style="margin-bottom:22px">
+      <div class="page-header">
         <div>
-          <div class="greeting">Tasks</div>
-          <div class="greeting-sub" id="tasksTabSub">What needs to get done.</div>
+          <div class="page-title">Tasks</div>
+          <div class="page-sub" id="tasksTabSub">What needs to get done.</div>
         </div>
         <button class="btn-new" onclick="openNewTaskModal()">+ New task</button>
       </div>
@@ -739,10 +757,10 @@ input,select,textarea{font-family:inherit}
 
     <!-- ── FINANCE TAB ── -->
     <div class="page" id="page-finance">
-      <div class="greeting-wrap" style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div class="page-header">
         <div>
-          <div class="greeting">Finance</div>
-          <div class="greeting-sub">Budget, spending, and net worth.</div>
+          <div class="page-title">Finance</div>
+          <div class="page-sub">Budget, spending, and net worth.</div>
         </div>
         <button class="hide-num-btn" onclick="toggleHideNumbers()" id="hideNumBtn">
           <svg id="hideNumIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -788,9 +806,12 @@ input,select,textarea{font-family:inherit}
 
     <!-- ── PROJECTS TAB ── -->
     <div class="page" id="page-projects">
-      <div class="greeting-wrap">
-        <div class="greeting">Projects</div>
-        <div class="greeting-sub" id="projectsTabSub">4 active builds in the shop · 0 in progress</div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Projects</div>
+          <div class="page-sub" id="projectsTabSub">—</div>
+        </div>
+        <button class="btn-new" onclick="openProjectModal()">+ New project</button>
       </div>
       <div class="proj-controls">
         <div class="proj-view-tabs">
@@ -806,7 +827,6 @@ input,select,textarea{font-family:inherit}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><polyline points="8 12 3 12"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="16" y1="18" x2="21" y2="18"/><polyline points="16 18 11 18"/></svg>
           Sort
         </button>
-        <button class="proj-new-btn" onclick="openProjectModal()">+ New project</button>
       </div>
       <div class="proj-table-wrap">
         <div class="proj-table-head">
@@ -818,10 +838,10 @@ input,select,textarea{font-family:inherit}
 
     <!-- ── GOALS TAB ── -->
     <div class="page" id="page-goals">
-      <div class="greeting-wrap" style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div class="page-header">
         <div>
-          <div class="greeting">Goals</div>
-          <div class="greeting-sub" id="goalsSub">Track what you're building toward.</div>
+          <div class="page-title">Goals</div>
+          <div class="page-sub" id="goalsSub">Track what you're building toward.</div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn-new" onclick="openWeeklyReview()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">📊 Weekly Review</button>
@@ -1240,11 +1260,7 @@ window.toggleTheme=function(){
 function updateThemeBtn(){
   const isLight=document.documentElement.getAttribute('data-theme')==='light';
   const lbl=document.getElementById('themeLabel');
-  const icon=document.getElementById('themeIcon');
-  if(lbl) lbl.textContent=isLight?'Dark Mode':'Light Mode';
-  if(icon) icon.innerHTML=isLight
-    ?'<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" fill="none" stroke="currentColor" stroke-width="2"/>'
-    :'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  if(lbl) lbl.textContent=isLight?'Dark':'Light';
 }
 // ── HIDE NUMBERS ─────────────────────────────────────────────────────
 let numbersHidden=localStorage.getItem('hideNumbers')==='1';
@@ -1276,12 +1292,12 @@ function migrateOldSavings(sv){
 
 // ── ACCOUNT COLORS by type ────────────────────────────────────────
 const ACCT_TYPE_META={
-  checking:{label:'Checking',color:'#4a90d9'},
-  savings:{label:'Savings',color:'#37d99a'},
-  investment:{label:'Investment',color:'#f59e0b'},
-  crypto:{label:'Crypto',color:'#a855f7'},
-  property:{label:'Property',color:'#06b6d4'},
-  debt:{label:'Debt',color:'#e05050'},
+  checking:{label:'Checking',color:'#0a84ff'},
+  savings:{label:'Savings',color:'#30d158'},
+  investment:{label:'Investment',color:'#ff9f0a'},
+  crypto:{label:'Crypto',color:'#bf5af2'},
+  property:{label:'Property',color:'#64d2ff'},
+  debt:{label:'Debt',color:'#ff453a'},
 };
 
 const fmt=n=>'$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
@@ -1319,12 +1335,10 @@ onAuthStateChanged(auth, async user=>{
     const appEl=document.getElementById('app');
     appEl.style.display='flex';
     appEl.style.flexDirection='column';
-    // Avatar initials
     updateThemeBtn();
     const initials=(user.displayName||'D').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    document.getElementById('userAvatar').textContent=initials;
-    const nameEl=document.getElementById('sidebarUserName');
-    if(nameEl)nameEl.textContent=(user.displayName||'Dan').split(' ')[0];
+    const avatarEl=document.getElementById('userAvatar');
+    if(avatarEl)avatarEl.textContent=initials;
     userRef=doc(db,'users',user.uid,'data','main');
     await loadData();
     renderAll();
@@ -1390,8 +1404,23 @@ function renderAll(){
 
 // ── GREETING ──────────────────────────────────────────────────────
 function renderGreeting(){
-  document.getElementById('greetingText').textContent=`${getGreeting()}, Dan`;
+  const name=(typeof auth!=='undefined'&&auth.currentUser?.displayName||'Dan').split(' ')[0];
+  document.getElementById('greetingText').textContent=`${getGreeting()}, ${name}`;
+  const dateEl=document.getElementById('heroDate');
+  if(dateEl){
+    const now=new Date();
+    dateEl.textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  }
 }
+
+function updateNavClock(){
+  const el=document.getElementById('navClock');
+  if(!el)return;
+  const now=new Date();
+  el.textContent=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+}
+setInterval(updateNavClock,1000);
+updateNavClock();
 
 // ── INTENTION ─────────────────────────────────────────────────────
 function renderIntention(){
@@ -1402,6 +1431,23 @@ window.saveIntention=()=>{
   saveData();
 };
 
+// ── GAUGE RING SVG HELPER ─────────────────────────────────────────
+function gaugeRingSVG(pct,color,label,sub,size=100){
+  const r=size*0.4,cx=size/2,cy=size/2,sw=size*0.1;
+  const circ=2*Math.PI*r;
+  const offset=circ*(1-Math.min(pct/100,1));
+  return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="gauge-svg">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${sw}" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round"
+      stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
+      transform="rotate(-90 ${cx} ${cy})" style="transition:stroke-dashoffset .8s ease"/>
+    <text x="${cx}" y="${cy-2}" text-anchor="middle" dominant-baseline="middle"
+      font-family="-apple-system,'SF Pro Display',sans-serif" font-size="${size*0.2}" font-weight="700" fill="var(--text)">${label}</text>
+    <text x="${cx}" y="${cy+size*0.2}" text-anchor="middle" dominant-baseline="middle"
+      font-family="-apple-system,'SF Pro Display',sans-serif" font-size="${size*0.11}" fill="var(--sub)">${sub}</text>
+  </svg>`;
+}
+
 // ── STATS ─────────────────────────────────────────────────────────
 function renderStats(){
   const today=todayStr();
@@ -1409,8 +1455,9 @@ function renderStats(){
   const yStr=yesterday.toISOString().slice(0,10);
 
   // Tasks done today (completed today) vs yesterday
-  const doneTasks=(appData.projects||[]).filter(t=>t.doneAt===today).length;
-  const yesterdayDone=(appData.projects||[]).filter(t=>t.doneAt===yStr).length;
+  const doneAtStr=t=>{if(!t.doneAt)return null;return typeof t.doneAt==='number'?new Date(t.doneAt).toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'}):t.doneAt;};
+  const doneTasks=(appData.projects||[]).filter(t=>t.done&&doneAtStr(t)===today).length;
+  const yesterdayDone=(appData.projects||[]).filter(t=>t.done&&doneAtStr(t)===yStr).length;
   const activeTotal=(appData.projects||[]).filter(t=>!t.done).length;
   document.getElementById('tasksDoneNum').textContent=doneTasks;
   document.getElementById('tasksTotalNum').textContent=activeTotal;
@@ -1434,13 +1481,21 @@ function renderStats(){
   renderMiniChart('tasksChart',getLast14TaskCounts());
   renderMiniChart('streakChart',getLast14HabitCounts());
   renderMiniChart('completionChart',getLast14Completion());
+
+  // Hero gauge rings
+  const totalTasks=(appData.projects||[]).filter(t=>!t.done).length+doneTasks||1;
+  const taskPct=doneTasks/totalTasks*100;
+  const gl=document.getElementById('heroGaugeLeft');
+  const gr=document.getElementById('heroGaugeRight');
+  if(gl) gl.innerHTML=gaugeRingSVG(taskPct,'var(--green)',doneTasks,'tasks done');
+  if(gr) gr.innerHTML=gaugeRingSVG(pct,'var(--blue)',pct+'%','habits done');
 }
 
 function getLast14TaskCounts(){
   return Array.from({length:14},(_,i)=>{
     const d=new Date();d.setDate(d.getDate()-13+i);
     const s=d.toISOString().slice(0,10);
-    return (appData.projects||[]).filter(t=>t.doneAt===s).length;
+    return (appData.projects||[]).filter(t=>t.done&&(typeof t.doneAt==='number'?new Date(t.doneAt).toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'}):t.doneAt)===s).length;
   });
 }
 function getLast14HabitCounts(){
@@ -1463,10 +1518,11 @@ function getLast14Completion(){
 function renderMiniChart(id,vals){
   const max=Math.max(...vals,1);
   const el=document.getElementById(id);
+  if(!el)return;
   el.innerHTML=vals.map((v,i)=>{
     const h=Math.max(Math.round(v/max*36),3);
     const isToday=i===13;
-    const color=isToday?'#37d99a':v>0?'#2a4a35':'#1e1e24';
+    const color=isToday?'#30d158':v>0?'rgba(48,209,88,.25)':'var(--border)';
     return `<div class="mini-bar" style="height:${h}px;background:${color}"></div>`;
   }).join('');
 }
@@ -1540,9 +1596,9 @@ function renderFinanceRing(){
 
   // Color
   let color,status;
-  if(diff>budget*0.03){color='#37d99a';status='under pace';}
-  else if(diff>-budget*0.05){color='#f5c518';status='on pace';}
-  else{color='#ff4d4d';status='over pace';}
+  if(diff>budget*0.03){color='#30d158';status='under pace';}
+  else if(diff>-budget*0.05){color='#ffd60a';status='on pace';}
+  else{color='#ff453a';status='over pace';}
 
   const arc=document.getElementById('ringArc');
   arc.setAttribute('stroke',color);
@@ -1566,8 +1622,10 @@ function renderFinanceRing(){
 function renderTodaySchedule(){
   const today=todayStr();
   const events=(appData.events||[]).filter(e=>e.date===today).sort((a,b)=>a.time.localeCompare(b.time));
-  document.getElementById('eventsBadge').textContent=events.length+' event'+(events.length!==1?'s':'');
+  const badge=document.getElementById('eventsBadge');
+  if(badge)badge.textContent=events.length+' event'+(events.length!==1?'s':'');
   const el=document.getElementById('todayEventsList');
+  if(!el)return;
   if(!events.length){
     el.innerHTML='<div class="evt-empty">No events today — add one below</div>';
     return;
@@ -1736,13 +1794,17 @@ function renderTaskSection(containerId,label,tasks,color){
   const el=document.getElementById(containerId);
   if(!el)return;
   if(!tasks.length){el.innerHTML='';return;}
-  const colors={red:'var(--red)',yellow:'var(--yellow)','':'var(--sub)'};
+  const dotColors={red:'var(--red)',yellow:'var(--blue)','':'var(--muted)'};
+  const dotColor=dotColors[color]||'var(--muted)';
   el.innerHTML=`<div class="tasks-section">
     <div class="tasks-section-hdr">
-      <span class="tasks-section-label" style="color:${colors[color]||'var(--sub)'}">${label}</span>
+      <span class="tasks-section-dot" style="background:${dotColor}"></span>
+      <span class="tasks-section-label">${label}</span>
       <span class="tasks-section-count">${tasks.length}</span>
     </div>
-    ${tasks.map(t=>taskRowHTML(t)).join('')}
+    <div class="tasks-section-body">
+      ${tasks.map(t=>taskRowHTML(t)).join('')}
+    </div>
   </div>`;
 }
 
@@ -1754,12 +1816,12 @@ function renderDoneSection(done){
   el.innerHTML=`<div class="tasks-section">
     <div class="tasks-section-hdr">
       <button class="done-toggle-btn" onclick="toggleDoneSection()">
-        <span>${isOpen?'▾':'▸'}</span>
-        <span class="tasks-section-label" style="color:var(--muted)">Done</span>
+        <span class="tasks-section-dot" style="background:var(--green)"></span>
+        <span class="tasks-section-label">${isOpen?'▾ ':'▸ '}Done</span>
         <span class="tasks-section-count">${done.length}</span>
       </button>
     </div>
-    ${isOpen?done.slice(0,30).map(t=>taskRowHTML(t)).join(''):''}
+    ${isOpen?`<div class="tasks-section-body">${done.slice(0,30).map(t=>taskRowHTML(t)).join('')}</div>`:''}
   </div>`;
 }
 
@@ -1966,13 +2028,13 @@ const PROJECT_STAGES={
   done:{label:'✅ Done',color:'rgba(55,217,154,.45)'},
 };
 const STAGE_STATUS={
-  planning:{label:'Planning',dotColor:'#555',bg:'var(--card2)'},
-  sourcing:{label:'Plan & Design',dotColor:'#4a90d9',bg:'rgba(74,144,217,.15)'},
-  building:{label:'Working on it',dotColor:'#e8a020',bg:'rgba(232,160,32,.13)'},
-  blocked:{label:'Waiting on Parts',dotColor:'#ff4d4d',bg:'var(--red-dim)'},
-  done:{label:'Done',dotColor:'#37d99a',bg:'var(--green-dim)'},
+  planning:{label:'Planning',dotColor:'#636366',bg:'var(--card2)'},
+  sourcing:{label:'Plan & Design',dotColor:'#0a84ff',bg:'rgba(10,132,255,.13)'},
+  building:{label:'Working on it',dotColor:'#ff9f0a',bg:'rgba(255,159,10,.13)'},
+  blocked:{label:'Waiting on Parts',dotColor:'#ff453a',bg:'var(--red-dim)'},
+  done:{label:'Done',dotColor:'#30d158',bg:'var(--green-dim)'},
 };
-const PRIORITY_COLORS={high:'#ff4d4d',medium:'#e8a020',low:'#666'};
+const PRIORITY_COLORS={high:'#ff453a',medium:'#ff9f0a',low:'#636366'};
 let projGroupOpen={};
 
 function projectRowHTML(p){
@@ -2273,7 +2335,7 @@ window.deleteAccount=function(id){
 };
 
 // ── GOALS ─────────────────────────────────────────────────────────
-const GOAL_COLORS=['#37d99a','#4a90d9','#f59e0b','#a855f7','#e05050','#06b6d4','#f472b6','#2ecc71'];
+const GOAL_COLORS=['#30d158','#0a84ff','#ff9f0a','#bf5af2','#ff453a','#64d2ff','#ff6eb4','#30d158'];
 function renderGoals(){
   const el=document.getElementById('goalsGrid');
   if(!el)return;
@@ -2571,9 +2633,9 @@ window.openEditTaskModal=function(id){
 // ── TAB SWITCHING ─────────────────────────────────────────────────
 window.switchTab=function(tab){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+tab)?.classList.add('active');
-  document.querySelectorAll('.sidebar-item[data-tab]').forEach(b=>{
+  document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>{
     if(b.dataset.tab===tab)b.classList.add('active');
   });
   if(tab==='finance')renderFinanceTab();
@@ -2588,8 +2650,8 @@ window.switchTab=function(tab){
 // ── CALENDAR ─────────────────────────────────────────────────────
 const CAL_COLORS=[
   {bg:'#3d7eff',text:'#fff'},
-  {bg:'#37d99a',text:'#000'},
-  {bg:'#f5c518',text:'#000'},
+  {bg:'#30d158',text:'#000'},
+  {bg:'#ffd60a',text:'#000'},
   {bg:'#ff6b6b',text:'#fff'},
   {bg:'#c47dff',text:'#fff'},
   {bg:'#ff9a3c',text:'#000'},
