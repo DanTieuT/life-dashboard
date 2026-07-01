@@ -219,7 +219,7 @@ function buildContext(data) {
   const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
   const monthName = now.toLocaleDateString('en-US', { month: 'long' });
 
-  const tasks = (data.focusTasks || []).filter(t => !t.done).map(t => ({ id: t.id, name: t.name, due: t.due || '' }));
+  const tasks = (data.projects || []).filter(t => !t.done).map(t => ({ id: t.id, name: t.name || '', due: t.due || '' }));
   const habits = (data.habits || []).map(h => ({ id: h.id, name: h.name, type: h.type, doneToday: !!(h.log && h.log[today]) }));
   const events = (data.events || []).filter(e => e.date === today).sort((a, b) => (a.time || '').localeCompare(b.time || '')).map(e => ({ time: e.time, name: e.name }));
   const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
@@ -293,9 +293,8 @@ When asked for a morning briefing or "what's my day look like", reply in this or
 3. Overdue or due-today tasks (if any)
 4. 📅 Your schedule today: list Dan's events from DAN'S TIMETREE CALENDAR with times. Always include the day name before dates (e.g. "Monday, Jun 29").
 5. 💜 Julia's plans today: list Julia's events from JULIA'S CALENDAR with times, clearly labeled as hers.
-6. 💪 Habits: list today's habits
-7. ─────────────────────
-8. 2-3 sentences of personal perspective on the day — what matters, what to watch out for, something grounding. Spoken directly to Dan like a trusted friend.
+6. ─────────────────────
+7. 2-3 sentences of personal perspective on the day — what matters, what to watch out for, something grounding. Spoken directly to Dan like a trusted friend.
 
 JULIA'S SCHEDULE CONTEXT:
 Use Julia's calendar proactively — not just when asked directly. If Dan mentions plans, scheduling something, or asks about free time, check Julia's schedule and mention it naturally. Examples: "Julia's free that evening" or "heads up, Julia has her orthodontist that morning." If Dan asks about a free evening or weekend, factor in Julia's events. Never present Julia's events as Dan's — always attribute them to her.
@@ -323,6 +322,8 @@ AVAILABLE ACTIONS:
 {"type":"log_habit","id":"<habit id>","name":"<habit name>"}
 {"type":"add_event","name":"...","time":"HH:MM","date":"YYYY-MM-DD"}
 {"type":"add_timetree_event","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","all_day":false,"location":"...","note":"...","recurrence":"RRULE:FREQ=WEEKLY"}
+{"type":"update_timetree_event","event_id":"<id from calendar>","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","location":"...","note":"..."}
+{"type":"delete_timetree_event","event_id":"<id from calendar>","title":"<event title for confirmation>"}
 {"type":"add_transaction","name":"...","amount":50,"category":"Food","transactionType":"out"}
 {"type":"set_intention","text":"..."}
 {"type":"add_project","emoji":"🔨","name":"...","stage":"planning","nextAction":"..."}
@@ -354,6 +355,8 @@ RULES:
   - Leave recurrence out (or null) for one-time events
   - time and end_time use 24h HH:MM format; omit both for all_day events
   - location and note are optional — include if Dan provides them
+  - To RESCHEDULE or EDIT an event, use update_timetree_event with the event_id from the calendar list. Only include fields that are changing.
+  - To DELETE an event, use delete_timetree_event with the event_id. Always confirm "Want me to delete [event]?" before deleting.
 - ALWAYS ask for missing required info before creating anything — do not guess:
   - add_task: if no due date given, ask "When is this due?" before creating it
   - add_project: if no stage given, ask what stage it's at before creating it
@@ -433,7 +436,7 @@ function findById(arr, id, name) {
   let item = (arr || []).find(x => x.id === id);
   if (!item && name) {
     const lc = name.toLowerCase();
-    item = (arr || []).find(x => x.name && x.name.toLowerCase().includes(lc));
+    item = (arr || []).find(x => (x.name || x.text || '').toLowerCase().includes(lc));
   }
   return item || null;
 }
@@ -446,12 +449,12 @@ function applyActions(data, actions) {
   for (const action of (actions || [])) {
     switch (action.type) {
       case 'add_task':
-        data.focusTasks = data.focusTasks || [];
-        data.focusTasks.push({ id: uidGen(), name: action.name, due: action.due || '', done: false, created: today });
+        data.projects = data.projects || [];
+        data.projects.push({ id: uidGen(), name: action.name, due: action.due || '', done: false, created: today });
         labels.push(`Added task: ${action.name}`);
         break;
       case 'update_task': {
-        const t = findById(data.focusTasks, action.id, action.name);
+        const t = findById(data.projects, action.id, action.name);
         if (t) {
           if (action.due) t.due = action.due;
           if (action.newName) t.name = action.newName;
@@ -460,19 +463,19 @@ function applyActions(data, actions) {
         break;
       }
       case 'complete_task': {
-        const t = findById(data.focusTasks, action.id, action.name);
+        const t = findById(data.projects, action.id, action.name);
         if (t) { t.done = true; t.completedDate = today; labels.push(`Completed: ${t.name}`); }
         else { console.warn('complete_task: no match for id=%s name=%s', action.id, action.name); }
         break;
       }
       case 'delete_task': {
-        const before = (data.focusTasks || []).length;
-        data.focusTasks = (data.focusTasks || []).filter(t => t.id !== action.id);
-        if (data.focusTasks.length === before && action.name) {
+        const before = (data.projects || []).length;
+        data.projects = (data.projects || []).filter(t => t.id !== action.id);
+        if (data.projects.length === before && action.name) {
           const lc = action.name.toLowerCase();
-          data.focusTasks = data.focusTasks.filter(t => !t.name || !t.name.toLowerCase().includes(lc));
+          data.projects = data.projects.filter(t => !t.name || !t.name.toLowerCase().includes(lc));
         }
-        const removed = before - (data.focusTasks || []).length;
+        const removed = before - (data.projects || []).length;
         if (removed > 0) labels.push(`Task removed`);
         else { console.warn('delete_task: no match for id=%s name=%s', action.id, action.name); labels.push(`Warning: could not find task to delete`); }
         break;
@@ -530,6 +533,12 @@ function applyActions(data, actions) {
       }
       case 'add_timetree_event':
         labels.push(`TimeTree: ${action.title} on ${action.date}`);
+        break;
+      case 'update_timetree_event':
+        labels.push(`Updated event: ${action.title || action.event_id}`);
+        break;
+      case 'delete_timetree_event':
+        labels.push(`Deleted event: ${action.title || action.event_id}`);
         break;
       case 'save_memory':
         labels.push(`Memory saved`);
@@ -695,6 +704,31 @@ exports.handler = async (event) => {
           console.log('TimeTree event created:', action.title);
         } catch (e) {
           console.error('TimeTree createEvent error:', e.message);
+        }
+      }
+      if (action.type === 'update_timetree_event' && action.event_id) {
+        try {
+          await timetree.updateEvent(action.event_id, {
+            title: action.title,
+            date: action.date,
+            time: action.time,
+            endDate: action.end_date,
+            endTime: action.end_time,
+            allDay: action.all_day,
+            location: action.location,
+            note: action.note,
+          });
+          console.log('TimeTree event updated:', action.event_id);
+        } catch (e) {
+          console.error('TimeTree updateEvent error:', e.message, e.body);
+        }
+      }
+      if (action.type === 'delete_timetree_event' && action.event_id) {
+        try {
+          await timetree.deleteEvent(action.event_id);
+          console.log('TimeTree event deleted:', action.event_id);
+        } catch (e) {
+          console.error('TimeTree deleteEvent error:', e.message, e.body);
         }
       }
     }

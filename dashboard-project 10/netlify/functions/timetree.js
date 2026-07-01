@@ -283,7 +283,8 @@ function eventsToBlock(events) {
     const items = evts.map(e => {
       const time = e.all_day ? '[all day]' : `${e.startTime}–${e.endTime}`;
       const loc = e.location ? ` @ ${e.location}` : '';
-      return `    • ${e.title} ${time}${loc}`;
+      const id = e.uuid ? ` [id:${e.uuid}]` : '';
+      return `    • ${e.title} ${time}${loc}${id}`;
     }).join('\n');
     return `  ${date}:\n${items}`;
   }).join('\n');
@@ -321,4 +322,47 @@ async function getEventsForRange(startMs, endMs) {
   }
 }
 
-module.exports = { getUpcomingEvents, getEventsForRange, createEvent, getCalendars, formatForPrompt, isDanEvent, authenticate };
+async function updateEvent(eventUuid, { title, date, time, endDate, endTime, allDay, location, note }) {
+  await ensureAuth();
+  const calId = await getCalendarId();
+  const body = {};
+  if (title != null) body.title = title;
+  if (allDay != null) body.all_day = allDay;
+  if (date) {
+    const isAllDay = allDay ?? false;
+    const startMs = isAllDay
+      ? Date.UTC(...date.split('-').map((n, i) => i === 1 ? +n - 1 : +n))
+      : localToUtcMs(date, time || '09:00', TZ);
+    body.start_at = startMs;
+    body.start_timezone = TZ;
+    const eDate = endDate || date;
+    const endMs = isAllDay
+      ? Date.UTC(...eDate.split('-').map((n, i) => i === 1 ? +n - 1 : +n))
+      : localToUtcMs(eDate, endTime || time || '10:00', TZ);
+    body.end_at = endMs;
+    body.end_timezone = TZ;
+  }
+  if (location != null) body.location = location;
+  if (note != null) body.note = note;
+
+  try {
+    const res = await apiReq('PUT', `/calendar/${calId}/event/${eventUuid}`, body, true);
+    return res.body.event;
+  } catch (e) {
+    if (e.statusCode === 403) { await extractCsrf(); return (await apiReq('PUT', `/calendar/${calId}/event/${eventUuid}`, body, true)).body.event; }
+    throw e;
+  }
+}
+
+async function deleteEvent(eventUuid) {
+  await ensureAuth();
+  const calId = await getCalendarId();
+  try {
+    await apiReq('DELETE', `/calendar/${calId}/event/${eventUuid}`, null, true);
+  } catch (e) {
+    if (e.statusCode === 403) { await extractCsrf(); await apiReq('DELETE', `/calendar/${calId}/event/${eventUuid}`, null, true); return; }
+    throw e;
+  }
+}
+
+module.exports = { getUpcomingEvents, getEventsForRange, createEvent, updateEvent, deleteEvent, getCalendars, formatForPrompt, isDanEvent, authenticate };
