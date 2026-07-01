@@ -665,6 +665,9 @@ input,select,textarea{font-family:inherit}
   /* ── Habits ── */
   .habits-grid{grid-template-columns:1fr}
   .habit-tab-grid{grid-template-columns:1fr}
+  /* On touch devices, show edit/delete at low opacity always so first tap logs the habit */
+  .habit-card-actions{opacity:0.4}
+  .habit-card:hover .habit-card-actions{opacity:0.4}
 
   /* ── Tasks ── */
   .tasks-quick-add{flex-wrap:wrap}
@@ -828,7 +831,10 @@ input,select,textarea{font-family:inherit}
               <div class="card-title">Today</div>
               <div class="card-sub">Your schedule at a glance</div>
             </div>
-            <span class="events-badge" id="eventsBadge">0 events</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button id="juliaToggleBtn" onclick="toggleJuliaEvents()" title="Show Julia's events" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--sub);font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;opacity:0.45;transition:opacity .15s;font-family:inherit">Julia</button>
+              <span class="events-badge" id="eventsBadge">0 events</span>
+            </div>
           </div>
           <div id="todayEventsList"></div>
           <button class="add-evt-btn" onclick="openModal('addEventModal')">+ Add event</button>
@@ -1864,9 +1870,16 @@ function renderTodaySchedule(){
   const local=(appData.events||[]).filter(e=>e.date===today).map(e=>({
     id:e.id, name:e.name, time:e.time||'', source:'local',
   }));
-  const tt=(appData.timetreeEvents||[]).filter(e=>e.startDate===today).map(e=>({
+  const tt=(appData.timetreeEvents||[]).filter(e=>{
+    if(e.startDate!==today)return false;
+    if(!showJuliaEvents&&isTTJuliaEvent(e))return false;
+    return true;
+  }).map(e=>({
     id:e.id, name:e.title, time:e.time||'', allDay:e.allDay, source:'timetree',
   }));
+  // Update Julia toggle button state
+  const jtBtn=document.getElementById('juliaToggleBtn');
+  if(jtBtn){jtBtn.style.opacity=showJuliaEvents?'1':'0.45';jtBtn.title=showJuliaEvents?'Hide Julia\'s events':'Show Julia\'s events';}
   const events=[...local,...tt].sort((a,b)=>{
     if(!a.time&&!b.time)return 0;
     if(!a.time)return 1; if(!b.time)return -1;
@@ -1926,41 +1939,77 @@ function renderHabitsGrid(containerId){
   el.innerHTML=appData.habits.map((h,idx)=>habitCardHTML(h,idx)).join('');
 }
 
+function habitSegCircle(count,target,c,size=30){
+  const cx=size/2,cy=size/2,r=size*0.42;
+  const gap=target>1?0.14:0;
+  const step=(2*Math.PI)/target;
+  const paths=Array.from({length:target},(_,i)=>{
+    const a0=-Math.PI/2+i*step+gap/2;
+    const a1=-Math.PI/2+(i+1)*step-gap/2;
+    const x1=cx+r*Math.cos(a0),y1=cy+r*Math.sin(a0);
+    const x2=cx+r*Math.cos(a1),y2=cy+r*Math.sin(a1);
+    const large=(a1-a0)>Math.PI?1:0;
+    const fill=i<count?c.dot:c.dim;
+    return `<path d="M${cx} ${cy} L${x1.toFixed(1)} ${y1.toFixed(1)} A${r.toFixed(1)} ${r.toFixed(1)} 0 ${large} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}Z" fill="${fill}" stroke="${c.bg}" stroke-width="2"/>`;
+  }).join('');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}</svg>`;
+}
+
 function habitCardHTML(h,idx){
   const colors=habitColors();
   const ci=typeof h.colorIdx==='number'?h.colorIdx:idx%colors.length;
   const c=colors[ci];
   const today=todayStr();
-  const target=h.dailyTarget||1;
+  const isWeekly=h.type==='weekly';
+  const dailyTarget=h.dailyTarget||1;
+  const weeklyTarget=h.target||1;
   const count=habitCount(h,today);
-  const done=count>=target;
-  const partial=count>0&&!done;
+  const done=isWeekly?false:(count>=dailyTarget);
+  const partial=!isWeekly&&count>0&&!done;
 
-  // Year grid dots — full=done, partial=half-opacity, empty=dim
+  // ── Year grid ─────────────────────────────────────────────────
   const dots=[];
-  for(let week=0;week<52;week++){
-    for(let day=0;day<7;day++){
-      const daysAgo=(51-week)*7+(6-day);
-      const d=new Date();d.setDate(d.getDate()-daysAgo);
-      const s=d.toLocaleDateString('en-CA');
-      const cnt=habitCount(h,s);
-      const isDone=cnt>=(h.dailyTarget||1);
-      const isPartial=cnt>0&&!isDone;
-      dots.push(`<div class="yd" style="background:${isDone?c.dot:c.dim};opacity:${isPartial?'0.5':'1'}" title="${s}"></div>`);
+  if(isWeekly){
+    // N×52 grid: weeklyTarget rows × 52 week-columns
+    for(let week=0;week<52;week++){
+      const baseAgo=(51-week)*7;
+      let sessionsThisWeek=0;
+      for(let day=0;day<7;day++){
+        const daysAgo=baseAgo+(6-day);
+        const d=new Date();d.setDate(d.getDate()-daysAgo);
+        sessionsThisWeek+=habitCount(h,d.toLocaleDateString('en-CA'));
+      }
+      sessionsThisWeek=Math.min(sessionsThisWeek,weeklyTarget);
+      for(let slot=0;slot<weeklyTarget;slot++){
+        dots.push(`<div class="yd" style="background:${slot<sessionsThisWeek?c.dot:c.dim}"></div>`);
+      }
+    }
+  } else {
+    // Daily habit: 7×52 grid, opacity scales with count/target
+    for(let week=0;week<52;week++){
+      for(let day=0;day<7;day++){
+        const daysAgo=(51-week)*7+(6-day);
+        const d=new Date();d.setDate(d.getDate()-daysAgo);
+        const cnt=habitCount(h,d.toLocaleDateString('en-CA'));
+        const dotBg=cnt>0?c.dot:c.dim;
+        const dotOp=cnt>0?(cnt/dailyTarget).toFixed(2):'1';
+        dots.push(`<div class="yd" style="background:${dotBg};opacity:${dotOp}"></div>`);
+      }
     }
   }
+  const gridStyle=isWeekly
+    ?`grid-template-rows:repeat(${weeklyTarget},1fr);aspect-ratio:${52}/${weeklyTarget}`
+    :`grid-template-rows:repeat(7,1fr);aspect-ratio:52/7`;
 
-  // Button label: "2/2 ✓", "1/2", "+"
-  let btnLabel, btnBg, btnColor, btnOpacity;
-  if(done){
-    btnLabel=target>1?`${count}/${target} ✓`:'✓';
-    btnBg=c.btn;btnColor='#000';btnOpacity='1';
-  } else if(partial){
-    btnLabel=`${count}/${target}`;
-    btnBg=c.btn;btnColor='#000';btnOpacity='0.7';
+  // ── Log button ────────────────────────────────────────────────
+  let btnContent,btnBg,btnFontSize,btnOpacity;
+  if(dailyTarget>1){
+    btnContent=habitSegCircle(count,dailyTarget,c);
+    btnBg='transparent';btnFontSize='0';btnOpacity='1';
+  } else if(done){
+    btnContent='✓';btnBg=c.btn;btnFontSize='18px';btnOpacity='1';
   } else {
-    btnLabel=target>1?`0/${target}`:'+';
-    btnBg=c.dim;btnColor='#fff';btnOpacity='0.45';
+    btnContent='+';btnBg=c.dim;btnFontSize='22px';btnOpacity='0.45';
   }
 
   return `<div class="habit-card" style="background:${c.bg}">
@@ -1975,12 +2024,12 @@ function habitCardHTML(h,idx){
         <button class="habit-action-btn habit-del-btn" onclick="deleteHabit('${h.id}')" title="Delete">✕</button>
       </div>
       <button class="habit-log-btn ${done?'logged':partial?'logged':'unlogged'}"
-        style="background:${btnBg};color:${btnColor};opacity:${btnOpacity};font-size:${target>1?'12px':'18px'};font-weight:700"
+        style="background:${btnBg};font-size:${btnFontSize};font-weight:700;opacity:${btnOpacity}"
         onclick="logHabit('${h.id}')">
-        ${btnLabel}
+        ${btnContent}
       </button>
     </div>
-    <div class="year-grid">${dots.join('')}</div>
+    <div class="year-grid" style="${gridStyle}">${dots.join('')}</div>
   </div>`;
 }
 
@@ -2990,6 +3039,20 @@ const CAL_COLORS=[
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let calEditId=null;
 let ttSyncing=false;
+let showJuliaEvents=localStorage.getItem('showJuliaEvents')==='1';
+
+function isTTJuliaEvent(e){
+  const t=(e.title||'').toLowerCase();
+  const a=(e.author||'').toLowerCase();
+  if(['julia','nails','orthodontist','clinic','earrings','suki'].some(k=>t.includes(k)||a.includes(k)))return true;
+  if(['dan','office','timesheet','rdo'].some(k=>t.includes(k)))return false;
+  return!!(a&&!a.includes('dan'));
+}
+window.toggleJuliaEvents=function(){
+  showJuliaEvents=!showJuliaEvents;
+  localStorage.setItem('showJuliaEvents',showJuliaEvents?'1':'0');
+  renderTodaySchedule();
+};
 
 async function syncTimetreeEvents(force=false){
   const SIX_HOURS=6*60*60*1000;
