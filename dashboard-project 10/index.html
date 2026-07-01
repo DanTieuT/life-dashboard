@@ -2100,7 +2100,7 @@ function taskRowHTML(t){
   const rowCls=t.done?(recentDone?'recent-done-row':'done-row'):'';
   return`<div class="task-row${rowCls?' '+rowCls:''}">
     <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</button>
-    <span class="task-label${t.done?' done-text':''}">${t.name}</span>
+    <span class="task-label${t.done?' done-text':''}" onclick="toggleTask('${t.id}')" style="cursor:pointer;flex:1">${t.name}</span>
     ${duePill}
     <button class="task-row-edit" onclick="openEditTaskModal('${t.id}')" title="Edit">✎</button>
     <button class="task-row-del" onclick="deleteTask('${t.id}')">✕</button>
@@ -2306,7 +2306,7 @@ function isRecentDone(t){
 }
 window.toggleTask=function(id){
   const t=appData.projects.find(p=>p.id===id);
-  if(t){t.done=!t.done;t.doneAt=t.done?Date.now():null;saveData();renderTasks();renderFocusTasks();renderStats();}
+  if(t){t.done=!t.done;t.doneAt=t.done?Date.now():null;t.completedDate=t.done?todayStr():null;saveData();renderTasks();renderFocusTasks();renderStats();}
 };
 window.toggleProject=window.toggleTask;
 

@@ -190,14 +190,24 @@ function wmoDesc(code){
 
 function fetchWeather(lat=38.5347, lon=-121.4442){
   return new Promise((resolve)=>{
-    const path=`/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=1`;
+    const path=`/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=1&timezone=America%2FLos_Angeles`;
     const req=https.request({hostname:'api.open-meteo.com',path,method:'GET'},(res)=>{
       let d='';
       res.on('data',c=>d+=c);
       res.on('end',()=>{
         try{
-          const c=JSON.parse(d).current;
-          resolve({temp:Math.round(c.temperature_2m),feelsLike:Math.round(c.apparent_temperature),description:wmoDesc(c.weather_code),rain:c.rain>0||c.precipitation>0,wind:Math.round(c.wind_speed_10m)});
+          const parsed=JSON.parse(d);
+          const c=parsed.current;
+          const daily=parsed.daily||{};
+          resolve({
+            temp:Math.round(c.temperature_2m),
+            feelsLike:Math.round(c.apparent_temperature),
+            description:wmoDesc(c.weather_code),
+            rain:c.rain>0||c.precipitation>0,
+            wind:Math.round(c.wind_speed_10m),
+            high:daily.temperature_2m_max?Math.round(daily.temperature_2m_max[0]):null,
+            low:daily.temperature_2m_min?Math.round(daily.temperature_2m_min[0]):null,
+          });
         }catch{resolve(null);}
       });
     });
@@ -220,6 +230,12 @@ function buildContext(data) {
   const monthName = now.toLocaleDateString('en-US', { month: 'long' });
 
   const tasks = (data.projects || []).filter(t => !t.done).map(t => ({ id: t.id, name: t.name || '', due: t.due || '' }));
+  const completedToday = (data.projects || []).filter(t => {
+    if (!t.done) return false;
+    if (t.completedDate === today) return true;
+    if (t.doneAt) return new Date(t.doneAt).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }) === today;
+    return false;
+  }).map(t => ({ id: t.id, name: t.name || '' }));
   const habits = (data.habits || []).map(h => ({ id: h.id, name: h.name, type: h.type, doneToday: !!(h.log && h.log[today]) }));
   const events = (data.events || []).filter(e => e.date === today).sort((a, b) => (a.time || '').localeCompare(b.time || '')).map(e => ({ time: e.time, name: e.name }));
   const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
@@ -236,12 +252,13 @@ function buildContext(data) {
     return { name: g.name, emoji: g.emoji || '🎯', current, target: g.target, pct: g.target ? Math.round(current / g.target * 100) : 0 };
   });
 
-  return { today, dayName, monthName, tasks, habits, events, budget, spent, projects, accounts, goals };
+  return { today, dayName, monthName, tasks, completedToday, habits, events, budget, spent, projects, accounts, goals };
 }
 
 // ── System prompt (mirrors chat.js) ──────────────────────────────
 function buildSystemPrompt(ctx) {
   const taskList = ctx.tasks.length ? ctx.tasks.map(t => `  [${t.id}] "${t.name}"${t.due ? ` due:${t.due}` : ''}`).join('\n') : '  (none)';
+  const completedTodayList = ctx.completedToday?.length ? ctx.completedToday.map(t => `  ✓ "${t.name}"`).join('\n') : '  (none)';
   const habitList = ctx.habits.length ? ctx.habits.map(h => `  [${h.id}] "${h.name}" (${h.type})${h.doneToday ? ' ✓' : ''}`).join('\n') : '  (none)';
   const accountList = (ctx.accounts||[]).length ? ctx.accounts.map(a => `  ${a.name} (${a.type}): $${a.balance.toLocaleString()}`).join('\n') : '  (none)';
   const goalList = (ctx.goals||[]).length ? ctx.goals.map(g => `  ${g.emoji} ${g.name}: $${g.current.toLocaleString()} / $${g.target.toLocaleString()} (${g.pct}%)`).join('\n') : '  (none)';
@@ -264,10 +281,13 @@ function buildSystemPrompt(ctx) {
   return `You are J.A.R.V.I.S. — Dan's personal AI assistant on Telegram. You have full visibility into his tasks, habits, schedule, finances, projects, and his TimeTree calendar. Be sharp, proactive, and genuinely helpful.
 ${memoryBlock}${ttBlock}${juliaBlock}
 Today: ${ctx.today} (${ctx.dayName})
-${ctx.weather ? `Weather: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}${ctx.weather.rain ? ', rain expected' : ''}, wind ${ctx.weather.wind}mph` : ''}
+${ctx.weather ? `Weather: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}${ctx.weather.rain ? ', rain expected' : ''}, wind ${ctx.weather.wind}mph${ctx.weather.high != null ? `, High ${ctx.weather.high}°F / Low ${ctx.weather.low}°F` : ''}` : ''}
 
 ACTIVE TASKS:
 ${taskList}
+
+COMPLETED TODAY:
+${completedTodayList}
 
 HABITS (✓ = done today):
 ${habitList}
@@ -289,8 +309,8 @@ ${projectList}
 MORNING BRIEFING FORMAT:
 When asked for a morning briefing or "what's my day look like", reply in this order using \\n for line breaks:
 1. ☀️ Good morning, Dan! It's ${ctx.dayName}, [full month + day, e.g. June 29].
-2. Weather summary (temp, feels like, conditions)
-3. Overdue or due-today tasks (if any)
+2. Weather: current conditions, High [X]°F / Low [X]°F (always include high/low from the weather data above).
+3. Tasks due today or overdue (if any) — use these indicators, no bold text: 🔴 overdue, 🟡 due tomorrow, 🟢 due today. Example: "🔴 Fix brakes  🟢 Call dentist"
 4. 📅 Your schedule today: list Dan's events from DAN'S TIMETREE CALENDAR with times. Always include the day name before dates (e.g. "Monday, Jun 29").
 5. 💜 Julia's plans today: list Julia's events from JULIA'S CALENDAR with times, clearly labeled as hers.
 6. ─────────────────────
@@ -308,6 +328,7 @@ PERSONALITY:
 - Only ask a follow-up question if you can act on the answer with one of your available actions.
 - Never repeat information already given in this conversation.
 - When telling Dan about his day, use DAN'S TIMETREE CALENDAR above as his primary schedule.
+- Write in plain text. Do NOT use markdown bold (**word**) or italic (*word*) anywhere in replies — Telegram renders these as symbols and it looks cluttered. Use plain sentences, emojis, or line breaks instead.
 
 Respond ONLY with valid JSON — no markdown, no extra text:
 {"reply":"your response","actions":[]}
