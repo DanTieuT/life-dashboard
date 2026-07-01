@@ -1473,6 +1473,7 @@ function renderAll(){
   renderStats();
   renderFocusTasks();
   renderTodaySchedule();
+  loadDashTTEvents();
   renderFinanceRing();
   renderHabitsGrid('habitsGridDash');
   renderHabitsGrid('habitsGridTab');
@@ -1688,7 +1689,17 @@ function renderFinanceRing(){
 // ── TODAY SCHEDULE ────────────────────────────────────────────────
 function renderTodaySchedule(){
   const today=todayStr();
-  const events=(appData.events||[]).filter(e=>e.date===today).sort((a,b)=>a.time.localeCompare(b.time));
+  const local=(appData.events||[]).filter(e=>e.date===today).map(e=>({
+    id:e.id, name:e.name, time:e.time||'', source:'local',
+  }));
+  const tt=dashTTEvents.map(e=>({
+    id:e.id, name:e.title, time:e.time||'', allDay:e.allDay, source:'timetree',
+  }));
+  const events=[...local,...tt].sort((a,b)=>{
+    if(!a.time&&!b.time)return 0;
+    if(!a.time)return 1; if(!b.time)return -1;
+    return a.time.localeCompare(b.time);
+  });
   const badge=document.getElementById('eventsBadge');
   if(badge)badge.textContent=events.length+' event'+(events.length!==1?'s':'');
   const el=document.getElementById('todayEventsList');
@@ -1701,21 +1712,26 @@ function renderTodaySchedule(){
   const nowMins=now.getHours()*60+now.getMinutes();
   let foundNext=false;
   const rows=events.map(e=>{
-    const [hh,mm]=e.time.split(':').map(Number);
-    const eMins=hh*60+mm;
-    const diff=eMins-nowMins;
     let status,cls;
-    if(diff<-30){status='Done';cls='done';}
-    else if(diff<=0&&diff>-30){status='Now';cls='now';}
-    else if(!foundNext){foundNext=true;status='Next';cls='next';}
-    else{status='Upcoming';cls='upcoming';}
+    if(e.allDay){status='All day';cls='upcoming';}
+    else if(!e.time){status='All day';cls='upcoming';}
+    else{
+      const [hh,mm]=(e.time||'00:00').split(':').map(Number);
+      const eMins=hh*60+mm, diff=eMins-nowMins;
+      if(diff<-30){status='Done';cls='done';}
+      else if(diff<=0&&diff>-30){status='Now';cls='now';}
+      else if(!foundNext){foundNext=true;status='Next';cls='next';}
+      else{status='Upcoming';cls='upcoming';}
+    }
     const isBold=cls==='now';
+    const ttBadge=e.source==='timetree'?`<span style="font-size:9px;font-weight:700;letter-spacing:.5px;background:rgba(10,132,255,.15);color:var(--blue);padding:2px 5px;border-radius:4px;margin-left:5px">TT</span>`:'';
+    const delBtn=e.source==='local'?`<button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--muted);font-size:14px;margin-left:6px">✕</button>`:'';
     return `<div class="evt-row">
-      <div class="evt-time">${e.time}</div>
-      <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}</div>
+      <div class="evt-time">${e.time||'—'}</div>
+      <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}${ttBadge}</div>
       <div class="evt-status">
         <span class="sbadge ${cls}">${status}</span>
-        <button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--muted);font-size:14px;margin-left:6px">✕</button>
+        ${delBtn}
       </div>
     </div>`;
   });
@@ -2780,7 +2796,7 @@ window.switchTab=function(tab){
   document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>{
     if(b.dataset.tab===tab)b.classList.add('active');
   });
-  if(tab==='dashboard'){renderTodaySchedule();renderStats();}
+  if(tab==='dashboard'){renderTodaySchedule();renderStats();loadDashTTEvents();}
   if(tab==='finance')renderFinanceTab();
   if(tab==='habits'){renderHabitsGrid('habitsGridTab');updateHabitsSummary();}
   if(tab==='tasks')renderTasks();
@@ -2806,6 +2822,23 @@ let calEditId=null;
 let calTTEvents=[];
 let calTTLoading=false;
 let calRefreshTimer=null;
+
+// Dashboard today-card TT cache
+let dashTTEvents=[];
+let dashTTLoadedDate='';
+
+async function loadDashTTEvents(){
+  const today=todayStr();
+  if(dashTTLoadedDate===today)return; // already fresh for today
+  try{
+    const y=new Date().getFullYear(), m=new Date().getMonth();
+    const res=await fetch(`/.netlify/functions/get-timetree-events?year=${y}&month=${m}`);
+    const data=await res.json();
+    dashTTEvents=(data.events||[]).filter(e=>e.startDate===today);
+    dashTTLoadedDate=today;
+  }catch(e){dashTTEvents=[];}
+  renderTodaySchedule();
+}
 
 function calDateStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
