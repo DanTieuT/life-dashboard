@@ -1949,9 +1949,11 @@ function habitRingBtn(count,target,c,size=38){
   // Gap between segments as arc-length; 0 for single-segment ring
   const gapArc=target>1?Math.min(circ*0.055,circ/target*0.22):0;
   const segArc=(circ-gapArc*target)/target;
+  // Offset each segment by half a gap so gaps land exactly at 12 o'clock / 6 o'clock
+  const halfGapDeg=target>1?(gapArc/circ)*180:0;
   let segs='';
   for(let i=0;i<target;i++){
-    const startDeg=-90+i*(360/target);
+    const startDeg=-90+i*(360/target)+halfGapDeg;
     const filled=i<count;
     segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
       stroke="${filled?c.dot:'rgba(0,0,0,0.35)'}"
