@@ -574,8 +574,9 @@ input,select,textarea{font-family:inherit}
 .bottom-nav{display:none}
 
 @media(max-width:768px){
-  /* ── Top nav: hide tabs, keep logo + avatar ── */
-  .top-nav{padding:0 16px;gap:8px;height:52px}
+  /* ── Top nav: hide logo + tabs, keep only avatar ── */
+  .top-nav{padding:0 14px;gap:8px;height:48px}
+  .nav-logo{display:none}
   .nav-tabs{display:none}
   .nav-clock{display:none}
   .nav-theme-btn{display:none}
@@ -583,26 +584,30 @@ input,select,textarea{font-family:inherit}
   /* ── Bottom tab bar ── */
   .bottom-nav{
     display:flex;position:fixed;bottom:0;left:0;right:0;
-    height:calc(58px + env(safe-area-inset-bottom));
+    height:calc(70px + env(safe-area-inset-bottom));
     padding-bottom:env(safe-area-inset-bottom);
-    background:rgba(18,18,18,.92);backdrop-filter:blur(20px) saturate(180%);
+    background:rgba(18,18,18,.95);backdrop-filter:blur(20px) saturate(180%);
     -webkit-backdrop-filter:blur(20px) saturate(180%);
     border-top:1px solid var(--border);z-index:200;
   }
-  [data-theme="light"] .bottom-nav{background:rgba(245,245,247,.92)}
+  [data-theme="light"] .bottom-nav{background:rgba(245,245,247,.95)}
   .bottom-tab{
     flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;background:none;border:none;color:var(--sub);font-size:10px;font-weight:500;
-    cursor:pointer;padding:6px 2px;font-family:inherit;transition:color .15s;min-width:0;
+    gap:4px;background:none;border:none;color:var(--sub);font-size:11px;font-weight:500;
+    cursor:pointer;padding:8px 4px;font-family:inherit;transition:color .15s;min-width:0;
   }
-  .bottom-tab svg{width:22px;height:22px;opacity:.6;flex-shrink:0;transition:opacity .15s}
-  .bottom-tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px}
+  .bottom-tab svg{width:25px;height:25px;opacity:.55;flex-shrink:0;transition:opacity .15s}
+  .bottom-tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px}
   .bottom-tab.active{color:var(--green)}
   .bottom-tab.active svg{opacity:1}
 
-  /* ── Main content: account for bottom nav + safe area ── */
-  .main{padding:16px 14px calc(74px + env(safe-area-inset-bottom))}
-  .cal-fullpage{top:52px;padding:12px 10px calc(74px + env(safe-area-inset-bottom))}
+  /* ── Main content: account for top + bottom nav + safe areas ── */
+  .main{padding:14px 14px calc(84px + env(safe-area-inset-bottom));padding-top:calc(14px + env(safe-area-inset-top))}
+  .cal-fullpage{top:48px;padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
+
+  /* ── Intention input: hidden on mobile ── */
+  .hero-intention{display:none}
+  .hero-date{margin-bottom:0}
   .chat-panel{left:10px;right:10px;width:auto;bottom:calc(64px + env(safe-area-inset-bottom))}
   .chat-fab{bottom:calc(64px + env(safe-area-inset-bottom));right:14px;width:46px;height:46px;font-size:19px}
   .toast{right:10px;left:10px;max-width:none;bottom:calc(70px + env(safe-area-inset-bottom))}
@@ -1602,7 +1607,7 @@ window.saveIntention=()=>{
 
 // ── GAUGE RING SVG HELPER ─────────────────────────────────────────
 function gaugeRingSVG(pct,color,label,sub,size=100){
-  const r=size*0.4,cx=size/2,cy=size/2,sw=size*0.1;
+  const r=size*0.38,cx=size/2,cy=size/2,sw=size*0.09;
   const circ=2*Math.PI*r;
   const offset=circ*(1-Math.min(pct/100,1));
   return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="gauge-svg">
@@ -1610,10 +1615,10 @@ function gaugeRingSVG(pct,color,label,sub,size=100){
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round"
       stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
       transform="rotate(-90 ${cx} ${cy})" style="transition:stroke-dashoffset .8s ease"/>
-    <text x="${cx}" y="${cy-2}" text-anchor="middle" dominant-baseline="middle"
-      font-family="-apple-system,'SF Pro Display',sans-serif" font-size="${size*0.2}" font-weight="700" fill="var(--text)">${label}</text>
-    <text x="${cx}" y="${cy+size*0.2}" text-anchor="middle" dominant-baseline="middle"
-      font-family="-apple-system,'SF Pro Display',sans-serif" font-size="${size*0.11}" fill="var(--sub)">${sub}</text>
+    <text x="${cx}" y="${cy-size*0.06}" text-anchor="middle" dominant-baseline="middle"
+      font-family="-apple-system,'SF Pro Display',sans-serif" font-size="${size*0.18}" font-weight="700" fill="var(--text)">${label}</text>
+    <text x="${cx}" y="${cy+size*0.13}" text-anchor="middle" dominant-baseline="middle"
+      font-family="-apple-system,'SF Pro Display',sans-serif" font-size="${size*0.09}" fill="var(--sub)">${sub}</text>
   </svg>`;
 }
 
@@ -3472,6 +3477,31 @@ async function _transcribeAudio(){
     if(voiceMode)setTimeout(startListening,300);
   }
 }
+
+// ── Mobile swipe navigation ────────────────────────────────────────
+(function(){
+  const TAB_ORDER=['dashboard','calendar','tasks','finance','goals','projects'];
+  let _sx=0,_sy=0;
+  function curTabIdx(){
+    const el=document.querySelector('.page.active');
+    if(!el)return 0;
+    return Math.max(0,TAB_ORDER.indexOf(el.id.replace('page-','')));
+  }
+  document.addEventListener('touchstart',e=>{
+    _sx=e.touches[0].clientX;
+    _sy=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-_sx;
+    const dy=Math.abs(e.changedTouches[0].clientY-_sy);
+    // Ignore short swipes, vertical scrolls, and swipes starting on modals/panels
+    if(Math.abs(dx)<55||dy>Math.abs(dx)*0.8)return;
+    if(e.target.closest('.modal,.chat-panel,.bottom-nav'))return;
+    const i=curTabIdx();
+    if(dx<0&&i<TAB_ORDER.length-1)switchTab(TAB_ORDER[i+1]);
+    else if(dx>0&&i>0)switchTab(TAB_ORDER[i-1]);
+  },{passive:true});
+})();
 
 </script>
 </body>
