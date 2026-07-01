@@ -485,6 +485,80 @@ input,select,textarea{font-family:inherit}
 .cal-color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .15s}
 .cal-color-swatch.selected{border-color:#fff;transform:scale(1.18)}
 
+/* ── PROJ CARD GRID ──────────────────────────────────────────────── */
+.proj-filter-bar{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:20px;width:fit-content}
+.proj-filter-btn{padding:6px 14px;border-radius:7px;border:none;background:none;color:var(--sub);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
+.proj-filter-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.proj-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.proj-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative}
+.proj-card:hover{transform:translateY(-1px);box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.proj-card-accent{height:4px}
+.proj-card-body{padding:18px 20px 16px}
+.proj-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:3px}
+.proj-card-name{font-size:16px;font-weight:700;line-height:1.2}
+.proj-status-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:7px;white-space:nowrap;flex-shrink:0}
+.proj-card-desc{font-size:13px;color:var(--sub);margin-bottom:14px;line-height:1.4;min-height:18px}
+.proj-prog-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:var(--sub);margin-bottom:6px}
+.proj-prog-pct{color:var(--text)}
+.proj-prog-track{height:5px;background:var(--track);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.proj-prog-fill{height:100%;border-radius:3px;transition:width .4s}
+.proj-card-foot{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--sub)}
+.proj-card-del{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 5px;border-radius:5px;opacity:0;transition:opacity .15s}
+.proj-card:hover .proj-card-del{opacity:.6}
+.proj-card-del:hover{color:var(--red);opacity:1!important}
+/* ── ACCT CARDS ──────────────────────────────────────────────────── */
+.acct-cards-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.acct-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;cursor:pointer;transition:background .15s}
+.acct-card:hover{background:var(--card2)}
+.acct-card-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:18px}
+.acct-card-name{font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct-card-num{font-size:11px;color:var(--muted);margin-bottom:8px}
+.acct-card-bal{font-size:19px;font-weight:700;line-height:1}
+.acct-card-bal.red{color:var(--red)}
+.acct-card-bar{height:3px;background:var(--track);border-radius:2px;margin-top:8px;overflow:hidden}
+.acct-card-bar-fill{height:100%;border-radius:2px}
+.acct-card-limit{font-size:11px;color:var(--muted);margin-top:4px}
+/* ── PAYDAY BAR ──────────────────────────────────────────────────── */
+.payday-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:20px}
+.payday-left{min-width:110px;flex-shrink:0}
+.payday-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.payday-days-line{display:flex;align-items:baseline;gap:5px;margin-bottom:2px}
+.payday-days-num{font-size:22px;font-weight:700;color:var(--green)}
+.payday-days-text{font-size:13px;color:var(--sub)}
+.payday-pay-date{font-size:12px;color:var(--muted)}
+.payday-right{flex:1}
+.payday-dates-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px}
+.payday-track{height:6px;background:var(--track);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.payday-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
+.payday-pct-label{font-size:11px;color:var(--sub);text-align:right}
+/* ── SPENDING CARD ───────────────────────────────────────────────── */
+.spending-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px}
+.spending-card-hdr{font-size:16px;font-weight:600;margin-bottom:18px}
+.spending-inner{display:flex;align-items:center;gap:32px}
+.spending-donut{position:relative;flex-shrink:0}
+.spending-donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.spending-donut-total{font-size:20px;font-weight:700;line-height:1.1}
+.spending-donut-of{font-size:11px;color:var(--muted);margin-top:2px}
+.spending-legend{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.spending-leg-row{display:flex;align-items:center;gap:10px}
+.spending-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.spending-leg-name{font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spending-leg-amt{font-size:13px;font-weight:600;flex-shrink:0}
+/* ── NW HERO ─────────────────────────────────────────────────────── */
+.nw-hero{margin-bottom:16px}
+.nw-hero-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.nw-hero-amount{font-size:42px;font-weight:700;letter-spacing:-1.5px;line-height:1.05}
+.nw-hero-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-dim);color:var(--green);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;margin:6px 0 5px}
+.nw-hero-sub{font-size:13px;color:var(--sub)}
+/* ── RING STAT CARDS ─────────────────────────────────────────────── */
+.ring-stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 20px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.ring-stat-title{font-size:12px;font-weight:600;letter-spacing:.3px;color:var(--sub);margin-bottom:12px;text-transform:uppercase}
+.ring-stat-sub{font-size:12px;color:var(--sub);margin-top:6px}
+.ring-stat-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:7px;margin-top:5px}
+.ring-stat-badge.green{background:var(--green-dim);color:var(--green)}
+.ring-stat-badge.red{background:var(--red-dim);color:var(--red)}
+.ring-stat-badge.yellow{background:var(--yellow-dim);color:var(--yellow)}
+
 /* ── SCROLLBAR ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -513,6 +587,10 @@ input,select,textarea{font-family:inherit}
   .proj-table-head,.proj-row{grid-template-columns:1fr 130px 80px;font-size:12px}
   .proj-table-head .proj-col-actions,.proj-row .proj-row-actions{display:none}
   .dash-proj-cols,.dash-proj-row{grid-template-columns:1fr 130px 80px}
+  .proj-card-grid{grid-template-columns:1fr}
+  .acct-cards-row{grid-template-columns:1fr 1fr}
+  .spending-inner{flex-direction:column;align-items:flex-start}
+  .nw-hero-amount{font-size:32px}
   .chat-panel{left:12px;right:12px;width:auto;bottom:84px}
   .chat-fab{bottom:76px;right:16px;width:46px;height:46px;font-size:19px}
   .toast{right:12px;left:12px;max-width:none;bottom:90px}
@@ -605,32 +683,25 @@ input,select,textarea{font-family:inherit}
         </div>
       </div>
 
-      <!-- Stats Row -->
+      <!-- Stats Row - Ring Cards -->
       <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label-row"><span class="stat-label">Tasks Done</span><span class="stat-badge" id="tasksBadge">↑ 0</span></div>
-          <div class="stat-val-row">
-            <span class="stat-val"><span id="tasksDoneNum">0</span><span class="stat-val-unit">/<span id="tasksTotalNum">0</span></span></span>
-          </div>
-          <div class="stat-context">vs yesterday</div>
-          <div class="mini-chart" id="tasksChart"></div>
+        <div class="ring-stat-card">
+          <div class="ring-stat-title">Tasks Done</div>
+          <div id="statsRingTasks"></div>
+          <div class="ring-stat-sub"><span id="tasksDoneNum">0</span> / <span id="tasksTotalNum">0</span> today</div>
+          <div class="ring-stat-badge green" id="tasksBadge">↑ 0</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label-row"><span class="stat-label">Day Streak</span><button class="stat-dots">···</button></div>
-          <div class="stat-val-row">
-            <span class="stat-val"><span id="streakNum">0</span><span class="stat-val-unit"> days</span></span>
-          </div>
-          <div class="stat-context" id="streakContext">personal best</div>
-          <div class="mini-chart" id="streakChart"></div>
+        <div class="ring-stat-card">
+          <div class="ring-stat-title">Habit Consistency</div>
+          <div id="statsRingHabits"></div>
+          <div class="ring-stat-sub"><span id="statsHabitsDoneN">0</span>/<span id="statsHabitsTotalN">0</span> today</div>
+          <div class="ring-stat-badge green" id="completionBadge"><span id="completionNum">0</span>%</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label-row"><span class="stat-label">Completion</span><button class="stat-dots">···</button></div>
-          <div class="stat-val-row">
-            <span class="stat-val"><span id="completionNum">0</span><span class="stat-val-unit">%</span></span>
-            <span class="stat-badge" id="completionBadge">↑ 0%</span>
-          </div>
-          <div class="stat-context">habits today</div>
-          <div class="mini-chart" id="completionChart"></div>
+        <div class="ring-stat-card">
+          <div class="ring-stat-title">Budget</div>
+          <div id="statsRingBudget"></div>
+          <div class="ring-stat-sub" id="statsBudgetDetail">set up budget</div>
+          <div class="ring-stat-badge green" id="statsBudgetBadge">on track</div>
         </div>
       </div>
 
@@ -643,30 +714,17 @@ input,select,textarea{font-family:inherit}
           <div id="focusTasksList"></div>
         </div>
 
-        <!-- Finance Ring -->
-        <div class="finance-card">
-          <div class="finance-card-hdr">
-            <div class="card-title">Finance</div>
-            <div class="finance-month" id="financeMonthLabel"></div>
-          </div>
-          <div id="financeRingSection">
-            <div class="ring-wrap">
-              <svg class="ring-svg" viewBox="0 0 180 180">
-                <circle class="ring-track" cx="90" cy="90" r="70"/>
-                <circle class="ring-progress" id="ringArc" cx="90" cy="90" r="70" stroke="#30d158" stroke-dasharray="439.8" stroke-dashoffset="439.8"/>
-                <circle id="paceMark" cx="90" cy="20" r="5" fill="white"/>
-              </svg>
-              <div class="ring-center">
-                <div class="ring-status" id="ringStatus">—</div>
-                <div class="ring-amount green" id="ringAmount">$—</div>
-                <div class="ring-detail" id="ringDetail">set a budget</div>
-              </div>
+        <!-- Today Schedule -->
+        <div class="today-card" style="margin-bottom:0">
+          <div class="today-hdr">
+            <div class="today-title-wrap">
+              <div class="card-title">Today</div>
+              <div class="card-sub">Your schedule at a glance</div>
             </div>
-            <div class="pace-legend"><div class="pace-dot-legend"></div>today's pace mark</div>
+            <span class="events-badge" id="eventsBadge">0 events</span>
           </div>
-          <div id="financeSetupMsg" style="display:none">
-            <div class="finance-setup">No budget set.<br><a onclick="switchTab('finance')">Set up budget →</a></div>
-          </div>
+          <div id="todayEventsList"></div>
+          <button class="add-evt-btn" onclick="openModal('addEventModal')">+ Add event</button>
         </div>
       </div>
 
@@ -762,46 +820,83 @@ input,select,textarea{font-family:inherit}
           <div class="page-title">Finance</div>
           <div class="page-sub">Budget, spending, and net worth.</div>
         </div>
-        <button class="hide-num-btn" onclick="toggleHideNumbers()" id="hideNumBtn">
-          <svg id="hideNumIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span id="hideNumLabel">Hide</span>
-        </button>
-      </div>
-      <div class="month-nav">
-        <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
-        <div class="month-label-big" id="financeTabMonth"></div>
-        <button class="month-nav-btn" onclick="changeMonth(1)">›</button>
-      </div>
-      <div class="finance-tab-grid">
-        <div class="finance-stat-card">
-          <div class="fstat-label">Income / Budget</div>
-          <div class="fstat-val" id="fstatIncome">$0</div>
-          <div class="fstat-sub" id="fstatIncomeSub">Set via ⚙ Budget</div>
-        </div>
-        <div class="finance-stat-card">
-          <div class="fstat-label">Spent this month</div>
-          <div class="fstat-val" id="fstatSpent">$0</div>
-          <div class="fstat-sub" id="fstatRemaining">$0 remaining</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="hide-num-btn" onclick="toggleHideNumbers()" id="hideNumBtn">
+            <svg id="hideNumIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span id="hideNumLabel">Hide</span>
+          </button>
         </div>
       </div>
-      <!-- Budget categories -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:16px;font-weight:600">Budget</div>
+
+      <!-- Net Worth Hero -->
+      <div class="nw-hero">
+        <div class="nw-hero-label">NET WORTH</div>
+        <div class="nw-hero-amount" id="nwHeroAmount">—</div>
+        <div class="nw-hero-badge" id="nwHeroBadge" style="display:none"></div>
+        <div class="nw-hero-sub" id="nwHeroSub"></div>
+      </div>
+
+      <!-- Account Cards -->
+      <div class="acct-cards-row" id="acctCardsRow"></div>
+
+      <!-- Month nav + action buttons -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px">
+        <div class="month-nav" style="margin:0">
+          <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
+          <div class="month-label-big" id="financeTabMonth" style="min-width:120px;text-align:center"></div>
+          <button class="month-nav-btn" onclick="changeMonth(1)">›</button>
+        </div>
         <div style="display:flex;gap:8px">
+          <button class="btn-new" onclick="openAccountModal()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">+ Account</button>
           <button class="btn-new" onclick="openBudgetModal()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">⚙ Budget</button>
           <button class="btn-new" onclick="openTxnModal()">+ Transaction</button>
         </div>
       </div>
-      <div id="budgetCats" style="margin-bottom:20px"></div>
-      <!-- Net worth -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:16px;font-weight:600">Net Worth</div>
-        <button class="btn-new" onclick="openAccountModal()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">+ Account</button>
+
+      <!-- Payday Bar -->
+      <div class="payday-card" id="paydayCard">
+        <div class="payday-left">
+          <div class="payday-label">NEXT PAYDAY</div>
+          <div class="payday-days-line">
+            <span class="payday-days-num" id="paydayDays">—</span>
+            <span class="payday-days-text" id="paydayDaysText">days</span>
+          </div>
+          <div class="payday-pay-date" id="paydayDate"></div>
+        </div>
+        <div class="payday-right">
+          <div class="payday-dates-row"><span id="paydayStart"></span><span id="paydayEnd"></span></div>
+          <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
+          <div class="payday-pct-label" id="paydayPct">50% through pay period</div>
+        </div>
       </div>
-      <div class="net-worth-card" id="netWorthCard"></div>
-      <!-- Transactions -->
-      <div style="font-size:16px;font-weight:600;margin-bottom:12px">Transactions</div>
+
+      <!-- Spending Card (donut + legend) -->
+      <div class="spending-card">
+        <div class="spending-card-hdr" id="spendingCardHdr">Spending</div>
+        <div class="spending-inner">
+          <div class="spending-donut" id="spendingDonutWrap">
+            <svg width="160" height="160" viewBox="0 0 160 160" id="spendingDonutSvg">
+              <circle cx="80" cy="80" r="56" fill="none" stroke="var(--track)" stroke-width="18"/>
+            </svg>
+            <div class="spending-donut-center">
+              <div class="spending-donut-total" id="spendingTotal">$0</div>
+              <div class="spending-donut-of" id="spendingOf">of $0</div>
+            </div>
+          </div>
+          <div class="spending-legend" id="spendingLegend"></div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div style="font-size:16px;font-weight:600;margin-bottom:12px">Recent transactions</div>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:4px 16px" id="txnList"></div>
+
+      <!-- Hidden legacy elements for JS compat -->
+      <div style="display:none">
+        <div id="fstatIncome"></div><div id="fstatSpent"></div>
+        <div id="fstatRemaining"></div><div id="fstatIncomeSub"></div>
+        <div id="budgetCats"></div><div id="netWorthCard"></div>
+      </div>
     </div>
 
     <!-- ── PROJECTS TAB ── -->
@@ -813,27 +908,14 @@ input,select,textarea{font-family:inherit}
         </div>
         <button class="btn-new" onclick="openProjectModal()">+ New project</button>
       </div>
-      <div class="proj-controls">
-        <div class="proj-view-tabs">
-          <button class="proj-view-tab active">Table</button>
-          <button class="proj-view-tab" style="color:var(--muted);opacity:.5;cursor:default">Board</button>
-          <button class="proj-view-tab" style="color:var(--muted);opacity:.5;cursor:default">Grid</button>
-        </div>
-        <button class="proj-sort-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="8" y2="18"/></svg>
-          Filter
-        </button>
-        <button class="proj-sort-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><polyline points="8 12 3 12"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="16" y1="18" x2="21" y2="18"/><polyline points="16 18 11 18"/></svg>
-          Sort
-        </button>
+      <div class="proj-filter-bar" id="projFilterBar">
+        <button class="proj-filter-btn active" onclick="setProjFilter('all')" data-filter="all">All</button>
+        <button class="proj-filter-btn" onclick="setProjFilter('on_track')" data-filter="on_track">On Track</button>
+        <button class="proj-filter-btn" onclick="setProjFilter('at_risk')" data-filter="at_risk">At Risk</button>
+        <button class="proj-filter-btn" onclick="setProjFilter('blocked')" data-filter="blocked">Blocked</button>
+        <button class="proj-filter-btn" onclick="setProjFilter('done')" data-filter="done">Completed</button>
       </div>
-      <div class="proj-table-wrap">
-        <div class="proj-table-head">
-          <span>PROJECT</span><span>STATUS</span><span>PRIORITY</span><span></span>
-        </div>
-        <div id="projectsTableBody"></div>
-      </div>
+      <div class="proj-card-grid" id="projectsCardGrid"></div>
     </div>
 
     <!-- ── GOALS TAB ── -->
@@ -1390,6 +1472,7 @@ function renderAll(){
   renderIntention();
   renderStats();
   renderFocusTasks();
+  renderTodaySchedule();
   renderFinanceRing();
   renderHabitsGrid('habitsGridDash');
   renderHabitsGrid('habitsGridTab');
@@ -1459,28 +1542,17 @@ function renderStats(){
   const doneTasks=(appData.projects||[]).filter(t=>t.done&&doneAtStr(t)===today).length;
   const yesterdayDone=(appData.projects||[]).filter(t=>t.done&&doneAtStr(t)===yStr).length;
   const activeTotal=(appData.projects||[]).filter(t=>!t.done).length;
-  document.getElementById('tasksDoneNum').textContent=doneTasks;
-  document.getElementById('tasksTotalNum').textContent=activeTotal;
+  const tdnEl=document.getElementById('tasksDoneNum');if(tdnEl)tdnEl.textContent=doneTasks;
+  const ttnEl=document.getElementById('tasksTotalNum');if(ttnEl)ttnEl.textContent=activeTotal;
   const taskDiff=doneTasks-yesterdayDone;
   const taskBadge=document.getElementById('tasksBadge');
-  taskBadge.textContent=(taskDiff>=0?'↑':'↓')+' '+Math.abs(taskDiff);
-  taskBadge.className='stat-badge'+(taskDiff<0?' red':'');
-
-  // Streak: best habit streak
-  const streaks=appData.habits.map(h=>calcStreak(h));
-  const maxStreak=Math.max(0,...streaks);
-  document.getElementById('streakNum').textContent=maxStreak;
+  if(taskBadge){taskBadge.textContent=(taskDiff>=0?'↑':'↓')+' '+Math.abs(taskDiff);taskBadge.className='ring-stat-badge'+(taskDiff<0?' red':' green');}
 
   // Completion: % of daily habits done today
   const dailyHabits=appData.habits.filter(h=>h.type==='daily');
   const doneHabits=dailyHabits.filter(h=>habitDone(h,today)).length;
   const pct=dailyHabits.length?Math.round(doneHabits/dailyHabits.length*100):0;
-  document.getElementById('completionNum').textContent=pct;
-
-  // Mini charts
-  renderMiniChart('tasksChart',getLast14TaskCounts());
-  renderMiniChart('streakChart',getLast14HabitCounts());
-  renderMiniChart('completionChart',getLast14Completion());
+  const cnEl=document.getElementById('completionNum');if(cnEl)cnEl.textContent=pct;
 
   // Hero gauge rings
   const totalTasks=(appData.projects||[]).filter(t=>!t.done).length+doneTasks||1;
@@ -1489,6 +1561,35 @@ function renderStats(){
   const gr=document.getElementById('heroGaugeRight');
   if(gl) gl.innerHTML=gaugeRingSVG(taskPct,'var(--green)',doneTasks,'tasks done');
   if(gr) gr.innerHTML=gaugeRingSVG(pct,'var(--blue)',pct+'%','habits done');
+
+  // Ring stat cards
+  const rstTasks=document.getElementById('statsRingTasks');
+  if(rstTasks) rstTasks.innerHTML=gaugeRingSVG(taskPct,'var(--blue)',doneTasks,'done',80);
+  const rstHabits=document.getElementById('statsRingHabits');
+  if(rstHabits) rstHabits.innerHTML=gaugeRingSVG(pct,'var(--cyan)',pct+'%','this week',80);
+  const sdn=document.getElementById('statsHabitsDoneN');
+  const stn=document.getElementById('statsHabitsTotalN');
+  if(sdn) sdn.textContent=doneHabits;
+  if(stn) stn.textContent=dailyHabits.length;
+
+  // Budget ring stat
+  const rstBudget=document.getElementById('statsRingBudget');
+  if(rstBudget){
+    const bMonth=currentMonth,bYear=currentYear;
+    const budgetAmt=appData.budget.monthly||appData.budget.income||0;
+    const bMt=(appData.transactions||[]).filter(t=>{const d=new Date(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
+    const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+    const bPct=budgetAmt>0?Math.min(bSpent/budgetAmt*100,100):0;
+    const bColor=bPct>=100?'var(--red)':bPct>=80?'var(--yellow)':'var(--orange)';
+    rstBudget.innerHTML=gaugeRingSVG(bPct,bColor,fmtM(bSpent),'spent',80);
+    const bd=document.getElementById('statsBudgetDetail');
+    const bb=document.getElementById('statsBudgetBadge');
+    if(bd) bd.textContent=budgetAmt>0?`${fmtM(bSpent)} / ${fmtM(budgetAmt)}`:'set up budget →';
+    if(bb){
+      bb.textContent=bPct>=100?'over budget':bPct>=80?'close to limit':'on track';
+      bb.className='ring-stat-badge '+(bPct>=100?'red':bPct>=80?'yellow':'green');
+    }
+  }
 }
 
 function getLast14TaskCounts(){
@@ -1560,62 +1661,28 @@ function renderFocusTasks(){
   }).join('');
 }
 
-// ── FINANCE RING ──────────────────────────────────────────────────
+// ── FINANCE RING (legacy, kept for any callers) ───────────────────
 function renderFinanceRing(){
-  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('financeMonthLabel').textContent=months[currentMonth]+' budget';
-  document.getElementById('financeTabMonth').textContent=months[currentMonth]+' '+currentYear;
-
+  // All ring DOM elements were removed from the dashboard; this is a no-op
+  // unless the elements exist (e.g. custom HTML adds them back).
+  const arc=document.getElementById('ringArc');
+  if(!arc)return;
   const budget=appData.budget.monthly||(appData.budget.income)||0;
   const mt=appData.transactions.filter(t=>{
     const d=new Date(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;
   });
   const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-
-  if(!budget){
-    document.getElementById('financeRingSection').style.display='none';
-    document.getElementById('financeSetupMsg').style.display='block';
-    return;
-  }
-  document.getElementById('financeRingSection').style.display='flex';
-  document.getElementById('financeRingSection').style.flexDirection='column';
-  document.getElementById('financeRingSection').style.alignItems='center';
-  document.getElementById('financeSetupMsg').style.display='none';
-
-  const circ=2*Math.PI*70; // 439.82
-  const spentRatio=Math.min(spent/budget,1);
-  const offset=circ*(1-spentRatio);
-
-  // Pace: where should spending be today?
-  const today=new Date();
-  const dim=daysInMonth(today.getFullYear(),today.getMonth());
-  const paceRatio=today.getDate()/dim;
-  const paceBudget=budget*paceRatio;
-  const diff=paceBudget-spent; // positive = under pace (good)
-  const pctDiff=Math.abs(diff)/budget;
-
-  // Color
-  let color,status;
-  if(diff>budget*0.03){color='#30d158';status='under pace';}
-  else if(diff>-budget*0.05){color='#ffd60a';status='on pace';}
-  else{color='#ff453a';status='over pace';}
-
-  const arc=document.getElementById('ringArc');
-  arc.setAttribute('stroke',color);
+  if(!budget)return;
+  const circ=2*Math.PI*70;
+  const offset=circ*(1-Math.min(spent/budget,1));
+  arc.setAttribute('stroke',spent>budget?'#ff453a':spent>budget*.8?'#ffd60a':'#30d158');
   arc.style.strokeDashoffset=offset;
-
-  // Pace mark position (SVG is rotated -90deg, so 0 = right = 12 o'clock)
-  const paceAngle=paceRatio*2*Math.PI; // 0 = right in SVG coords
-  const px=90+70*Math.cos(paceAngle);
-  const py=90+70*Math.sin(paceAngle);
   const pm=document.getElementById('paceMark');
-  pm.setAttribute('cx',px);pm.setAttribute('cy',py);
-
-  document.getElementById('ringStatus').textContent=status;
-  const amtEl=document.getElementById('ringAmount');
-  amtEl.textContent=fmt(Math.abs(diff));
-  amtEl.className='ring-amount '+(diff>budget*0.03?'green':diff>-budget*0.05?'yellow':'red');
-  document.getElementById('ringDetail').textContent=fmt(spent)+' / '+fmt(budget);
+  if(pm){
+    const today=new Date();const dim=daysInMonth(today.getFullYear(),today.getMonth());
+    const paceAngle=(today.getDate()/dim)*2*Math.PI;
+    pm.setAttribute('cx',90+70*Math.cos(paceAngle));pm.setAttribute('cy',90+70*Math.sin(paceAngle));
+  }
 }
 
 // ── TODAY SCHEDULE ────────────────────────────────────────────────
@@ -2028,14 +2095,23 @@ const PROJECT_STAGES={
   done:{label:'✅ Done',color:'rgba(55,217,154,.45)'},
 };
 const STAGE_STATUS={
-  planning:{label:'Planning',dotColor:'#636366',bg:'var(--card2)'},
-  sourcing:{label:'Plan & Design',dotColor:'#0a84ff',bg:'rgba(10,132,255,.13)'},
-  building:{label:'Working on it',dotColor:'#ff9f0a',bg:'rgba(255,159,10,.13)'},
-  blocked:{label:'Waiting on Parts',dotColor:'#ff453a',bg:'var(--red-dim)'},
-  done:{label:'Done',dotColor:'#30d158',bg:'var(--green-dim)'},
+  planning:{label:'On Track',dotColor:'#30d158',bg:'var(--green-dim)',accent:'#30d158',filterKey:'on_track'},
+  sourcing:{label:'On Track',dotColor:'#30d158',bg:'var(--green-dim)',accent:'#30d158',filterKey:'on_track'},
+  building:{label:'At Risk',dotColor:'#ff9f0a',bg:'rgba(255,159,10,.13)',accent:'#ff9f0a',filterKey:'at_risk'},
+  blocked:{label:'Blocked',dotColor:'#ff453a',bg:'var(--red-dim)',accent:'#ff453a',filterKey:'blocked'},
+  done:{label:'Completed',dotColor:'#0a84ff',bg:'var(--blue-dim)',accent:'#0a84ff',filterKey:'done'},
 };
 const PRIORITY_COLORS={high:'#ff453a',medium:'#ff9f0a',low:'#636366'};
 let projGroupOpen={};
+let currentProjFilter='all';
+
+window.setProjFilter=function(f){
+  currentProjFilter=f;
+  document.querySelectorAll('.proj-filter-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.filter===f);
+  });
+  renderProjects();
+};
 
 function projectRowHTML(p){
   const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
@@ -2060,40 +2136,50 @@ function projectRowHTML(p){
 function renderProjects(){
   const all=appData.userProjects||[];
   const active=all.filter(p=>p.stage!=='done');
-  const inProgress=active.filter(p=>p.stage==='building'||p.stage==='blocked');
+  const atRisk=all.filter(p=>p.stage==='building'||p.stage==='blocked');
+  const done=all.filter(p=>p.stage==='done');
   // Subtitle
   const sub=document.getElementById('projectsTabSub');
-  if(sub)sub.textContent=`${active.length} active build${active.length!==1?'s':''} in the shop · ${inProgress.length} in progress`;
-  // Table body
-  const tableEl=document.getElementById('projectsTableBody');
-  if(!tableEl)return;
-  if(!all.length){
-    tableEl.innerHTML=`<div class="projects-empty-row">No projects yet — hit <strong>+ New project</strong> to get started 🚀</div>`;
+  if(sub)sub.textContent=`${active.length} active · ${atRisk.length} need attention · ${done.length} completed`;
+  // Card grid
+  const gridEl=document.getElementById('projectsCardGrid');
+  if(!gridEl)return;
+  let filtered=all;
+  if(currentProjFilter==='on_track') filtered=all.filter(p=>STAGE_STATUS[p.stage]?.filterKey==='on_track');
+  else if(currentProjFilter==='at_risk') filtered=all.filter(p=>STAGE_STATUS[p.stage]?.filterKey==='at_risk');
+  else if(currentProjFilter==='blocked') filtered=all.filter(p=>p.stage==='blocked');
+  else if(currentProjFilter==='done') filtered=all.filter(p=>p.stage==='done');
+  if(!filtered.length){
+    gridEl.innerHTML=`<div class="projects-empty-row" style="grid-column:1/-1;padding:48px 20px;text-align:center;color:var(--muted);font-size:14px">No projects${currentProjFilter!=='all'?' in this category':''} yet — hit <strong>+ New project</strong> to get started</div>`;
+    renderDashProjectsWidget();
     return;
   }
-  const groups=[
-    {key:'in_progress',label:'In progress',stages:['building','blocked']},
-    {key:'planning',label:'Planning',stages:['planning','sourcing']},
-    {key:'done',label:'Done',stages:['done']},
-  ];
-  let html='';
-  for(const group of groups){
-    const projects=all.filter(p=>group.stages.includes(p.stage));
-    if(!projects.length)continue;
-    const isOpen=projGroupOpen[group.key]!==false;
-    html+=`<div>
-      <button class="proj-group-hdr" onclick="toggleProjGroup('${group.key}')">
-        <span class="proj-group-chevron" id="chevron-${group.key}" style="${isOpen?'':'transform:rotate(-90deg)'}"">▾</span>
-        ${group.label}
-        <span class="proj-group-count">${projects.length}</span>
-      </button>
-      <div id="projgroup-${group.key}" style="${isOpen?'':'display:none'}">
-        ${projects.map(projectRowHTML).join('')}
-      </div>
-    </div>`;
-  }
-  tableEl.innerHTML=html;
+  gridEl.innerHTML=filtered.map(projectCardHTML).join('');
   renderDashProjectsWidget();
+}
+
+function projectCardHTML(p){
+  const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
+  // Derive a fake progress % from stage for visual polish
+  const stagePct={planning:10,sourcing:30,building:60,blocked:20,done:100};
+  const pct=stagePct[p.stage]||10;
+  const nextAction=p.nextAction?`<span style="display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>${p.nextAction}</span>`:'';
+  return`<div class="proj-card" onclick="openProjectModal('${p.id}')">
+    <div class="proj-card-accent" style="background:${s.accent}"></div>
+    <div class="proj-card-body">
+      <div class="proj-card-top">
+        <div class="proj-card-name">${p.name}</div>
+        <span class="proj-status-badge" style="background:${s.bg};color:${s.dotColor}">${s.label}</span>
+      </div>
+      <div class="proj-card-desc">${p.category||p.nextAction||'—'}</div>
+      <div class="proj-prog-row"><span style="font-weight:600;color:var(--sub)">Progress</span><span class="proj-prog-pct">${pct}%</span></div>
+      <div class="proj-prog-track"><div class="proj-prog-fill" style="width:${pct}%;background:${s.accent}"></div></div>
+      <div class="proj-card-foot">
+        <span>${nextAction}</span>
+        <button class="proj-card-del" onclick="event.stopPropagation();deleteUserProject('${p.id}')">✕</button>
+      </div>
+    </div>
+  </div>`;
 }
 
 window.toggleProjGroup=function(key){
@@ -2195,74 +2281,130 @@ window.deleteUserProject=function(id){
 // ── FINANCE TAB ───────────────────────────────────────────────────
 function renderFinanceTab(){
   renderFinanceRing();
+  updateHideNumBtn();
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('financeTabMonth').textContent=months[currentMonth]+' '+currentYear;
+  const monthEl=document.getElementById('financeTabMonth');
+  if(monthEl) monthEl.textContent=months[currentMonth]+' '+currentYear;
+
   const mt=appData.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
   const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-  const incomeIn=mt.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
   const budget=appData.budget.monthly||appData.budget.income||0;
-  const total=budget+incomeIn;
-  const remaining=total-spent;
-  document.getElementById('fstatIncome').textContent=fmtM(total);
-  document.getElementById('fstatIncomeSub').textContent=appData.budget.income>0?'Base: '+fmtM(appData.budget.income):'Set via ⚙ Budget';
-  document.getElementById('fstatSpent').textContent=fmtM(spent);
-  document.getElementById('fstatRemaining').textContent=fmtM(remaining)+' remaining';
-  updateHideNumBtn();
-  // Budget categories
-  const catsEl=document.getElementById('budgetCats');
-  const catEntries=Object.entries(appData.budget.categories||{});
-  if(!catEntries.length){catsEl.innerHTML='<div style="color:var(--muted);font-size:13px">No categories set. Use ⚙ Budget to configure.</div>';return;}
-  catsEl.innerHTML=catEntries.map(([cat,limit])=>{
-    const catSpent=mt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0);
-    const pct=limit>0?Math.min(catSpent/limit*100,100):0;
-    const fillCls=pct>=100?'over':pct>=80?'warn':'';
-    return `<div class="budget-cat">
-      <div class="budget-cat-row">
-        <span class="budget-cat-name">${CATS_EMOJI[cat]||'📦'} ${cat}</span>
-        <span class="budget-amounts">${fmtM(catSpent)} / ${fmtM(limit)}</span>
-      </div>
-      <div class="budget-bar-track"><div class="budget-bar-fill ${fillCls}" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-  // Net worth — dynamic accounts
+
+  // ── Net Worth Hero ──────────────────────────────────────────────
   const accounts=appData.accounts||[];
-  const fmtDate=d=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
   const assets=accounts.filter(a=>a.type!=='debt').reduce((s,a)=>s+a.balance,0);
   const liabilities=accounts.filter(a=>a.type==='debt').reduce((s,a)=>s+a.balance,0);
   const netWorth=assets-liabilities;
-  const nwEl=document.getElementById('netWorthCard');
-  if(!accounts.length){
-    nwEl.innerHTML=`<div style="color:var(--muted);font-size:13px;padding:12px 0">No accounts yet. Click <b>+ Account</b> to add one.</div>`;
-  } else {
-    nwEl.innerHTML=accounts.map(a=>{
-      const meta=ACCT_TYPE_META[a.type]||{label:a.type,color:'#888'};
-      return `<div class="nw-row">
-        <div style="flex:1">
-          <div class="nw-label">${a.name} <span class="nw-acct-type">${meta.label}</span></div>
-          ${a.updatedAt?`<div class="nw-date">Updated ${fmtDate(a.updatedAt)}</div>`:''}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="nw-val" style="color:${a.type==='debt'?'var(--red)':'inherit'}">${a.type==='debt'?'-':''}${fmtM(a.balance)}</div>
-          <button class="nw-edit-btn" onclick="openAccountModal('${a.id}')">✏️</button>
-          <button class="nw-edit-btn" onclick="deleteAccount('${a.id}')" style="color:var(--red)">✕</button>
-        </div>
-      </div>`;
-    }).join('')+`
-    <div class="nw-row" style="border-top:2px solid var(--border);margin-top:4px">
-      <div style="display:flex;gap:16px;font-size:12px;color:var(--sub)">
-        <span>Assets: <b style="color:var(--text)">${fmtM(assets)}</b></span>
-        ${liabilities>0?`<span>Debt: <b style="color:var(--red)">${fmtM(liabilities)}</b></span>`:''}
-      </div>
-      <div class="nw-val nw-total">${fmtM(netWorth)}</div>
-    </div>`;
+  const nwAmount=document.getElementById('nwHeroAmount');
+  const nwBadge=document.getElementById('nwHeroBadge');
+  const nwSub=document.getElementById('nwHeroSub');
+  if(nwAmount) nwAmount.textContent=fmtM(netWorth);
+  if(nwBadge){
+    nwBadge.style.display=accounts.length?'inline-flex':'none';
+    nwBadge.textContent='↑ '+fmtM(spent)+' this month';
   }
-  // Transactions
+  if(nwSub) nwSub.textContent=accounts.length?`${fmtM(assets)} assets · `+(liabilities>0?`${fmtM(liabilities)} liabilities`:'no liabilities'):'Add accounts to track net worth';
+
+  // ── Account Cards ───────────────────────────────────────────────
+  const acctRow=document.getElementById('acctCardsRow');
+  if(acctRow){
+    if(!accounts.length){
+      acctRow.innerHTML=`<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:13px">No accounts yet — click <b>+ Account</b> to add one.</div>`;
+    } else {
+      const ACCT_ICON={checking:'💳',savings:'🛡️',investment:'📈',crypto:'₿',property:'🏠',debt:'💸'};
+      acctRow.innerHTML=accounts.map(a=>{
+        const meta=ACCT_TYPE_META[a.type]||{label:a.type,color:'#888'};
+        const isDebt=a.type==='debt';
+        const last4=a.id.slice(-4).toUpperCase();
+        const creditLimit=a.creditLimit||0;
+        const barPct=isDebt&&creditLimit>0?Math.min(a.balance/creditLimit*100,100):0;
+        return`<div class="acct-card" onclick="openAccountModal('${a.id}')">
+          <div class="acct-card-icon" style="background:${meta.color}22">${ACCT_ICON[a.type]||'💰'}</div>
+          <div class="acct-card-name">${a.name}</div>
+          <div class="acct-card-num">•••• ${last4}</div>
+          <div class="acct-card-bal${isDebt?' red':''}">${isDebt?'-':''}${fmtM(a.balance)}</div>
+          ${isDebt&&creditLimit>0?`
+            <div class="acct-card-bar"><div class="acct-card-bar-fill" style="width:${barPct}%;background:${meta.color}"></div></div>
+            <div class="acct-card-limit">${fmtM(a.balance)} of ${fmtM(creditLimit)} limit</div>
+          `:''}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── Payday Bar ──────────────────────────────────────────────────
+  const now=new Date();
+  const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
+  const dayOfMonth=currentMonth===now.getMonth()&&currentYear===now.getFullYear()?now.getDate():1;
+  const paidDay=1; // pay period starts 1st
+  const nextPayDay=new Date(currentYear,currentMonth+1,1);
+  const daysLeft=Math.max(0,Math.ceil((nextPayDay-now)/(1000*60*60*24)));
+  const pct=Math.round((dayOfMonth-1)/(daysInMonth-1)*100);
+  const startLabel=months[currentMonth].slice(0,3)+' 1';
+  const endLabel=months[(currentMonth+1)%12].slice(0,3)+' 1';
+  const pEl=id=>document.getElementById(id);
+  if(pEl('paydayDays')) pEl('paydayDays').textContent=daysLeft;
+  if(pEl('paydayDaysText')) pEl('paydayDaysText').textContent='days';
+  if(pEl('paydayDate')) pEl('paydayDate').textContent=endLabel+' '+currentYear;
+  if(pEl('paydayStart')) pEl('paydayStart').textContent=startLabel+' '+currentYear;
+  if(pEl('paydayEnd')) pEl('paydayEnd').textContent=endLabel+' '+currentYear;
+  if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
+  if(pEl('paydayPct')) pEl('paydayPct').textContent=pct+'% through pay period';
+
+  // ── Spending Donut ──────────────────────────────────────────────
+  const catEntries=Object.entries(appData.budget.categories||{});
+  const spendingHdr=document.getElementById('spendingCardHdr');
+  if(spendingHdr) spendingHdr.textContent=months[currentMonth]+' spending';
+  const donutSvg=document.getElementById('spendingDonutSvg');
+  const legendEl=document.getElementById('spendingLegend');
+  const totalEl=document.getElementById('spendingTotal');
+  const ofEl=document.getElementById('spendingOf');
+  if(totalEl) totalEl.textContent=fmtM(spent);
+  if(ofEl) ofEl.textContent='of '+fmtM(budget||spent||1);
+
+  // Build donut segments from category spending
+  const DONUT_COLORS=['#ff453a','#ff9f0a','#30d158','#bf5af2','#0a84ff','#64d2ff','#ffd60a','#ff6b35'];
+  const catSpends=catEntries.map(([cat,limit],i)=>{
+    const catSpent=mt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0);
+    return{cat,limit,catSpent,color:DONUT_COLORS[i%DONUT_COLORS.length]};
+  }).filter(c=>c.catSpent>0).sort((a,b)=>b.catSpent-a.catSpent);
+
+  if(donutSvg){
+    const r=56,cx=80,cy=80,circ=2*Math.PI*r;
+    const total=catSpends.reduce((s,c)=>s+c.catSpent,0)||1;
+    let offset=0;
+    let segs='<circle cx="80" cy="80" r="56" fill="none" stroke="var(--track)" stroke-width="18"/>';
+    for(const c of catSpends){
+      const dash=(c.catSpent/total)*circ;
+      const gap=circ-dash;
+      segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.color}" stroke-width="18" stroke-linecap="butt"
+        stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"
+        transform="rotate(-90 ${cx} ${cy})"/>`;
+      offset+=dash;
+    }
+    donutSvg.innerHTML=segs;
+  }
+  if(legendEl){
+    if(!catSpends.length){
+      legendEl.innerHTML='<div style="color:var(--muted);font-size:13px">No spending this month</div>';
+    } else {
+      legendEl.innerHTML=catSpends.slice(0,6).map(c=>`
+        <div class="spending-leg-row">
+          <div class="spending-leg-dot" style="background:${c.color}"></div>
+          <div class="spending-leg-name">${CATS_EMOJI[c.cat]||''} ${c.cat}</div>
+          <div class="spending-leg-amt">${fmtM(c.catSpent)}</div>
+        </div>`).join('');
+    }
+  }
+
+  // ── Transactions ────────────────────────────────────────────────
   const sorted=[...mt].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,30);
-  document.getElementById('txnList').innerHTML=!sorted.length
+  const txnEl=document.getElementById('txnList');
+  if(txnEl) txnEl.innerHTML=!sorted.length
     ?'<div class="empty-state" style="padding:30px">No transactions this month</div>'
     :sorted.map(t=>`<div class="txn-item">
       <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>
-      <div class="txn-name-col"><div class="txn-name">${t.name}</div><div class="txn-cat">${t.category} · ${t.date}</div></div>
+      <div class="txn-name-col"><div class="txn-name">${t.name}</div><div class="txn-cat">${t.category||'Other'} · ${t.date}</div></div>
       <span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>
       <button class="txn-del" onclick="deleteTxn('${t.id}')">✕</button>
     </div>`).join('');
@@ -2638,6 +2780,7 @@ window.switchTab=function(tab){
   document.querySelectorAll('.nav-tab[data-tab]').forEach(b=>{
     if(b.dataset.tab===tab)b.classList.add('active');
   });
+  if(tab==='dashboard'){renderTodaySchedule();renderStats();}
   if(tab==='finance')renderFinanceTab();
   if(tab==='habits'){renderHabitsGrid('habitsGridTab');updateHabitsSummary();}
   if(tab==='tasks')renderTasks();
