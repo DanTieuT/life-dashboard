@@ -570,16 +570,49 @@ input,select,textarea{font-family:inherit}
 ::-webkit-scrollbar-thumb{background:var(--card2);border-radius:3px}
 
 /* ── MOBILE ──────────────────────────────────────────────────────── */
+/* ── PROFILE DROPDOWN ───────────────────────────────────────────── */
+.pdd-backdrop{display:none;position:fixed;inset:0;z-index:210}
+.pdd-backdrop.open{display:block}
+.profile-dropdown{
+  display:none;position:fixed;top:52px;right:14px;z-index:220;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:6px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.5);
+  transform-origin:top right;
+}
+.profile-dropdown.open{display:block}
+.pdd-item{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-radius:10px;cursor:pointer;transition:background .12s;
+  font-size:14px;color:var(--text);background:none;border:none;width:100%;
+  font-family:inherit;text-align:left}
+.pdd-item:hover{background:var(--card2)}
+.pdd-divider{height:1px;background:var(--border);margin:4px 0}
+.pdd-label{font-size:14px;color:var(--text)}
+.pdd-signout{color:var(--red)!important;justify-content:flex-start}
+/* iOS-style toggle switch */
+.pdd-toggle{
+  width:44px;height:26px;border-radius:13px;background:var(--card2);
+  border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;
+  padding:0;
+}
+.pdd-toggle.on{background:var(--green)}
+.pdd-knob{
+  position:absolute;top:3px;left:3px;width:20px;height:20px;
+  border-radius:50%;background:#fff;transition:transform .2s;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+.pdd-toggle.on .pdd-knob{transform:translateX(18px)}
+
 /* ── BOTTOM NAV (mobile only) ───────────────────────────────────── */
 .bottom-nav{display:none}
 
 @media(max-width:768px){
-  /* ── Top nav: hide logo + tabs, keep only avatar ── */
-  .top-nav{padding:0 14px;gap:8px;height:48px}
+  /* ── Top nav: transparent floating bar, avatar only ── */
+  .top-nav{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-bottom:none!important;height:52px;padding:0 14px;pointer-events:none}
   .nav-logo{display:none}
   .nav-tabs{display:none}
   .nav-clock{display:none}
   .nav-theme-btn{display:none}
+  .nav-right{pointer-events:auto}
 
   /* ── Bottom tab bar ── */
   .bottom-nav{
@@ -717,9 +750,23 @@ input,select,textarea{font-family:inherit}
     <div class="nav-right">
       <span class="nav-clock" id="navClock"></span>
       <button class="nav-theme-btn" onclick="toggleTheme()" id="themeToggleBtn"><span id="themeLabel">Light</span></button>
-      <div class="nav-avatar" id="userAvatar" onclick="openModal('signOutModal')"></div>
+      <div class="nav-avatar" id="userAvatar" onclick="toggleProfileDropdown()"></div>
     </div>
   </header>
+  <!-- Profile dropdown -->
+  <div class="pdd-backdrop" id="pddBackdrop" onclick="closeProfileDropdown()"></div>
+  <div class="profile-dropdown" id="profileDropdown">
+    <div class="pdd-item" style="cursor:default;pointer-events:none">
+      <span class="pdd-label" style="font-weight:600">Settings</span>
+    </div>
+    <div class="pdd-divider"></div>
+    <div class="pdd-item" onclick="pddToggleTheme()">
+      <span class="pdd-label">Dark Mode</span>
+      <button class="pdd-toggle" id="pddThemeToggle" onclick="event.stopPropagation();pddToggleTheme()"><div class="pdd-knob"></div></button>
+    </div>
+    <div class="pdd-divider"></div>
+    <button class="pdd-item pdd-signout" onclick="closeProfileDropdown();openModal('signOutModal')">Sign Out</button>
+  </div>
 
   <!-- MAIN -->
   <div class="main-with-sidebar">
@@ -1431,6 +1478,7 @@ function updateThemeBtn(){
   const isLight=document.documentElement.getAttribute('data-theme')==='light';
   const lbl=document.getElementById('themeLabel');
   if(lbl) lbl.textContent=isLight?'Dark':'Light';
+  updateThemeSwitch();
 }
 // ── HIDE NUMBERS ─────────────────────────────────────────────────────
 let numbersHidden=localStorage.getItem('hideNumbers')==='1';
@@ -1521,6 +1569,40 @@ onAuthStateChanged(auth, async user=>{
 document.getElementById('signInBtn').onclick=()=>signInWithPopup(auth,new GoogleAuthProvider());
 
 window.doSignOut=()=>{signOut(auth);closeModal('signOutModal');};
+
+// ── PROFILE DROPDOWN ──────────────────────────────────────────────
+window.toggleProfileDropdown=function(){
+  const dd=document.getElementById('profileDropdown');
+  const bd=document.getElementById('pddBackdrop');
+  if(!dd)return;
+  const isOpen=dd.classList.contains('open');
+  if(isOpen){closeProfileDropdown();}
+  else{openProfileDropdown();}
+};
+window.openProfileDropdown=function(){
+  const dd=document.getElementById('profileDropdown');
+  const bd=document.getElementById('pddBackdrop');
+  if(!dd)return;
+  updateThemeSwitch();
+  dd.classList.add('open');
+  if(bd)bd.classList.add('open');
+};
+window.closeProfileDropdown=function(){
+  const dd=document.getElementById('profileDropdown');
+  const bd=document.getElementById('pddBackdrop');
+  if(dd)dd.classList.remove('open');
+  if(bd)bd.classList.remove('open');
+};
+window.pddToggleTheme=function(){
+  toggleTheme();
+  updateThemeSwitch();
+};
+function updateThemeSwitch(){
+  const toggle=document.getElementById('pddThemeToggle');
+  if(!toggle)return;
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  toggle.classList.toggle('on',isDark);
+}
 
 // ── DATA ──────────────────────────────────────────────────────────
 async function loadData(){
