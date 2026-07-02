@@ -728,6 +728,33 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .show-archived-btn{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:6px 0;font-family:inherit;transition:color .15s}
 .show-archived-btn:hover{color:var(--sub)}
 
+/* ── TASK NOTES (#13) ───────────────────────────────────────────── */
+.task-notes-indicator{font-size:12px;cursor:pointer;padding:2px 4px;opacity:.5;transition:opacity .15s;flex-shrink:0;line-height:1}
+.task-notes-indicator:hover{opacity:1}
+.task-notes-expand{font-size:12px;color:var(--sub);padding:4px 16px 8px 50px;line-height:1.5;display:none;word-break:break-word}
+.task-notes-expand.open{display:block}
+.task-row.has-notes .task-notes-indicator{opacity:.7}
+
+/* ── RECURRING TASK BADGE (#12) ─────────────────────────────────── */
+.recur-badge{font-size:11px;color:var(--blue);opacity:.7;flex-shrink:0;margin-right:2px}
+
+/* ── TASK DRAG REORDER (#17) ────────────────────────────────────── */
+.task-drag-handle{color:var(--muted);font-size:14px;cursor:grab;padding:0 4px;
+  flex-shrink:0;opacity:0.2;user-select:none;display:none;align-items:center;
+  touch-action:none}
+.tasks-section-body:hover .task-drag-handle,
+.task-row:hover .task-drag-handle{display:flex}
+.task-row.task-dragging{opacity:0.4}
+.task-row.task-drag-over{outline:2px dashed var(--green);outline-offset:-2px;border-radius:4px}
+
+/* ── SWIPE TO DELETE (#80) ──────────────────────────────────────── */
+.task-row-swipe-wrap{position:relative;overflow:hidden}
+.task-row-delete-reveal{position:absolute;right:0;top:0;bottom:0;width:80px;
+  background:var(--red);display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:13px;font-weight:600;border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  pointer-events:none}
+.task-row-swipe-inner{position:relative;background:var(--card);transition:transform .15s ease;will-change:transform}
+
 /* ── JARVIS HISTORY WIDGET ───────────────────────────────────────── */
 .jarvis-history-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
 .jarvis-history-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;cursor:pointer}
@@ -1164,6 +1191,10 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
         <button class="btn-new" onclick="openAddHabitModal()">+ New habit</button>
       </div>
       <div class="habit-tab-grid" id="habitsGridTab"></div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="show-archived-btn" id="showArchivedHabitsBtn" onclick="toggleShowArchivedHabits()">Show archived habits</button>
+      </div>
+      <div class="habit-tab-grid" id="habitsGridArchived" style="display:none;margin-top:10px;opacity:.55"></div>
     </div>
 
     <!-- ── FINANCE TAB ── -->
@@ -1448,6 +1479,7 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('addHabitModal')">Cancel</button>
+      <button class="btn-cancel" id="habitArchiveBtn" style="color:var(--muted);display:none" onclick="archiveHabitFromModal()">Archive</button>
       <button class="btn-save" id="habitModalSaveBtn" onclick="saveHabitModal()">Add Habit</button>
     </div>
   </div>
@@ -1460,6 +1492,19 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
     <input type="hidden" id="editTaskId">
     <div class="form-group"><label class="form-label">What needs to get done?</label><input class="form-input" id="modalTaskName" placeholder="e.g. Replace air filter" onkeydown="if(event.key==='Enter')saveModalTask()"></div>
     <div class="form-group"><label class="form-label">Due date</label><input class="form-input" id="modalTaskDue" type="date"></div>
+    <div class="form-group">
+      <label class="form-label">Repeats</label>
+      <select class="form-select" id="modalTaskRecurrence">
+        <option value="">None</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <textarea class="form-input" id="modalTaskNotes" placeholder="Details, context..." rows="2" style="resize:vertical"></textarea>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('newTaskModal')">Cancel</button>
       <button class="btn-save" id="taskModalSaveBtn" onclick="saveModalTask()">Add task</button>
@@ -2401,8 +2446,8 @@ function renderHabitsGrid(containerId){
     el.innerHTML='<div class="habit-empty">No habits yet — add your first one above!</div>';
     return;
   }
-  // Sort by order property if set
-  const sorted=[...appData.habits].sort((a,b)=>{
+  // Filter archived, sort by order property
+  const sorted=[...appData.habits].filter(h=>!h.archived).sort((a,b)=>{
     const ao=typeof a.order==='number'?a.order:9999;
     const bo=typeof b.order==='number'?b.order:9999;
     return ao-bo;
@@ -2548,7 +2593,8 @@ function habitDone(h,dateStr){
 
 function updateHabitsSummary(){
   const today=todayStr();
-  const all=appData.habits;
+  // Exclude archived habits (batch-2 feature)
+  const all=(appData.habits||[]).filter(h=>!h.archived);
   const done=all.filter(h=>{
     const cnt=habitCount(h,today);
     return h.type==='weekly'||h.type==='monthly'?cnt>0:cnt>=(h.dailyTarget||1);
@@ -2738,10 +2784,16 @@ function renderTasks(){
     if(!a.done&&b.done)return -1;
     return 0;
   };
-  const overdue=all.filter(t=>active(t)&&t.due&&t.due<today).sort((a,b)=>doneSort(a,b)||( a.due<b.due?-1:1));
-  const todayTasks=all.filter(t=>active(t)&&t.due===today).sort(doneSort);
+  const orderSort=(a,b)=>{
+    const ao=typeof a.order==='number'?a.order:9999;
+    const bo=typeof b.order==='number'?b.order:9999;
+    return ao-bo;
+  };
+  const overdue=all.filter(t=>active(t)&&t.due&&t.due<today).sort((a,b)=>doneSort(a,b)||orderSort(a,b)||(a.due<b.due?-1:1));
+  const todayTasks=all.filter(t=>active(t)&&t.due===today).sort((a,b)=>doneSort(a,b)||orderSort(a,b));
   const upcoming=all.filter(t=>active(t)&&(!t.due||t.due>today)).sort((a,b)=>{
     const ds=doneSort(a,b);if(ds)return ds;
+    const os=orderSort(a,b);if(os)return os;
     if(!a.due&&!b.due)return 0;if(!a.due)return 1;if(!b.due)return -1;return a.due<b.due?-1:1;
   });
   const done=all.filter(t=>t.done&&!isRecentDone(t)).sort((a,b)=>(b.doneAt||0)>(a.doneAt||0)?1:-1);
@@ -2749,6 +2801,9 @@ function renderTasks(){
   renderTaskSection('tasksTodaySection','Today',todayTasks,'yellow');
   renderTaskSection('tasksUpcomingSection','Upcoming',upcoming,'');
   renderDoneSection(done);
+  // Attach drag + swipe listeners after render (batch-2)
+  document.querySelectorAll('.tasks-section-body').forEach(el=>{ if(typeof attachTaskDragListeners==='function')attachTaskDragListeners(el); });
+  document.querySelectorAll('.task-row[data-task-id]').forEach(row=>{ if(typeof attachSwipeDelete==='function')attachSwipeDelete(row); });
   // Nav badge
   const urgentCount=overdue.filter(t=>!t.done).length+todayTasks.filter(t=>!t.done).length;
   const badge=document.getElementById('taskNavBadge');
@@ -5028,6 +5083,299 @@ window._patchedTaskRowHTML=taskRowHTMLWithConfirm;
     },150);
   });
 })();
+
+// ── BATCH 2: HABIT ARCHIVING (#6) ────────────────────────────────
+let _showArchivedHabits=false;
+
+window.archiveHabitFromModal=function(){
+  const id=document.getElementById('editHabitId').value;
+  if(!id)return;
+  const h=appData.habits.find(h=>h.id===id);
+  if(!h)return;
+  h.archived=true;
+  saveData();
+  closeModal('addHabitModal');
+  renderHabitsGrid('habitsGridDash');
+  renderHabitsGrid('habitsGridTab');
+  updateHabitsSummary();
+  toast('Habit archived');
+};
+
+window.toggleShowArchivedHabits=function(){
+  _showArchivedHabits=!_showArchivedHabits;
+  const btn=document.getElementById('showArchivedHabitsBtn');
+  if(btn)btn.textContent=_showArchivedHabits?'Hide archived habits':'Show archived habits';
+  const grid=document.getElementById('habitsGridArchived');
+  if(!grid)return;
+  if(_showArchivedHabits){
+    const archived=(appData.habits||[]).filter(h=>h.archived);
+    grid.style.display=archived.length?'grid':'none';
+    if(archived.length){
+      grid.innerHTML=archived.map((h,idx)=>{
+        const c=habitColors()[h.colorIdx||0];
+        return `<div class="habit-card" style="background:${c.bg}">
+          <div class="habit-card-top">
+            <div class="habit-icon" style="background:${c.dim}">${h.emoji||'⭐'}</div>
+            <div class="habit-info">
+              <div class="habit-name">${h.name}</div>
+              <div class="habit-sub">Archived</div>
+            </div>
+            <button class="habit-action-btn" onclick="unarchiveHabit('${h.id}')" title="Restore" style="opacity:1">↩</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  } else {
+    grid.style.display='none';
+    grid.innerHTML='';
+  }
+};
+
+window.unarchiveHabit=function(id){
+  const h=appData.habits.find(h=>h.id===id);
+  if(h){h.archived=false;saveData();toggleShowArchivedHabits();toggleShowArchivedHabits();renderHabitsGrid('habitsGridTab');toast('Habit restored');}
+};
+
+// Patch habit rendering to skip archived
+const _origRenderHabitsGridBase=renderHabitsGrid;
+// Update the filter in renderHabitsGrid by patching the sorted array computation
+// We handle this by overriding the function inline via the hook mechanism:
+window._afterRenderHabitsGrid=function(containerId){
+  if(typeof attachHabitDragListeners==='function') attachHabitDragListeners(containerId);
+  // Update archived button visibility
+  const hasArchived=(appData.habits||[]).some(h=>h.archived);
+  const btn=document.getElementById('showArchivedHabitsBtn');
+  if(btn)btn.style.display=hasArchived?'':'none';
+};
+
+// Also patch the openEditHabitModal to show Archive button for existing habits
+const _b2OrigOpenEditHabitModal=window.openEditHabitModal;
+window.openEditHabitModal=function(id){
+  _b2OrigOpenEditHabitModal(id);
+  const archBtn=document.getElementById('habitArchiveBtn');
+  if(archBtn)archBtn.style.display=id?'':'none';
+};
+
+// updateHabitsSummary already excludes archived (patched at source above)
+
+// ── BATCH 2: RECURRING TASKS (#12) ───────────────────────────────
+function nextRecurrenceDate(due,recurrence){
+  if(!due||!recurrence)return null;
+  const d=new Date(due+'T12:00:00');
+  if(recurrence==='daily')d.setDate(d.getDate()+1);
+  else if(recurrence==='weekly')d.setDate(d.getDate()+7);
+  else if(recurrence==='monthly')d.setMonth(d.getMonth()+1);
+  return d.toLocaleDateString('en-CA');
+}
+
+// Patch toggleTask to handle recurring tasks
+const _b2OrigToggleTask=window.toggleTask;
+window.toggleTask=function(id){
+  haptic(30);
+  const t=appData.projects.find(p=>p.id===id);
+  if(!t){return;}
+  if(!t.done&&t.recurrence){
+    // Mark current done and create next occurrence
+    t.done=true;t.doneAt=Date.now();t.completedDate=todayStr();
+    const nextDue=nextRecurrenceDate(t.due||todayStr(),t.recurrence);
+    if(nextDue){
+      appData.projects.push({
+        id:uid(),name:t.name,due:nextDue,done:false,
+        recurrence:t.recurrence,notes:t.notes||'',created:todayStr()
+      });
+    }
+    saveData();renderTasks();renderFocusTasks();renderStats();
+    toast('✓ Done — next scheduled: '+(nextDue||''));
+  } else {
+    t.done=!t.done;t.doneAt=t.done?Date.now():null;t.completedDate=t.done?todayStr():null;
+    saveData();renderTasks();renderFocusTasks();renderStats();
+  }
+};
+
+// ── BATCH 2: TASK NOTES (#13) ────────────────────────────────────
+// Patch openNewTaskModal to reset notes/recurrence fields
+const _b2OrigOpenNewTaskModal=window.openNewTaskModal;
+window.openNewTaskModal=function(){
+  _b2OrigOpenNewTaskModal();
+  const nr=document.getElementById('modalTaskRecurrence');
+  const nn=document.getElementById('modalTaskNotes');
+  if(nr)nr.value='';
+  if(nn)nn.value='';
+};
+
+const _b2OrigOpenEditTaskModal=window.openEditTaskModal;
+window.openEditTaskModal=function(id){
+  const t=(appData.projects||[]).find(x=>x.id===id);
+  if(!t)return;
+  document.getElementById('editTaskId').value=id;
+  document.getElementById('taskModalTitle').textContent='Edit Task';
+  document.getElementById('taskModalSaveBtn').textContent='Save changes';
+  document.getElementById('modalTaskName').value=t.name;
+  document.getElementById('modalTaskDue').value=t.due||'';
+  const nr=document.getElementById('modalTaskRecurrence');
+  if(nr)nr.value=t.recurrence||'';
+  const nn=document.getElementById('modalTaskNotes');
+  if(nn)nn.value=t.notes||'';
+  openModal('newTaskModal');
+  setTimeout(()=>document.getElementById('modalTaskName').focus(),80);
+};
+
+const _b2OrigSaveModalTask=window.saveModalTask;
+window.saveModalTask=function(){
+  const name=document.getElementById('modalTaskName').value.trim();
+  if(!name)return;
+  const due=document.getElementById('modalTaskDue').value||'';
+  const recurrence=document.getElementById('modalTaskRecurrence')?.value||'';
+  const notes=document.getElementById('modalTaskNotes')?.value.trim()||'';
+  const editId=document.getElementById('editTaskId').value;
+  if(editId){
+    const t=(appData.projects||[]).find(x=>x.id===editId);
+    if(t){t.name=name;t.due=due;t.recurrence=recurrence||null;t.notes=notes||'';}
+    toast('✓ Task updated');
+  }else{
+    appData.projects.push({id:uid(),name,due,done:false,created:todayStr(),recurrence:recurrence||null,notes:notes||''});
+    toast('✓ Task added');
+  }
+  saveData();renderTasks();renderFocusTasks();renderStats();
+  document.getElementById('modalTaskName').value='';
+  document.getElementById('modalTaskDue').value='';
+  if(document.getElementById('modalTaskRecurrence'))document.getElementById('modalTaskRecurrence').value='';
+  if(document.getElementById('modalTaskNotes'))document.getElementById('modalTaskNotes').value='';
+  document.getElementById('editTaskId').value='';
+  closeModal('newTaskModal');
+  if(window._noteToTaskId){
+    const nid=window._noteToTaskId;window._noteToTaskId=null;
+    setTimeout(()=>{if(confirm('Delete the original note?')){appData.notes=(appData.notes||[]).filter(n=>n.id!==nid);saveData();renderBrainDump();}},300);
+  }
+};
+
+// Enhanced task row with notes indicator and recurrence badge
+function taskRowHTMLFull(t){
+  const today=todayStr();
+  let duePill='';
+  if(t.due){
+    let cls,label;
+    if(t.due<today){cls='overdue';label=humanDate(t.due,today);}
+    else if(t.due===today){cls='today';label='Today';}
+    else{cls='upcoming';label=humanDate(t.due,today);}
+    duePill=`<span class="due-pill ${cls}">${label}</span>`;
+  }
+  const recentDone=isRecentDone(t);
+  const rowCls=t.done?(recentDone?'recent-done-row':'done-row'):'';
+  const recurBadge=t.recurrence?`<span class="recur-badge" title="Repeats ${t.recurrence}">↻</span>`:'';
+  const notesBadge=t.notes?`<button class="task-notes-indicator" onclick="event.stopPropagation();toggleTaskNotes('${t.id}')" title="Show notes">📝</button>`:'';
+  const notesRow=t.notes?`<div class="task-notes-expand" id="tnotes-${t.id}">${escHtml(t.notes)}</div>`:'';
+  return`<div class="task-row${rowCls?' '+rowCls:''}${t.notes?' has-notes':''}" data-task-id="${t.id}">
+    <span class="task-drag-handle" title="Drag to reorder">⠿</span>
+    <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</button>
+    ${recurBadge}
+    <span class="task-label${t.done?' done-text':''}" onclick="toggleTask('${t.id}')" style="cursor:pointer;flex:1">${t.name}</span>
+    ${notesBadge}
+    ${duePill}
+    <button class="task-row-edit" onclick="openEditTaskModal('${t.id}')" title="Edit">✎</button>
+    <button class="task-row-del" onclick="confirmDeleteTask('${t.id}')">✕</button>
+  </div>${notesRow}`;
+}
+// Register as the task row renderer
+window._patchedTaskRowHTML=taskRowHTMLFull;
+
+window.toggleTaskNotes=function(id){
+  const el=document.getElementById('tnotes-'+id);
+  if(el)el.classList.toggle('open');
+};
+
+// ── BATCH 2: TASK DRAG REORDER (#17) ─────────────────────────────
+function attachTaskDragListeners(sectionBodyEl){
+  if(!sectionBodyEl)return;
+  sectionBodyEl.querySelectorAll('.task-row[data-task-id]').forEach(row=>{
+    row.setAttribute('draggable','true');
+    row.addEventListener('dragstart',e=>{
+      row._dragId=row.dataset.taskId;
+      setTimeout(()=>row.classList.add('task-dragging'),0);
+      e.dataTransfer.effectAllowed='move';
+    });
+    row.addEventListener('dragend',()=>{
+      row.classList.remove('task-dragging');
+      sectionBodyEl.querySelectorAll('.task-row').forEach(r=>r.classList.remove('task-drag-over'));
+    });
+    row.addEventListener('dragover',e=>{
+      e.preventDefault();
+      sectionBodyEl.querySelectorAll('.task-row').forEach(r=>r.classList.remove('task-drag-over'));
+      row.classList.add('task-drag-over');
+    });
+    row.addEventListener('drop',e=>{
+      e.preventDefault();
+      const fromId=document.querySelector('.task-row.task-dragging')?.dataset.taskId;
+      const toId=row.dataset.taskId;
+      if(fromId&&toId&&fromId!==toId){
+        const tasks=appData.projects;
+        const fi=tasks.findIndex(t=>t.id===fromId);
+        const ti=tasks.findIndex(t=>t.id===toId);
+        if(fi>-1&&ti>-1){
+          const [moved]=tasks.splice(fi,1);
+          tasks.splice(ti,0,moved);
+          tasks.forEach((t,i)=>t.order=i);
+          saveData();renderTasks();
+        }
+      }
+      row.classList.remove('task-drag-over');
+    });
+  });
+}
+
+// renderTasks is already patched at source to support order sort + drag/swipe listeners.
+
+// ── BATCH 2: SWIPE TO DELETE (#80) ───────────────────────────────
+function attachSwipeDelete(row){
+  if(row._swipeAttached)return;
+  row._swipeAttached=true;
+  let startX=0,curX=0,swiping=false;
+  const THRESHOLD=70;
+  row.addEventListener('touchstart',e=>{
+    startX=e.touches[0].clientX;
+    curX=startX;
+    swiping=true;
+  },{passive:true});
+  row.addEventListener('touchmove',e=>{
+    if(!swiping)return;
+    curX=e.touches[0].clientX;
+    const dx=curX-startX;
+    // Only allow left swipe
+    if(dx<0&&Math.abs(dx)<120){
+      row.style.transform=`translateX(${dx}px)`;
+      row.style.transition='none';
+    }
+  },{passive:true});
+  row.addEventListener('touchend',()=>{
+    if(!swiping)return;
+    swiping=false;
+    const dx=curX-startX;
+    row.style.transition='transform .2s ease';
+    if(dx<-THRESHOLD){
+      // Snap open to show delete
+      row.style.transform='translateX(-80px)';
+      // Show delete indicator via background
+      row.style.background=`linear-gradient(to left, var(--red) 80px, var(--card) 80px)`;
+      // Auto-reset after 2s or on any tap elsewhere
+      const reset=()=>{
+        row.style.transform='';
+        row.style.background='';
+        document.removeEventListener('touchstart',reset);
+      };
+      setTimeout(reset,2000);
+      document.addEventListener('touchstart',reset,{once:true,passive:true});
+      // If fully swiped (>100px), delete immediately
+      if(dx<-100){
+        reset();
+        const id=row.dataset.taskId;
+        if(id)confirmDeleteTask(id);
+      }
+    } else {
+      row.style.transform='';
+      row.style.background='';
+    }
+  },{passive:true});
+}
 
 // ── Mobile swipe navigation ────────────────────────────────────────
 (function(){
