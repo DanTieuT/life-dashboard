@@ -239,22 +239,88 @@ function buildContext(data) {
   const habits = (data.habits || []).map(h => ({ id: h.id, name: h.name, type: h.type, doneToday: !!(h.log && h.log[today]) }));
   const events = (data.events || []).filter(e => e.date === today).sort((a, b) => (a.time || '').localeCompare(b.time || '')).map(e => ({ time: e.time, name: e.name }));
   const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
-  const spent = Math.round((data.transactions || []).filter(t => {
+  const now2 = now;
+  const monthTxns = (data.transactions || []).filter(t => {
     const d = new Date(t.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && t.type === 'out';
-  }).reduce((s, t) => s + (t.amount || 0), 0));
-  const projects = (data.userProjects || []).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '🔨', stage: p.stage, nextAction: p.nextAction || '' }));
+    return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear();
+  });
+  const spent = Math.round(monthTxns.filter(t => t.type === 'out').reduce((s, t) => s + (t.amount || 0), 0));
+  const projects = (data.userProjects || []).filter(p => !p.archived).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '🔨', stage: p.stage, nextAction: p.nextAction || '' }));
   const accounts = (data.accounts || []).map(a => ({ name: a.name, type: a.type, balance: a.balance }));
   const goals = (data.goals || []).map(g => {
-    const current = g.linkedAccountId
-      ? ((data.accounts || []).find(a => a.id === g.linkedAccountId)?.balance ?? g.current)
-      : g.current;
+    const ids = g.linkedAccountIds || (g.linkedAccountId ? [g.linkedAccountId] : []);
+    const current = ids.length
+      ? ids.reduce((s, id) => s + ((data.accounts || []).find(a => a.id === id)?.balance || 0), 0)
+      : (g.current || 0);
     return { name: g.name, emoji: g.emoji || '🎯', current, target: g.target, pct: g.target ? Math.round(current / g.target * 100) : 0 };
   });
   const profile = data.profile || '';
-  const recentNotes = (data.notes || []).slice(0, 15).map(n => ({ text: n.text, createdAt: n.createdAt, source: n.source || 'dashboard' }));
+  const recentNotes = (data.notes || []).filter(n => !n.archived).slice(0, 15).map(n => ({ text: n.text, createdAt: n.createdAt, source: n.source || 'dashboard' }));
 
-  return { today, dayName, monthName, tasks, completedToday, habits, events, budget, spent, projects, accounts, goals, profile, recentNotes };
+  // ── Overdue tasks (3+ days) ──────────────────────────────────────
+  const todayDate = new Date(today + 'T12:00:00');
+  const overdueTasks = (data.projects || []).filter(t => {
+    if (t.done || !t.due) return false;
+    const dueDate = new Date(t.due + 'T12:00:00');
+    const daysOverdue = Math.round((todayDate - dueDate) / 86400000);
+    return daysOverdue >= 3;
+  }).map(t => {
+    const dueDate = new Date(t.due + 'T12:00:00');
+    const daysOverdue = Math.round((todayDate - dueDate) / 86400000);
+    return { id: t.id, name: t.name || '', due: t.due, daysOverdue };
+  });
+
+  // ── Weekly habit counts (this week vs last week) ─────────────────
+  const weekStart = new Date(todayDate);
+  weekStart.setDate(todayDate.getDate() - todayDate.getDay()); // Sunday
+  const lastWeekStart = new Date(weekStart);
+  lastWeekStart.setDate(weekStart.getDate() - 7);
+
+  function dateRange(start, days) {
+    return Array.from({ length: days }, (_, i) => {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      return d.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+    });
+  }
+  const thisWeekDays = dateRange(weekStart, 7);
+  const lastWeekDays = dateRange(lastWeekStart, 7);
+
+  const weeklyHabitCounts = (data.habits || []).filter(h => h.type === 'daily').map(h => {
+    const thisWeek = thisWeekDays.filter(d => h.log && h.log[d] && h.log[d] > 0).length;
+    const lastWeek = lastWeekDays.filter(d => h.log && h.log[d] && h.log[d] > 0).length;
+    return { name: h.name, thisWeek, lastWeek };
+  });
+
+  // ── Weekly spend ─────────────────────────────────────────────────
+  const thisWeekSpend = (data.transactions || []).filter(t =>
+    t.type === 'out' && thisWeekDays.includes(t.date)
+  ).reduce((s, t) => s + (t.amount || 0), 0);
+  const lastWeekSpend = (data.transactions || []).filter(t =>
+    t.type === 'out' && lastWeekDays.includes(t.date)
+  ).reduce((s, t) => s + (t.amount || 0), 0);
+
+  // ── Spending patterns (category 4+ times this week) ─────────────
+  const thisWeekTxns = (data.transactions || []).filter(t =>
+    t.type === 'out' && thisWeekDays.includes(t.date)
+  );
+  const catCounts = {};
+  thisWeekTxns.forEach(t => {
+    const cat = t.category || 'Other';
+    catCounts[cat] = (catCounts[cat] || 0) + 1;
+  });
+  const spendingPatterns = Object.entries(catCounts)
+    .filter(([, count]) => count >= 4)
+    .map(([cat, count]) => {
+      const total = thisWeekTxns.filter(t => (t.category || 'Other') === cat).reduce((s, t) => s + t.amount, 0);
+      return { category: cat, count, total };
+    });
+
+  return {
+    today, dayName, monthName, tasks, completedToday, habits, events,
+    budget, spent, projects, accounts, goals, profile, recentNotes,
+    overdueTasks, weeklyHabitCounts, weeklySpend: { thisWeek: Math.round(thisWeekSpend), lastWeek: Math.round(lastWeekSpend) },
+    spendingPatterns,
+  };
 }
 
 // ── System prompt (mirrors chat.js) ──────────────────────────────
@@ -272,6 +338,26 @@ function buildSystemPrompt(ctx) {
     ? `\nRECENT BRAIN DUMP NOTES (newest first):\n${ctx.recentNotes.map(n => `  [${n.source}] ${n.text}`).join('\n')}\n`
     : '';
 
+  // Overdue escalation (3+ days)
+  const overdueBlock = ctx.overdueTasks && ctx.overdueTasks.length
+    ? `\nOVERDUE TASKS (3+ days — flag these urgently in morning briefings):\n${ctx.overdueTasks.map(t => `  [${t.id}] "${t.name}" — ${t.daysOverdue} days overdue (was due ${t.due})`).join('\n')}\n`
+    : '';
+
+  // Weekly habit comparison
+  const weeklyHabitBlock = ctx.weeklyHabitCounts && ctx.weeklyHabitCounts.length
+    ? `\nHABIT COMPARISON (this week vs last week):\n${ctx.weeklyHabitCounts.map(h => `  ${h.name}: this week ${h.thisWeek}/7, last week ${h.lastWeek}/7`).join('\n')}\n`
+    : '';
+
+  // Weekly spend comparison
+  const weeklySpendBlock = ctx.weeklySpend
+    ? `\nWEEKLY SPENDING: this week $${ctx.weeklySpend.thisWeek}, last week $${ctx.weeklySpend.lastWeek}${ctx.weeklySpend.thisWeek > ctx.weeklySpend.lastWeek * 1.2 ? ' ⚠️ tracking 20%+ higher than last week' : ''}\n`
+    : '';
+
+  // Spending patterns
+  const spendingPatternsBlock = ctx.spendingPatterns && ctx.spendingPatterns.length
+    ? `\nSPENDING PATTERNS THIS WEEK (mention proactively when relevant):\n${ctx.spendingPatterns.map(p => `  ${p.category}: ${p.count} transactions, $${Math.round(p.total)} total`).join('\n')}\n`
+    : '';
+
   // Split timetree block into Dan's and Julia's sections
   let ttBlock = '';
   let juliaBlock = '';
@@ -284,7 +370,7 @@ function buildSystemPrompt(ctx) {
   }
 
   return `You are J.A.R.V.I.S. — Dan's personal AI assistant on Telegram. You have full visibility into his tasks, habits, schedule, finances, projects, and his TimeTree calendar. Be sharp, proactive, and genuinely helpful.
-${memoryBlock}${notesBlock}${ttBlock}${juliaBlock}
+${memoryBlock}${notesBlock}${overdueBlock}${weeklyHabitBlock}${weeklySpendBlock}${spendingPatternsBlock}${ttBlock}${juliaBlock}
 Today: ${ctx.today} (${ctx.dayName})
 ${ctx.weather ? `Weather: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}${ctx.weather.rain ? ', rain expected' : ''}, wind ${ctx.weather.wind}mph${ctx.weather.high != null ? `, High ${ctx.weather.high}°F / Low ${ctx.weather.low}°F` : ''}` : ''}
 
@@ -310,6 +396,12 @@ ${goalList}
 
 PROJECTS (stages: planning/sourcing/building/blocked/done):
 ${projectList}
+
+WHAT TO FOCUS ON TODAY:
+When Dan asks "what should I focus on", "what should I work on", "what's my priority", or similar, respond with a ranked list of exactly 3 things based on: (1) tasks from OVERDUE TASKS section first, (2) tasks due today, (3) habits not yet done today, (4) project next actions. Be specific and direct — no fluff.
+
+HOW AM I DOING THIS WEEK:
+When Dan asks "how am I doing this week", "how's my week going", "weekly check-in", or similar, compare using the HABIT COMPARISON and WEEKLY SPENDING blocks above. Mention what's better vs last week, what's slipped, and give a direct honest assessment. Include spending comparison.
 
 MORNING BRIEFING FORMAT:
 When asked for a morning briefing or "what's my day look like", reply in this order using \\n for line breaks:
@@ -404,7 +496,10 @@ RULES:
   building = hands-on work is actively happening
   blocked = waiting on parts, waiting on someone, or otherwise stalled — use this whenever something is holding the project up
   done = complete
-- Never repeat information already given in this conversation`;
+- Never repeat information already given in this conversation
+- OVERDUE ESCALATION: In morning briefings, ALWAYS call out tasks in the OVERDUE TASKS section separately with urgency. Use 🔴 for 7+ days, 🟠 for 3-6 days overdue. Don't just list them — acknowledge the delay and suggest action.
+- SPENDING PATTERNS: When relevant (after logging a transaction, or when asked about finances), proactively mention any patterns from SPENDING PATTERNS THIS WEEK. "Heads up, you've had 4+ transactions at [category] this week."
+- VOICE MEMO ROUTING: If a voice message (transcribed text) contains multiple distinct items — tasks, ideas, notes, project updates, events — extract and route each one using the appropriate action types. Don't just reply to the whole message — act on each item individually.`;
 }
 
 // Extract the first complete JSON object from a string, handling nested braces correctly

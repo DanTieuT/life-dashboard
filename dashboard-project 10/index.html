@@ -590,6 +590,88 @@ input,select,textarea{font-family:inherit}
 .ring-stat-badge.red{background:var(--red-dim);color:var(--red)}
 .ring-stat-badge.yellow{background:var(--yellow-dim);color:var(--yellow)}
 
+/* ── PAGE TRANSITION ─────────────────────────────────────────────── */
+.page.active{animation:pageFadeIn .18s ease both}
+@keyframes pageFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SKELETON LOADING ────────────────────────────────────────────── */
+.skeleton-wrap{padding:20px;display:flex;flex-direction:column;gap:12px}
+.skeleton-line{height:14px;border-radius:6px;background:linear-gradient(90deg,var(--card2) 25%,var(--border) 50%,var(--card2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+.skeleton-line.tall{height:80px}
+.skeleton-line.short{width:60%}
+.skeleton-line.med{width:80%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── FAB QUICK ADD ───────────────────────────────────────────────── */
+.quick-fab{position:fixed;bottom:96px;right:28px;width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.4);z-index:149;transition:all .2s;cursor:pointer}
+.quick-fab:hover{transform:scale(1.08);background:var(--card2)}
+.quick-action-sheet{position:fixed;bottom:152px;right:28px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:6px;display:none;flex-direction:column;gap:2px;z-index:149;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:160px}
+.quick-action-sheet.open{display:flex}
+.quick-action-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;border:none;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit;text-align:left;transition:background .12s}
+.quick-action-item:hover{background:var(--card2)}
+@media(max-width:768px){
+  .quick-fab{bottom:calc(80px + env(safe-area-inset-bottom));right:14px}
+  .quick-action-sheet{bottom:calc(136px + env(safe-area-inset-bottom));right:14px}
+}
+
+/* ── OFFLINE BANNER ──────────────────────────────────────────────── */
+.offline-banner{position:fixed;top:56px;left:0;right:0;background:var(--yellow);color:#000;font-size:13px;font-weight:600;text-align:center;padding:6px;z-index:199;display:none}
+.offline-banner.show{display:block}
+@media(max-width:768px){.offline-banner{top:52px}}
+
+/* ── NOTE TAGS ───────────────────────────────────────────────────── */
+.note-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:opacity .15s}
+.note-tag:hover{opacity:.75}
+.note-tag.none{background:var(--card2);color:var(--muted)}
+.note-tag.idea{background:rgba(255,214,10,.15);color:var(--yellow)}
+.note-tag.action{background:var(--green-dim);color:var(--green)}
+.note-tag.reference{background:rgba(10,132,255,.12);color:var(--blue)}
+.note-tag.car{background:rgba(255,159,10,.12);color:var(--orange)}
+.note-tag.finance{background:rgba(48,209,88,.12);color:var(--green)}
+.brain-dump-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.brain-dump-filter-chip{padding:4px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card2);color:var(--sub);transition:all .15s;font-family:inherit}
+.brain-dump-filter-chip.active{background:var(--green-dim);color:var(--green);border-color:rgba(48,209,88,.3)}
+.brain-dump-search{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:13px;outline:none;min-width:0}
+.brain-dump-search:focus{border-color:var(--green)}
+.brain-dump-search::placeholder{color:var(--muted)}
+.brain-dump-match-count{font-size:12px;color:var(--muted);flex-shrink:0}
+.note-actions{display:flex;gap:4px;margin-left:auto;flex-shrink:0;opacity:0;transition:opacity .15s}
+.brain-dump-card:hover .note-actions{opacity:1}
+.note-action-btn{background:none;border:none;color:var(--muted);font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:inherit}
+.note-action-btn:hover{background:var(--card2);color:var(--text)}
+.note-edit-area{width:100%;background:none;border:none;outline:none;color:var(--text);font-size:14px;line-height:1.5;resize:none;font-family:inherit;min-height:40px}
+.note-save-btn{background:var(--green);border:none;border-radius:6px;color:#000;font-size:11px;font-weight:700;padding:3px 10px;cursor:pointer;flex-shrink:0}
+
+/* ── PROJECT NOTES/LINKS ─────────────────────────────────────────── */
+.proj-card-notes{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-card-link{background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;padding:2px 6px;border-radius:5px;transition:background .12s;text-decoration:none;display:inline-flex;align-items:center;gap:3px}
+.proj-card-link:hover{background:var(--blue-dim)}
+
+/* ── MILESTONE TASKS ─────────────────────────────────────────────── */
+.proj-task-milestone-btn{background:none;border:none;font-size:12px;cursor:pointer;padding:2px 4px;opacity:.4;transition:opacity .15s;line-height:1}
+.proj-task-milestone-btn:hover,.proj-task-milestone-btn.on{opacity:1}
+.proj-task-name.milestone{font-weight:700}
+.proj-task-flag{font-size:10px;margin-right:2px}
+
+/* ── GOAL WEEKLY ─────────────────────────────────────────────────── */
+.goal-weekly-change{font-size:12px;color:var(--green);margin-top:4px;font-weight:600}
+.goal-weekly-change.none{color:var(--muted)}
+
+/* ── ARCHIVE TOGGLE ──────────────────────────────────────────────── */
+.show-archived-btn{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:6px 0;font-family:inherit;transition:color .15s}
+.show-archived-btn:hover{color:var(--sub)}
+
+/* ── JARVIS HISTORY WIDGET ───────────────────────────────────────── */
+.jarvis-history-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
+.jarvis-history-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;cursor:pointer}
+.jarvis-history-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.jarvis-history-chev{font-size:12px;color:var(--muted);transition:transform .2s}
+.jarvis-history-body{padding:0 14px 10px;display:flex;flex-direction:column;gap:8px}
+.jh-exchange{background:var(--card2);border-radius:10px;padding:10px 12px;font-size:13px}
+.jh-user{color:var(--sub);margin-bottom:4px;font-weight:500}
+.jh-user span{color:var(--text)}
+.jh-reply{color:var(--muted);line-height:1.4}
+
 /* ── SCROLLBAR ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -794,6 +876,20 @@ input,select,textarea{font-family:inherit}
       <button class="pdd-toggle" id="pddThemeToggle" onclick="event.stopPropagation();pddToggleTheme()"><div class="pdd-knob"></div></button>
     </div>
     <div class="pdd-divider"></div>
+    <button class="pdd-item" onclick="closeProfileDropdown();enablePushNotifications()" id="pddPushBtn">
+      <span class="pdd-label">Enable Notifications</span>
+      <span style="color:var(--muted);font-size:12px" id="pddPushStatus">—</span>
+    </button>
+    <div class="pdd-divider"></div>
+    <button class="pdd-item" onclick="closeProfileDropdown();exportData()">
+      <span class="pdd-label">Export Data</span>
+      <span style="color:var(--muted);font-size:12px">↓ JSON</span>
+    </button>
+    <button class="pdd-item" onclick="closeProfileDropdown();createBackup()">
+      <span class="pdd-label">Create Backup</span>
+      <span style="color:var(--muted);font-size:12px" id="lastBackupLabel"></span>
+    </button>
+    <div class="pdd-divider"></div>
     <button class="pdd-item pdd-signout" onclick="closeProfileDropdown();openModal('signOutModal')">Sign Out</button>
   </div>
 
@@ -898,6 +994,17 @@ input,select,textarea{font-family:inherit}
         <div class="habits-grid" id="habitsGridDash"></div>
       </div>
 
+      <!-- JARVIS History -->
+      <div class="jarvis-history-wrap" id="jarvisHistoryWrap" style="display:none">
+        <div class="jarvis-history-hdr" onclick="toggleJarvisHistory()">
+          <div class="jarvis-history-title">
+            <span>💬</span> Recent JARVIS conversations
+          </div>
+          <span class="jarvis-history-chev" id="jarvisHistoryChev">▾</span>
+        </div>
+        <div class="jarvis-history-body" id="jarvisHistoryBody" style="display:none"></div>
+      </div>
+
       <!-- Brain Dump -->
       <div class="brain-dump-section">
         <div class="section-hdr">
@@ -910,7 +1017,20 @@ input,select,textarea{font-family:inherit}
           <input id="brainDumpInput" placeholder="Drop a thought, idea, or anything worth saving..." onkeydown="if(event.key==='Enter')addBrainDumpNote()">
           <button class="brain-dump-send" onclick="addBrainDumpNote()">Save</button>
         </div>
+        <div class="brain-dump-filter-bar" id="brainDumpFilterBar">
+          <input class="brain-dump-search" id="brainDumpSearch" placeholder="Search notes..." oninput="renderBrainDump()">
+          <span class="brain-dump-match-count" id="brainDumpMatchCount"></span>
+          <button class="brain-dump-filter-chip active" data-tag="" onclick="setBrainDumpTag(this,'')">All</button>
+          <button class="brain-dump-filter-chip" data-tag="idea" onclick="setBrainDumpTag(this,'idea')">💡 Ideas</button>
+          <button class="brain-dump-filter-chip" data-tag="action" onclick="setBrainDumpTag(this,'action')">✅ Actions</button>
+          <button class="brain-dump-filter-chip" data-tag="reference" onclick="setBrainDumpTag(this,'reference')">🔗 Ref</button>
+          <button class="brain-dump-filter-chip" data-tag="car" onclick="setBrainDumpTag(this,'car')">🚗 Car</button>
+          <button class="brain-dump-filter-chip" data-tag="finance" onclick="setBrainDumpTag(this,'finance')">💰 Finance</button>
+        </div>
         <div class="brain-dump-list" id="brainDumpList"></div>
+        <div style="text-align:center;margin-top:8px">
+          <button class="show-archived-btn" id="showArchivedNotesBtn" onclick="toggleShowArchivedNotes()">Show archived notes</button>
+        </div>
       </div>
 
     </div><!-- /dashboard -->
@@ -1064,6 +1184,10 @@ input,select,textarea{font-family:inherit}
         <button class="proj-filter-btn" onclick="setProjFilter('done')" data-filter="done">Completed</button>
       </div>
       <div class="proj-card-grid" id="projectsCardGrid"></div>
+      <div style="text-align:center;margin-top:10px">
+        <button class="show-archived-btn" id="showArchivedBtn" onclick="toggleShowArchived()">Show archived projects</button>
+      </div>
+      <div class="proj-card-grid" id="archivedProjectsGrid" style="display:none;margin-top:14px"></div>
     </div>
 
     <!-- ── GOALS TAB ── -->
@@ -1342,10 +1466,8 @@ input,select,textarea{font-family:inherit}
       <input class="form-input" id="goalCurrent" type="number" placeholder="0">
     </div>
     <div class="form-group">
-      <label class="form-label">Linked Account <span style="color:var(--muted);font-weight:400">(optional — auto-fills current)</span></label>
-      <select class="form-select" id="goalLinkedAccount">
-        <option value="">None</option>
-      </select>
+      <label class="form-label">Linked Accounts <span style="color:var(--muted);font-weight:400">(optional — auto-fills current balance)</span></label>
+      <div id="goalLinkedAccountsWrap" style="display:flex;flex-direction:column;gap:6px;max-height:140px;overflow-y:auto;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 12px"></div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('goalModal')">Cancel</button>
@@ -1403,11 +1525,20 @@ input,select,textarea{font-family:inherit}
       <input class="form-input" id="projectNextAction" placeholder="e.g. Order replacement bearings">
     </div>
     <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <textarea class="form-input" id="projectNotes" placeholder="Details, context, ideas..." rows="3" style="resize:vertical"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Link (optional)</label>
+      <input class="form-input" id="projectLink" placeholder="https://...">
+    </div>
+    <div class="form-group">
       <label class="form-label">Due date (optional)</label>
       <input class="form-input" id="projectDueDate" type="date">
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('projectModal')">Cancel</button>
+      <button class="btn-cancel" id="projectArchiveBtn" style="color:var(--muted);display:none" onclick="archiveProject()">Archive</button>
       <button class="btn-save" onclick="saveProject()">Save</button>
     </div>
   </div>
@@ -1427,6 +1558,18 @@ input,select,textarea{font-family:inherit}
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Offline Banner -->
+<div class="offline-banner" id="offlineBanner">⚡ Offline — changes will sync when you reconnect</div>
+
+<!-- Quick Add FAB -->
+<button class="quick-fab" id="quickFab" onclick="toggleQuickSheet()" title="Quick add">＋</button>
+<div class="quick-action-sheet" id="quickActionSheet">
+  <button class="quick-action-item" onclick="closeQuickSheet();openNewTaskModal()">✅ Task</button>
+  <button class="quick-action-item" onclick="closeQuickSheet();openHabitLogSheet()">💪 Habit Log</button>
+  <button class="quick-action-item" onclick="closeQuickSheet();openTxnModal()">💸 Transaction</button>
+  <button class="quick-action-item" onclick="closeQuickSheet();focusBrainDump()">💡 Note</button>
+</div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
@@ -1677,6 +1820,8 @@ async function loadData(){
 }
 
 function saveData(){
+  // Log goal balance history daily before saving
+  (appData.goals||[]).forEach(g=>logGoalBalanceHistory(g));
   clearTimeout(saveTimer);
   saveTimer=setTimeout(async()=>{
     if(!userRef)return;
@@ -1703,27 +1848,161 @@ function renderAll(){
   renderGoals();
   renderDashNW();
   renderBrainDump();
+  renderJarvisHistory();
+  updateLastBackupLabel();
 }
 
 // ── BRAIN DUMP ────────────────────────────────────────────────────
+const NOTE_TAGS=[
+  {key:'',label:'—',cls:'none'},
+  {key:'idea',label:'💡 Idea',cls:'idea'},
+  {key:'action',label:'✅ Action',cls:'action'},
+  {key:'reference',label:'🔗 Reference',cls:'reference'},
+  {key:'car',label:'🚗 Car',cls:'car'},
+  {key:'finance',label:'💰 Finance',cls:'finance'},
+];
+let _brainDumpTagFilter='';
+let _showArchivedNotes=false;
+
+window.setBrainDumpTag=function(btn,tag){
+  _brainDumpTagFilter=tag;
+  document.querySelectorAll('.brain-dump-filter-chip').forEach(b=>b.classList.toggle('active',b.dataset.tag===tag));
+  renderBrainDump();
+};
+
+window.cycleNoteTag=function(id){
+  const n=(appData.notes||[]).find(x=>x.id===id);
+  if(!n)return;
+  const keys=NOTE_TAGS.map(t=>t.key);
+  const cur=keys.indexOf(n.tag||'');
+  n.tag=keys[(cur+1)%keys.length];
+  saveData();renderBrainDump();
+};
+
+window.archiveNote=function(id){
+  const n=(appData.notes||[]).find(x=>x.id===id);
+  if(!n)return;
+  n.archived=true;
+  saveData();renderBrainDump();toast('Note archived');
+};
+
+window.toggleShowArchivedNotes=function(){
+  _showArchivedNotes=!_showArchivedNotes;
+  const btn=document.getElementById('showArchivedNotesBtn');
+  if(btn)btn.textContent=_showArchivedNotes?'Hide archived notes':'Show archived notes';
+  renderBrainDump();
+};
+
+window.editNote=function(id){
+  const el=document.getElementById('note-text-'+id);
+  if(!el)return;
+  const n=(appData.notes||[]).find(x=>x.id===id);
+  if(!n)return;
+  const area=document.createElement('textarea');
+  area.className='note-edit-area';
+  area.value=n.text;
+  area.rows=Math.max(2,n.text.split('\n').length);
+  el.style.display='none';
+  el.parentNode.insertBefore(area,el);
+  area.focus();
+  area.onkeydown=e=>{if(e.key==='Escape'){area.remove();el.style.display='';} };
+  // show save button
+  const saveBtn=document.getElementById('note-savebtn-'+id);
+  if(saveBtn)saveBtn.style.display='';
+  window['_saveNote_'+id]=function(){
+    const val=area.value.trim();
+    if(val){n.text=val;saveData();}
+    area.remove();el.style.display='';
+    if(saveBtn)saveBtn.style.display='none';
+    renderBrainDump();
+  };
+  area.addEventListener('blur',()=>{
+    setTimeout(()=>{
+      if(document.activeElement!==saveBtn){
+        area.remove();el.style.display='';
+        if(saveBtn)saveBtn.style.display='none';
+      }
+    },150);
+  });
+};
+
+window.convertNoteToTask=function(id){
+  const n=(appData.notes||[]).find(x=>x.id===id);
+  if(!n)return;
+  document.getElementById('editTaskId').value='';
+  document.getElementById('taskModalTitle').textContent='New Task';
+  document.getElementById('taskModalSaveBtn').textContent='Add task';
+  document.getElementById('modalTaskName').value=n.text;
+  document.getElementById('modalTaskDue').value=todayStr();
+  openModal('newTaskModal');
+  setTimeout(()=>document.getElementById('modalTaskName').focus(),80);
+  // After save, offer to delete note
+  window._noteToTaskId=id;
+};
+
+window.convertNoteToProject=function(id){
+  const n=(appData.notes||[]).find(x=>x.id===id);
+  if(!n)return;
+  document.getElementById('projectModalTitle').textContent='New Project';
+  document.getElementById('projectEditId').value='';
+  document.getElementById('projectName').value=n.text.slice(0,80);
+  document.getElementById('projectCategory').value='';
+  document.getElementById('projectStage').value='planning';
+  document.getElementById('projectPriority').value='';
+  document.getElementById('projectNextAction').value='';
+  document.getElementById('projectNotes').value='';
+  document.getElementById('projectLink').value='';
+  document.getElementById('projectDueDate').value='';
+  document.getElementById('projectArchiveBtn').style.display='none';
+  openModal('projectModal');
+};
+
 function renderBrainDump(){
   const el=document.getElementById('brainDumpList');
   if(!el)return;
-  const notes=appData.notes||[];
-  if(!notes.length){el.innerHTML='<div class="brain-dump-empty">No notes yet — drop something above or send it to JARVIS</div>';return;}
+  let notes=(appData.notes||[]);
+  // filter archived
+  if(!_showArchivedNotes) notes=notes.filter(n=>!n.archived);
+  // filter by tag
+  if(_brainDumpTagFilter) notes=notes.filter(n=>(n.tag||'')=== _brainDumpTagFilter);
+  // filter by search
+  const searchEl=document.getElementById('brainDumpSearch');
+  const q=(searchEl?.value||'').trim().toLowerCase();
+  if(q) notes=notes.filter(n=>(n.text||'').toLowerCase().includes(q));
+  // match count
+  const mc=document.getElementById('brainDumpMatchCount');
+  if(mc){
+    const total=(appData.notes||[]).filter(n=>_showArchivedNotes||!n.archived).length;
+    mc.textContent=q?`${notes.length} of ${total} matches`:'';
+  }
+  if(!notes.length){
+    el.innerHTML='<div class="brain-dump-empty">'+(q?'No matching notes':'No notes yet — drop something above or send it to JARVIS')+'</div>';
+    return;
+  }
   el.innerHTML=notes.map(n=>{
     const d=new Date(n.createdAt||Date.now());
     const ago=fmtTimeAgo(d);
     const src=n.source==='jarvis'?'JARVIS':'you';
-    return`<div class="brain-dump-card">
+    const tagMeta=NOTE_TAGS.find(t=>t.key===(n.tag||''))||NOTE_TAGS[0];
+    const archFlag=n.archived?'<span style="font-size:10px;color:var(--muted);background:var(--card2);padding:1px 5px;border-radius:4px;margin-left:4px">archived</span>':'';
+    return`<div class="brain-dump-card" id="note-card-${n.id}">
       <div class="brain-dump-card-body">
-        <div class="brain-dump-card-text">${escHtml(n.text)}</div>
-        <div class="brain-dump-card-meta">
+        <div class="brain-dump-card-text" id="note-text-${n.id}" onclick="editNote('${n.id}')" style="cursor:text">${escHtml(n.text)}</div>
+        <div class="brain-dump-card-meta" style="margin-top:6px;gap:8px;flex-wrap:wrap">
           <span class="brain-dump-source">${src}</span>
-          <span>${ago}</span>
+          <span>${ago}</span>${archFlag}
+          <button class="note-tag ${tagMeta.cls}" onclick="event.stopPropagation();cycleNoteTag('${n.id}')" title="Tap to change tag">${tagMeta.label||'tag'}</button>
         </div>
       </div>
-      <button class="brain-dump-del" onclick="deleteBrainDumpNote('${n.id}')" title="Delete">✕</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        <button class="note-save-btn" id="note-savebtn-${n.id}" style="display:none" onclick="window['_saveNote_${n.id}']&&window['_saveNote_${n.id}']()">✓</button>
+        <div class="note-actions">
+          <button class="note-action-btn" onclick="convertNoteToTask('${n.id}')" title="→ Task">→ Task</button>
+          <button class="note-action-btn" onclick="convertNoteToProject('${n.id}')" title="→ Project">→ Proj</button>
+          ${!n.archived?`<button class="note-action-btn" onclick="archiveNote('${n.id}')" title="Archive">📦</button>`:''}
+          <button class="brain-dump-del" onclick="deleteBrainDumpNote('${n.id}')" title="Delete">✕</button>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -2422,6 +2701,17 @@ window.saveModalTask=function(){
   document.getElementById('modalTaskDue').value='';
   document.getElementById('editTaskId').value='';
   closeModal('newTaskModal');
+  // If converted from note, offer to delete it
+  if(window._noteToTaskId){
+    const nid=window._noteToTaskId;
+    window._noteToTaskId=null;
+    setTimeout(()=>{
+      if(confirm('Delete the original note?')){
+        appData.notes=(appData.notes||[]).filter(n=>n.id!==nid);
+        saveData();renderBrainDump();
+      }
+    },300);
+  }
 };
 
 // ── PROJECTS ──────────────────────────────────────────────────────
@@ -2472,10 +2762,11 @@ function projectRowHTML(p){
 }
 
 function renderProjects(){
-  const all=appData.userProjects||[];
+  const all=(appData.userProjects||[]).filter(p=>!p.archived);
   const active=all.filter(p=>p.stage!=='done');
   const atRisk=all.filter(p=>p.stage==='building'||p.stage==='blocked');
   const done=all.filter(p=>p.stage==='done');
+  const archived=(appData.userProjects||[]).filter(p=>p.archived);
   // Subtitle
   const sub=document.getElementById('projectsTabSub');
   if(sub)sub.textContent=`${active.length} active · ${atRisk.length} need attention · ${done.length} completed`;
@@ -2489,12 +2780,42 @@ function renderProjects(){
   else if(currentProjFilter==='done') filtered=all.filter(p=>p.stage==='done');
   if(!filtered.length){
     gridEl.innerHTML=`<div class="projects-empty-row" style="grid-column:1/-1;padding:48px 20px;text-align:center;color:var(--muted);font-size:14px">No projects${currentProjFilter!=='all'?' in this category':''} yet — hit <strong>+ New project</strong> to get started</div>`;
-    renderDashProjectsWidget();
-    return;
+  } else {
+    gridEl.innerHTML=filtered.map(projectCardHTML).join('');
   }
-  gridEl.innerHTML=filtered.map(projectCardHTML).join('');
+  // Archived section
+  const archBtn=document.getElementById('showArchivedBtn');
+  if(archBtn) archBtn.style.display=archived.length?'':'none';
+  const archGrid=document.getElementById('archivedProjectsGrid');
+  if(archGrid){
+    archGrid.style.display=_showArchivedProjects&&archived.length?'':'none';
+    if(_showArchivedProjects&&archived.length){
+      archGrid.innerHTML=archived.map(p=>{
+        const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
+        return`<div class="proj-card" style="opacity:.55">
+          <div class="proj-card-accent" style="background:${s.accent}"></div>
+          <div class="proj-card-body">
+            <div class="proj-card-top">
+              <div class="proj-card-name">${p.name}</div>
+              <span class="proj-status-badge" style="background:var(--card2);color:var(--muted)">Archived</span>
+            </div>
+            <div class="proj-card-desc">${p.category||'—'}</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="proj-btn-sm" onclick="unarchiveProject('${p.id}')">Restore</button>
+              <button class="proj-btn-sm del" onclick="deleteUserProject('${p.id}')">Delete</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
   renderDashProjectsWidget();
 }
+
+window.unarchiveProject=function(id){
+  const p=(appData.userProjects||[]).find(x=>x.id===id);
+  if(p){p.archived=false;saveData();renderProjects();toast('Project restored');}
+};
 
 function projectCardHTML(p){
   const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
@@ -2506,16 +2827,23 @@ function projectCardHTML(p){
   const taskRows=tasks.map(t=>`
     <div class="proj-task-row" onclick="event.stopPropagation();toggleProjTask('${p.id}','${t.id}')">
       <div class="proj-task-circle" style="border-color:${t.done?s.accent:'rgba(255,255,255,0.2)'};background:${t.done?s.accent:'transparent'};color:${t.done?'#000':'transparent'}">✓</div>
-      <span class="proj-task-name${t.done?' done':''}">${t.name}</span>
+      <span class="proj-task-name${t.done?' done':''}${t.milestone?' milestone':''}">${t.milestone?'<span class="proj-task-flag">⚑</span>':''}${t.name}</span>
+      <button class="proj-task-milestone-btn${t.milestone?' on':''}" onclick="event.stopPropagation();toggleProjTaskMilestone('${p.id}','${t.id}')" title="Toggle milestone">⚑</button>
     </div>`).join('');
+  const notesSnip=p.notes?`<div class="proj-card-notes" title="${escHtml(p.notes)}">${escHtml(p.notes.slice(0,80))}${p.notes.length>80?'…':''}</div>`:'';
+  const linkBtn=p.link?`<a class="proj-card-link" href="${escHtml(p.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>`:'';
   return`<div class="proj-card">
     <div class="proj-card-accent" style="background:${s.accent}"></div>
     <div class="proj-card-body">
       <div class="proj-card-top" onclick="openProjectModal('${p.id}')" style="cursor:pointer">
         <div class="proj-card-name">${p.name}</div>
-        <span class="proj-status-badge" style="background:${s.bg};color:${s.dotColor}">${s.label}</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          ${linkBtn}
+          <span class="proj-status-badge" style="background:${s.bg};color:${s.dotColor}">${s.label}</span>
+        </div>
       </div>
       <div class="proj-card-desc" onclick="openProjectModal('${p.id}')" style="cursor:pointer">${p.category||p.nextAction||'—'}</div>
+      ${notesSnip}
       <div class="proj-prog-row"><span style="font-weight:600;color:var(--sub)">Progress</span><span class="proj-prog-pct">${pct}%</span></div>
       <div class="proj-prog-track"><div class="proj-prog-fill" style="width:${pct}%;background:${s.accent}"></div></div>
       <div class="proj-task-section">
@@ -2536,6 +2864,13 @@ function projectCardHTML(p){
     </div>
   </div>`;
 }
+
+window.toggleProjTaskMilestone=function(projId,taskId){
+  const p=(appData.userProjects||[]).find(x=>x.id===projId);
+  if(!p||!p.tasks)return;
+  const t=p.tasks.find(x=>x.id===taskId);
+  if(t){t.milestone=!t.milestone;saveData();renderProjects();}
+};
 
 window.toggleProjGroup=function(key){
   projGroupOpen[key]=projGroupOpen[key]===false;
@@ -2598,6 +2933,24 @@ function renderDashNW(){
   }).join('')+(accounts.length>5?`<div style="padding:10px 20px;font-size:12px;color:var(--muted)">${accounts.length-5} more accounts</div>`:'');
 }
 
+let _showArchivedProjects=false;
+
+window.toggleShowArchived=function(){
+  _showArchivedProjects=!_showArchivedProjects;
+  const btn=document.getElementById('showArchivedBtn');
+  if(btn)btn.textContent=_showArchivedProjects?'Hide archived projects':'Show archived projects';
+  renderProjects();
+};
+
+window.archiveProject=function(){
+  const id=document.getElementById('projectEditId').value;
+  if(!id)return;
+  const p=(appData.userProjects||[]).find(x=>x.id===id);
+  if(!p)return;
+  p.archived=true;
+  saveData();closeModal('projectModal');renderProjects();toast('Project archived');
+};
+
 window.openProjectModal=function(id){
   const p=id?(appData.userProjects||[]).find(x=>x.id===id):null;
   document.getElementById('projectModalTitle').textContent=p?'Edit Project':'New Project';
@@ -2607,7 +2960,12 @@ window.openProjectModal=function(id){
   document.getElementById('projectStage').value=p?p.stage:'planning';
   document.getElementById('projectPriority').value=p?p.priority||'':'';
   document.getElementById('projectNextAction').value=p?p.nextAction||'':'';
+  document.getElementById('projectNotes').value=p?p.notes||'':'';
+  document.getElementById('projectLink').value=p?p.link||'':'';
   document.getElementById('projectDueDate').value=p?p.dueDate||'':'';
+  // Archive button: only show for done-stage projects
+  const archBtn=document.getElementById('projectArchiveBtn');
+  if(archBtn) archBtn.style.display=(p&&p.stage==='done'&&!p.archived)?'':'none';
   openModal('projectModal');
 };
 
@@ -2619,13 +2977,15 @@ window.saveProject=function(){
   const category=document.getElementById('projectCategory').value.trim().toUpperCase();
   const priority=document.getElementById('projectPriority').value;
   const nextAction=document.getElementById('projectNextAction').value.trim();
+  const notes=document.getElementById('projectNotes').value.trim();
+  const link=document.getElementById('projectLink').value.trim();
   const dueDate=document.getElementById('projectDueDate').value;
   if(!appData.userProjects)appData.userProjects=[];
   if(id){
     const p=appData.userProjects.find(x=>x.id===id);
-    if(p){p.name=name;p.stage=stage;p.category=category;p.priority=priority;p.nextAction=nextAction;p.dueDate=dueDate;}
+    if(p){p.name=name;p.stage=stage;p.category=category;p.priority=priority;p.nextAction=nextAction;p.notes=notes;p.link=link;p.dueDate=dueDate;}
   } else {
-    appData.userProjects.push({id:uid(),name,stage,category,priority,nextAction,dueDate,tasks:[],created:todayStr()});
+    appData.userProjects.push({id:uid(),name,stage,category,priority,nextAction,notes,link,dueDate,tasks:[],created:todayStr()});
   }
   saveData();closeModal('projectModal');renderProjects();renderDashProjectsWidget();toast(id?'✓ Project updated':'✓ Project added');
 };
@@ -2656,11 +3016,12 @@ window.addProjTask=function(projId){
   p.tasks.push({id:uid(),name,done:false});
   saveData();
   renderProjects();
-  // Re-open the task list after re-render
   const list=document.getElementById('ptlist-'+projId);
   const chev=document.getElementById('ptchev-'+projId);
   if(list){list.classList.add('open');}
   if(chev){chev.style.transform='rotate(180deg)';}
+  const newInp=document.getElementById('ptinput-'+projId);
+  if(newInp){newInp.focus();}
 };
 
 window.deleteUserProject=function(id){
@@ -2868,13 +3229,51 @@ window.deleteAccount=function(id){
 
 // ── GOALS ─────────────────────────────────────────────────────────
 const GOAL_COLORS=['#30d158','#0a84ff','#ff9f0a','#bf5af2','#ff453a','#64d2ff','#ff6eb4','#30d158'];
+
+// Get current balance for a goal (supports multiple linked accounts)
+function goalCurrentBalance(g){
+  const ids=g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[]);
+  if(ids.length){
+    const accounts=appData.accounts||[];
+    const sum=ids.reduce((s,id)=>{
+      const a=accounts.find(x=>x.id===id);
+      return s+(a?a.balance:0);
+    },0);
+    return sum;
+  }
+  return g.current||0;
+}
+
+// Append today's balance to balanceHistory if not already logged
+function logGoalBalanceHistory(g){
+  const today=todayStr();
+  if(!g.balanceHistory)g.balanceHistory=[];
+  const alreadyLogged=g.balanceHistory.some(h=>h.date===today);
+  if(!alreadyLogged){
+    g.balanceHistory.push({date:today,balance:goalCurrentBalance(g)});
+    // Keep last 90 days
+    if(g.balanceHistory.length>90)g.balanceHistory=g.balanceHistory.slice(-90);
+  }
+}
+
+// Get balance from 7 days ago for weekly change calc
+function goalBalanceWeekAgo(g){
+  if(!g.balanceHistory||!g.balanceHistory.length)return null;
+  const sevenAgo=new Date();sevenAgo.setDate(sevenAgo.getDate()-7);
+  const sevenAgoStr=sevenAgo.toLocaleDateString('en-CA');
+  // Find closest entry at or before 7 days ago
+  const older=g.balanceHistory.filter(h=>h.date<=sevenAgoStr);
+  if(!older.length)return null;
+  return older[older.length-1].balance;
+}
+
 function renderGoals(){
   const el=document.getElementById('goalsGrid');
   if(!el)return;
   const goals=appData.goals||[];
   const sub=document.getElementById('goalsSub');
   if(sub){
-    const done=goals.filter(g=>g.current>=(g.target||1)).length;
+    const done=goals.filter(g=>goalCurrentBalance(g)>=(g.target||1)).length;
     sub.textContent=goals.length?`${done} of ${goals.length} goal${goals.length!==1?'s':''} reached`:'Track what you\'re building toward.';
   }
   if(!goals.length){
@@ -2883,16 +3282,29 @@ function renderGoals(){
   }
   el.innerHTML=goals.map((g,i)=>{
     const color=GOAL_COLORS[i%GOAL_COLORS.length];
-    const current=g.linkedAccountId?(appData.accounts||[]).find(a=>a.id===g.linkedAccountId)?.balance??g.current:g.current;
+    const current=goalCurrentBalance(g);
     const target=g.target||1;
     const pct=Math.min(current/target*100,100);
     const done=pct>=100;
+    // Weekly change
+    const weekAgo=goalBalanceWeekAgo(g);
+    let weeklyHtml='';
+    if(weekAgo!==null){
+      const diff=current-weekAgo;
+      if(diff>0) weeklyHtml=`<div class="goal-weekly-change">+ ${fmt(diff)} this week</div>`;
+      else if(diff<0) weeklyHtml=`<div class="goal-weekly-change" style="color:var(--red)">- ${fmt(Math.abs(diff))} this week</div>`;
+      else weeklyHtml=`<div class="goal-weekly-change none">no change this week</div>`;
+    }
+    // Linked account names
+    const ids=g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[]);
+    const linkedNames=ids.map(id=>(appData.accounts||[]).find(a=>a.id===id)?.name).filter(Boolean);
+    const linkedSub=linkedNames.length?`<div class="goal-sub">Linked: ${linkedNames.join(', ')}</div>`:'';
     return `<div class="goal-card">
       <div class="goal-top">
         <div class="goal-icon" style="background:${color}22;color:${color}">${g.emoji||'🎯'}</div>
         <div style="flex:1">
           <div class="goal-name">${g.name}</div>
-          ${g.linkedAccountId?`<div class="goal-sub">Linked to ${(appData.accounts||[]).find(a=>a.id===g.linkedAccountId)?.name||'account'}</div>`:''}
+          ${linkedSub}
         </div>
         <div class="goal-actions">
           <button class="goal-action-btn" onclick="openGoalModal('${g.id}')">✏️</button>
@@ -2907,9 +3319,11 @@ function renderGoals(){
         <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
       </div>
       <div class="goal-pct">${done?'🎉 Goal reached!':Math.round(pct)+'% · '+fmtM(target-current)+' to go'}</div>
+      ${weeklyHtml}
     </div>`;
   }).join('');
 }
+
 window.openGoalModal=function(id){
   const g=id?(appData.goals||[]).find(x=>x.id===id):null;
   document.getElementById('goalEditId').value=id||'';
@@ -2918,29 +3332,50 @@ window.openGoalModal=function(id){
   document.getElementById('goalEmoji').value=g?g.emoji:'🎯';
   document.getElementById('goalTarget').value=g?g.target:'';
   document.getElementById('goalCurrent').value=g?g.current:'';
-  // Populate linked account dropdown
-  const sel=document.getElementById('goalLinkedAccount');
-  sel.innerHTML='<option value="">None</option>'+(appData.accounts||[]).map(a=>`<option value="${a.id}"${g?.linkedAccountId===a.id?' selected':''}>${a.name}</option>`).join('');
-  // If linked account selected, disable current field
-  const linked=g?.linkedAccountId||'';
-  document.getElementById('goalCurrent').disabled=!!linked;
-  sel.onchange=()=>{document.getElementById('goalCurrent').disabled=!!sel.value;};
+  // Populate multi-select linked accounts
+  const wrap=document.getElementById('goalLinkedAccountsWrap');
+  const selectedIds=g?(g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[])):[];
+  wrap.innerHTML=(appData.accounts||[]).length
+    ?(appData.accounts||[]).map(a=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:2px 0">
+        <input type="checkbox" value="${a.id}" ${selectedIds.includes(a.id)?'checked':''} onchange="updateGoalCurrentFromAccounts()" style="cursor:pointer">
+        ${a.name} <span style="color:var(--muted);font-size:12px">${fmt(a.balance)}</span>
+      </label>`).join('')
+    :'<div style="color:var(--muted);font-size:13px">No accounts yet</div>';
+  // If any linked account checked, disable current field
+  const anyChecked=selectedIds.length>0;
+  document.getElementById('goalCurrent').disabled=anyChecked;
   openModal('goalModal');
 };
+
+window.updateGoalCurrentFromAccounts=function(){
+  const wrap=document.getElementById('goalLinkedAccountsWrap');
+  const checked=[...wrap.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
+  document.getElementById('goalCurrent').disabled=checked.length>0;
+  if(checked.length>0){
+    const total=checked.reduce((s,id)=>{
+      const a=(appData.accounts||[]).find(x=>x.id===id);
+      return s+(a?a.balance:0);
+    },0);
+    document.getElementById('goalCurrent').value=total.toFixed(0);
+  }
+};
+
 window.saveGoal=function(){
   const name=document.getElementById('goalName').value.trim();
   const emoji=document.getElementById('goalEmoji').value.trim()||'🎯';
   const target=parseFloat(document.getElementById('goalTarget').value)||0;
   const current=parseFloat(document.getElementById('goalCurrent').value)||0;
-  const linkedAccountId=document.getElementById('goalLinkedAccount').value||null;
+  // Get checked account IDs
+  const wrap=document.getElementById('goalLinkedAccountsWrap');
+  const linkedAccountIds=[...wrap.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
   const editId=document.getElementById('goalEditId').value;
   if(!name||!target)return;
   if(!appData.goals)appData.goals=[];
   if(editId){
     const g=appData.goals.find(x=>x.id===editId);
-    if(g){Object.assign(g,{name,emoji,target,current,linkedAccountId});}
+    if(g){Object.assign(g,{name,emoji,target,current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});}
   } else {
-    appData.goals.push({id:uid(),name,emoji,target,current,linkedAccountId,created:todayStr()});
+    appData.goals.push({id:uid(),name,emoji,target,current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null,created:todayStr()});
   }
   saveData();closeModal('goalModal');renderGoals();toast('✓ Goal saved');
 };
@@ -3158,7 +3593,7 @@ window.openEditTaskModal=function(id){
   openModal('newTaskModal');
   setTimeout(()=>document.getElementById('modalTaskName').focus(),80);
 };
-['addEventModal','addHabitModal','newTaskModal','txnModal','budgetModal','savingsModal','signOutModal','projectModal','accountModal','goalModal','weeklyReviewModal'].forEach(id=>{
+['addEventModal','addHabitModal','newTaskModal','txnModal','budgetModal','savingsModal','signOutModal','projectModal','accountModal','goalModal','weeklyReviewModal','calEventModal'].forEach(id=>{
   document.getElementById(id)?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal(id);});
 });
 
@@ -3775,6 +4210,194 @@ async function _transcribeAudio(){
     if(voiceMode)setTimeout(startListening,300);
   }
 }
+
+// ── JARVIS HISTORY ────────────────────────────────────────────────
+async function renderJarvisHistory(){
+  const wrap=document.getElementById('jarvisHistoryWrap');
+  if(!wrap||!userRef)return;
+  try{
+    // userRef path = users/{uid}/data/main → derive history ref
+    const pathParts=userRef.path.split('/');
+    const uid=pathParts[1];
+    const historyRef=doc(db,`users/${uid}/data/telegramHistory`);
+    const snap=await getDoc(historyRef);
+    if(!snap.exists()){wrap.style.display='none';return;}
+    const messages=snap.data().messages||[];
+    if(!messages.length){wrap.style.display='none';return;}
+    // Build exchanges: pairs of user+assistant
+    const exchanges=[];
+    for(let i=0;i<messages.length-1;i++){
+      if(messages[i].role==='user'&&messages[i+1]?.role==='assistant'){
+        exchanges.push({user:messages[i].content,reply:messages[i+1].content});
+        i++;
+      }
+    }
+    const last5=exchanges.slice(-5).reverse();
+    if(!last5.length){wrap.style.display='none';return;}
+    wrap.style.display='';
+    const body=document.getElementById('jarvisHistoryBody');
+    if(body){
+      body.innerHTML=last5.map(ex=>`<div class="jh-exchange">
+        <div class="jh-user">You: <span>${escHtml(ex.user.slice(0,120))}${ex.user.length>120?'…':''}</span></div>
+        <div class="jh-reply">${escHtml(ex.reply.slice(0,200))}${ex.reply.length>200?'…':''}</div>
+      </div>`).join('');
+    }
+  }catch(e){console.warn('JARVIS history error',e.message);wrap.style.display='none';}
+}
+
+window.toggleJarvisHistory=function(){
+  const body=document.getElementById('jarvisHistoryBody');
+  const chev=document.getElementById('jarvisHistoryChev');
+  if(!body)return;
+  const open=body.style.display==='none'||!body.style.display;
+  body.style.display=open?'flex':'none';
+  if(chev)chev.style.transform=open?'rotate(180deg)':'';
+};
+
+// ── QUICK ADD FAB ─────────────────────────────────────────────────
+window.toggleQuickSheet=function(){
+  const sheet=document.getElementById('quickActionSheet');
+  if(!sheet)return;
+  sheet.classList.toggle('open');
+};
+window.closeQuickSheet=function(){
+  const sheet=document.getElementById('quickActionSheet');
+  if(sheet)sheet.classList.remove('open');
+};
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#quickFab')&&!e.target.closest('#quickActionSheet')){
+    closeQuickSheet();
+  }
+});
+window.openHabitLogSheet=function(){
+  // Open habits tab and scroll there
+  switchTab('dashboard');
+  setTimeout(()=>{
+    const el=document.querySelector('.habits-section');
+    if(el)el.scrollIntoView({behavior:'smooth'});
+  },100);
+};
+window.focusBrainDump=function(){
+  switchTab('dashboard');
+  setTimeout(()=>{
+    const inp=document.getElementById('brainDumpInput');
+    if(inp){inp.scrollIntoView({behavior:'smooth'});inp.focus();}
+  },100);
+};
+
+// ── OFFLINE DETECTION ─────────────────────────────────────────────
+function updateOnlineStatus(){
+  const banner=document.getElementById('offlineBanner');
+  if(!banner)return;
+  banner.classList.toggle('show',!navigator.onLine);
+}
+window.addEventListener('online',updateOnlineStatus);
+window.addEventListener('offline',updateOnlineStatus);
+updateOnlineStatus();
+
+// ── DATA EXPORT ───────────────────────────────────────────────────
+window.exportData=function(){
+  const blob=new Blob([JSON.stringify(appData,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`dashboard-export-${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('✓ Export downloaded');
+};
+
+// ── DATA BACKUP ───────────────────────────────────────────────────
+window.createBackup=async function(){
+  if(!userRef)return;
+  toast('Creating backup…');
+  try{
+    const ts=Date.now();
+    const pathParts=userRef.path.split('/');
+    const uid=pathParts[1];
+    const backupRef=doc(db,`users/${uid}/backups/${ts}`);
+    await setDoc(backupRef,{...appData,_backedUpAt:ts});
+    localStorage.setItem('lastBackupAt',String(ts));
+    updateLastBackupLabel();
+    toast('✓ Backup saved');
+  }catch(e){toast('Backup failed: '+e.message,'error');}
+};
+
+function updateLastBackupLabel(){
+  const el=document.getElementById('lastBackupLabel');
+  if(!el)return;
+  const ts=localStorage.getItem('lastBackupAt');
+  if(!ts){el.textContent='';return;}
+  const d=new Date(parseInt(ts));
+  el.textContent=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────────────────
+async function enablePushNotifications(){
+  const statusEl=document.getElementById('pddPushStatus');
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    toast('Push notifications not supported in this browser','error');return;
+  }
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){toast('Notification permission denied','error');return;}
+    // Get VAPID public key
+    const keyRes=await fetch('/.netlify/functions/push-notify?action=vapid-key');
+    const keyData=await keyRes.json();
+    if(keyData.error){toast('Notifications not configured yet — see push-notify.js for setup instructions');return;}
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:urlBase64ToUint8Array(keyData.publicKey),
+    });
+    // Send subscription to server
+    await fetch('/.netlify/functions/push-notify?action=subscribe',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({subscription:sub.toJSON()}),
+    });
+    if(statusEl)statusEl.textContent='✓ On';
+    toast('✓ Push notifications enabled');
+  }catch(e){
+    console.error('Push subscribe error:',e);
+    toast('Could not enable notifications: '+e.message,'error');
+  }
+}
+window.enablePushNotifications=enablePushNotifications;
+
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=window.atob(base64);
+  return new Uint8Array([...raw].map(c=>c.charCodeAt(0)));
+}
+
+// Check existing push permission state on load
+(function checkPushStatus(){
+  const statusEl=document.getElementById('pddPushStatus');
+  if(!statusEl)return;
+  if(!('Notification' in window)){statusEl.textContent='N/A';return;}
+  statusEl.textContent=Notification.permission==='granted'?'✓ On':Notification.permission==='denied'?'Blocked':'—';
+})();
+
+// ── SERVICE WORKER ────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW reg failed',e.message));
+  });
+}
+
+// ── SKELETON SCREENS ──────────────────────────────────────────────
+// Show skeletons during initial load (before renderAll fires)
+(function showSkeletons(){
+  const skeletonHTML=`<div class="skeleton-wrap">
+    <div class="skeleton-line tall"></div>
+    <div class="skeleton-line med"></div>
+    <div class="skeleton-line short"></div>
+  </div>`;
+  ['habitsGridDash','focusTasksList','todayEventsList','brainDumpList'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=skeletonHTML;
+  });
+})();
 
 // ── Mobile swipe navigation ────────────────────────────────────────
 (function(){

@@ -9,3 +9,6 @@
 
 [functions."sync-timetree"]
   schedule = "*/5 * * * *"
+
+[functions."weekly-review"]
+  schedule = "0 9 * * 0"
