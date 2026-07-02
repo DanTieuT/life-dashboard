@@ -591,7 +591,7 @@ input,select,textarea{font-family:inherit}
 .ring-stat-badge.yellow{background:var(--yellow-dim);color:var(--yellow)}
 
 /* ── PAGE TRANSITION ─────────────────────────────────────────────── */
-.page.active{animation:pageFadeIn .18s ease both}
+.page.active{animation:pageFadeIn .18s ease}
 @keyframes pageFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── DARK/LIGHT TRANSITION (#70) ─────────────────────────────────── */
@@ -889,7 +889,7 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
   .hero-date{margin-bottom:0}
   .chat-panel{left:10px;right:10px;width:auto;bottom:calc(64px + env(safe-area-inset-bottom))}
   .chat-fab{bottom:calc(64px + env(safe-area-inset-bottom));right:14px;width:46px;height:46px;font-size:19px}
-  .toast{right:10px;left:10px;max-width:none;bottom:calc(70px + env(safe-area-inset-bottom))}
+  /* .toast mobile position handled by #79 rule (top of screen) */
 
   /* ── Hero card: single-column, hide side gauges ── */
   .hero-card{flex-direction:column;padding:20px 18px;gap:0;align-items:stretch}
@@ -2203,6 +2203,7 @@ window.convertNoteToProject=function(id){
   openModal('projectModal');
 };
 
+window.renderBrainDump=renderBrainDump;
 function renderBrainDump(){
   const el=document.getElementById('brainDumpList');
   if(!el)return;
@@ -3298,6 +3299,7 @@ window.deleteUserProject=function(id){
 };
 
 // ── FINANCE TAB ───────────────────────────────────────────────────
+window.renderFinanceTab=renderFinanceTab;
 function renderFinanceTab(){
   renderFinanceRing();
   updateHideNumBtn();
@@ -3849,6 +3851,7 @@ window.saveEvent=function(){
 
 // ── MODALS ────────────────────────────────────────────────────────
 function openModal(id){document.getElementById(id).classList.add('open');}
+window.openModal=openModal;
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 window.closeModal=closeModal;
 window.openNewTaskModal=function(){
