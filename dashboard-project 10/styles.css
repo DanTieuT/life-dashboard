@@ -646,16 +646,37 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .habit-color-picker-input{width:40px;height:40px;border:none;border-radius:8px;
   cursor:pointer;padding:2px;background:var(--card2)}
 
-/* ── CONFIRM INLINE (#81) ────────────────────────────────────────── */
-.confirm-inline{display:none;align-items:center;gap:6px;margin-top:6px}
-.confirm-inline.show{display:flex}
-.confirm-msg{font-size:12px;color:var(--sub);flex:1}
-.confirm-yes{background:var(--red);color:#fff;border:none;border-radius:6px;
-  padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
-.confirm-no{background:var(--card2);border:1px solid var(--border);border-radius:6px;
-  padding:4px 10px;font-size:12px;color:var(--sub);cursor:pointer;font-family:inherit}
-.task-row.confirm-pending{background:rgba(255,69,58,.05)}
-.habit-card.confirm-pending{outline:1px solid var(--red)}
+/* ── UNDO TOAST (#7) ─────────────────────────────────────────────── */
+.toast-undo-btn{background:none;border:none;color:var(--green);font-weight:700;
+  font-size:13px;cursor:pointer;font-family:inherit;margin-left:12px;padding:0}
+.toast-undo-btn:active{opacity:.7}
+
+/* ── SUBTASKS (#20) ──────────────────────────────────────────────── */
+.subtask-chip{font-size:11px;font-weight:600;color:var(--sub);background:var(--card2);
+  border:1px solid var(--border);border-radius:6px;padding:1px 6px;flex-shrink:0;margin-left:4px}
+.subtask-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px}
+.subtask-check{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--border);
+  background:none;color:transparent;font-size:10px;line-height:1;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;padding:0}
+.subtask-check.checked{background:var(--green);border-color:var(--green);color:#000}
+.subtask-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.subtask-text.done{text-decoration:line-through;color:var(--muted)}
+.subtask-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 4px}
+.subtask-add-row{display:flex;gap:8px;margin-top:6px}
+.subtask-add-row input{flex:1;background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);font-family:inherit;outline:none}
+.subtask-add-row button{background:var(--card2);border:1px solid var(--border);border-radius:8px;
+  padding:0 12px;color:var(--green);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.task-subtasks-expand{padding:2px 16px 8px 46px}
+
+/* ── PROJECT DEADLINE ROLLUP (#21) ───────────────────────────────── */
+.proj-next-due{font-size:12px;color:var(--sub);margin-top:6px;display:flex;align-items:center;gap:6px}
+.proj-next-due.overdue{color:var(--red);font-weight:600}
+
+/* ── RECURRING EDIT SCOPE (#22) ──────────────────────────────────── */
+.recur-scope-group{display:flex;flex-direction:column;gap:6px;background:var(--card2);
+  border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px}
+.recur-scope-group label{display:flex;align-items:center;gap:8px;cursor:pointer}
 
 /* ── SKELETON LOADING ────────────────────────────────────────────── */
 .skeleton-wrap{padding:20px;display:flex;flex-direction:column;gap:12px}

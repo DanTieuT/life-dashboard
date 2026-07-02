@@ -108,7 +108,7 @@ function habitCardHTML(h,idx){
       </div>
       <div class="habit-card-actions">
         <button class="habit-action-btn" onclick="openEditHabitModal('${h.id}')" title="Edit">✎</button>
-        <button class="habit-action-btn habit-del-btn" onclick="confirmDeleteHabit('${h.id}')" title="Delete">✕</button>
+        <button class="habit-action-btn habit-del-btn" onclick="deleteHabit('${h.id}')" title="Delete">✕</button>
       </div>
       <button class="habit-log-btn" style="background:${c.dim};padding:0;opacity:1"
         onclick="logHabit('${h.id}')">
@@ -271,12 +271,24 @@ window.saveHabitModal=function(){
   renderHabitsGrid('habitsGridDash');renderHabitsGrid('habitsGridTab');
   updateHabitsSummary();toast(editId?'✓ Habit updated':'✓ Habit added');
 };
+// Immediate delete with 6s undo toast (#7)
 window.deleteHabit=function(id){
-  appData.habits=appData.habits.filter(h=>h.id!==id);
+  const idx=appData.habits.findIndex(h=>h.id===id);
+  if(idx===-1)return;
+  const [removed]=appData.habits.splice(idx,1);
   saveData();
   renderHabitsGrid('habitsGridDash');renderHabitsGrid('habitsGridTab');
-  updateHabitsSummary();renderStats();toast('Habit deleted');
+  updateHabitsSummary();renderStats();
+  toastUndo(removed.name,()=>{
+    appData.habits.splice(Math.min(idx,appData.habits.length),0,removed);
+    saveData();
+    renderHabitsGrid('habitsGridDash');renderHabitsGrid('habitsGridTab');
+    updateHabitsSummary();renderStats();
+  });
 };
+
+// Enter advances fields; Cmd/Ctrl+Enter saves (#11)
+setupModalEnterFlow('addHabitModal',['newHabitName','newHabitSub','newHabitEmoji'],()=>saveHabitModal());
 let _dragHabitId=null;
 
 function attachHabitDragListeners(containerId){
@@ -387,32 +399,6 @@ function afterRenderHabitsGrid(containerId){
   if(btn)btn.style.display=hasArchived?'':'none';
 }
 
-window.confirmDeleteHabit=function(id){
-  const card=document.querySelector(`.habit-card[data-habit-id="${id}"]`);
-  if(!card)return;
-  // Check if already in confirm mode
-  if(card.classList.contains('confirm-pending')){
-    return;
-  }
-  card.classList.add('confirm-pending');
-  const existing=card.querySelector('.confirm-inline');
-  if(existing){existing.classList.add('show');return;}
-  const confirm=document.createElement('div');
-  confirm.className='confirm-inline show';
-  confirm.innerHTML=`<span class="confirm-msg">Delete habit?</span>
-    <button class="confirm-no" onclick="cancelConfirmHabit('${id}')">No</button>
-    <button class="confirm-yes" onclick="deleteHabit('${id}')">Yes, delete</button>`;
-  const yearGrid=card.querySelector('.year-grid');
-  if(yearGrid)card.insertBefore(confirm,yearGrid);
-  else card.appendChild(confirm);
-};
-window.cancelConfirmHabit=function(id){
-  const card=document.querySelector(`.habit-card[data-habit-id="${id}"]`);
-  if(!card)return;
-  card.classList.remove('confirm-pending');
-  const conf=card.querySelector('.confirm-inline');
-  if(conf)conf.classList.remove('show');
-};
 let _showArchivedHabits=false;
 
 window.archiveHabitFromModal=function(){

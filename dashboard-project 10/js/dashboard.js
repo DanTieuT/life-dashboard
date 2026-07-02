@@ -174,10 +174,20 @@ window.addBrainDumpNote=function(){
   saveData();
   renderBrainDump();
 };
+// Immediate delete with 6s undo toast (#7)
 window.deleteBrainDumpNote=function(id){
-  appData.notes=(appData.notes||[]).filter(n=>n.id!==id);
+  if(!appData.notes)appData.notes=[];
+  const idx=appData.notes.findIndex(n=>n.id===id);
+  if(idx===-1)return;
+  const [removed]=appData.notes.splice(idx,1);
   saveData();
   renderBrainDump();
+  const label=(removed.text||'note').slice(0,40)+((removed.text||'').length>40?'…':'');
+  toastUndo(label,()=>{
+    appData.notes.splice(Math.min(idx,appData.notes.length),0,removed);
+    saveData();
+    renderBrainDump();
+  });
 };
 
 // ── GREETING ──────────────────────────────────────────────────────
@@ -929,7 +939,8 @@ window.toggleJarvisHistory=function(){
 window.toggleQuickSheet=function(){
   const sheet=document.getElementById('quickActionSheet');
   if(!sheet)return;
-  sheet.classList.toggle('open');
+  const opened=sheet.classList.toggle('open');
+  if(opened)haptic(20); // quick-fab open (#12)
 };
 window.closeQuickSheet=function(){
   const sheet=document.getElementById('quickActionSheet');

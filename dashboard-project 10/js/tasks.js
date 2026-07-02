@@ -12,19 +12,40 @@ function taskRowHTML(t){
   const recentDone=isRecentDone(t);
   const rowCls=t.done?(recentDone?'recent-done-row':'done-row'):'';
   const recurBadge=t.recurrence?`<span class="recur-badge" title="Repeats ${t.recurrence}">↻</span>`:'';
-  const notesBadge=t.notes?`<button class="task-notes-indicator" onclick="event.stopPropagation();toggleTaskNotes('${t.id}')" title="Show notes">📝</button>`:'';
-  const notesRow=t.notes?`<div class="task-notes-expand" id="tnotes-${t.id}">${escHtml(t.notes)}</div>`:'';
-  return`<div class="task-row${rowCls?' '+rowCls:''}${t.notes?' has-notes':''}" data-task-id="${t.id}">
+  const subs=t.subtasks||[];
+  const subChip=subs.length?`<span class="subtask-chip">${subs.filter(s=>s.done).length}/${subs.length}</span>`:'';
+  const hasExpand=!!(t.notes||subs.length);
+  const notesBadge=hasExpand?`<button class="task-notes-indicator" onclick="event.stopPropagation();toggleTaskNotes('${t.id}')" title="Show details">📝</button>`:'';
+  const subRows=subs.map(s=>`<div class="subtask-row">
+      <button class="subtask-check${s.done?' checked':''}" onclick="event.stopPropagation();toggleSubtask('${t.id}','${s.id}')">✓</button>
+      <span class="subtask-text${s.done?' done':''}">${escHtml(s.text)}</span>
+    </div>`).join('');
+  const expandRow=hasExpand?`<div class="task-notes-expand" id="tnotes-${t.id}">${t.notes?escHtml(t.notes):''}${subs.length?`<div class="task-subtasks-inline" style="margin-top:${t.notes?'6px':'0'}">${subRows}</div>`:''}</div>`:'';
+  return`<div class="task-row${rowCls?' '+rowCls:''}${hasExpand?' has-notes':''}" data-task-id="${t.id}">
     <span class="task-drag-handle" title="Drag to reorder">⠿</span>
     <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</button>
     ${recurBadge}
     <span class="task-label${t.done?' done-text':''}" onclick="toggleTask('${t.id}')" style="cursor:pointer;flex:1">${t.name}</span>
+    ${subChip}
     ${notesBadge}
     ${duePill}
     <button class="task-row-edit" onclick="openEditTaskModal('${t.id}')" title="Edit">✎</button>
-    <button class="task-row-del" onclick="confirmDeleteTask('${t.id}')">✕</button>
-  </div>${notesRow}`;
+    <button class="task-row-del" onclick="deleteTask('${t.id}')">✕</button>
+  </div>${expandRow}`;
 }
+
+// ── SUBTASKS (#20) ────────────────────────────────────────────────
+window.toggleSubtask=function(taskId,subId){
+  const t=(appData.projects||[]).find(x=>x.id===taskId);
+  const s=t&&(t.subtasks||[]).find(x=>x.id===subId);
+  if(!s)return;
+  haptic(20);
+  s.done=!s.done;
+  saveData();
+  const wasOpen=document.getElementById('tnotes-'+taskId)?.classList.contains('open');
+  renderTasks();
+  if(wasOpen)document.getElementById('tnotes-'+taskId)?.classList.add('open');
+};
 function renderTaskSection(containerId,label,tasks,color){
   const el=document.getElementById(containerId);
   if(!el)return;
@@ -245,11 +266,14 @@ window.toggleTask=function(id){
   if(!t.done&&t.recurrence){
     // Mark current done and create next occurrence
     t.done=true;t.doneAt=Date.now();t.completedDate=todayStr();
+    if(!t.seriesId)t.seriesId=t.id; // establish series linkage (#22)
     const nextDue=nextRecurrenceDate(t.due||todayStr(),t.recurrence);
     if(nextDue){
       appData.projects.push({
         id:uid(),name:t.name,due:nextDue,done:false,
-        recurrence:t.recurrence,notes:t.notes||'',created:todayStr()
+        recurrence:t.recurrence,notes:t.notes||'',created:todayStr(),
+        seriesId:t.seriesId,
+        subtasks:(t.subtasks||[]).map(s=>({id:uid(),text:s.text,done:false})),
       });
     }
     saveData();renderTasks();renderFocusTasks();renderStats();
@@ -261,11 +285,62 @@ window.toggleTask=function(id){
 };
 window.toggleProject=window.toggleTask;
 
+// Immediate delete with 6s undo toast (#7)
 window.deleteTask=function(id){
-  appData.projects=appData.projects.filter(p=>p.id!==id);
+  const idx=appData.projects.findIndex(p=>p.id===id);
+  if(idx===-1)return;
+  const [removed]=appData.projects.splice(idx,1);
   saveData();renderTasks();renderFocusTasks();renderStats();
+  toastUndo(removed.name,()=>{
+    appData.projects.splice(Math.min(idx,appData.projects.length),0,removed);
+    saveData();renderTasks();renderFocusTasks();renderStats();
+  });
 };
 window.deleteProject=window.deleteTask;
+
+// ── TASK MODAL SUBTASK EDITOR (#20) ───────────────────────────────
+let _modalSubtasks=[]; // working copy while modal is open
+
+function renderModalSubtasks(){
+  const list=document.getElementById('modalSubtaskList');
+  if(!list)return;
+  list.innerHTML=_modalSubtasks.map(s=>`<div class="subtask-row">
+    <button class="subtask-check${s.done?' checked':''}" onclick="modalToggleSubtask('${s.id}')">✓</button>
+    <span class="subtask-text${s.done?' done':''}">${escHtml(s.text)}</span>
+    <button class="subtask-del" onclick="modalRemoveSubtask('${s.id}')">✕</button>
+  </div>`).join('');
+}
+window.modalToggleSubtask=function(id){
+  const s=_modalSubtasks.find(x=>x.id===id);
+  if(s){s.done=!s.done;renderModalSubtasks();}
+};
+window.modalRemoveSubtask=function(id){
+  _modalSubtasks=_modalSubtasks.filter(x=>x.id!==id);
+  renderModalSubtasks();
+};
+window.modalAddSubtask=function(){
+  const inp=document.getElementById('modalSubtaskInput');
+  if(!inp)return;
+  const text=inp.value.trim();
+  if(!text)return;
+  _modalSubtasks.push({id:uid(),text,done:false});
+  inp.value='';
+  renderModalSubtasks();
+  inp.focus();
+};
+
+// Show/hide the recurring-edit-scope radios (#22)
+function updateRecurScopeVis(t){
+  const grp=document.getElementById('recurScopeGroup');
+  if(!grp)return;
+  const show=!!(t&&t.recurrence);
+  grp.style.display=show?'':'none';
+  if(show){
+    const all=document.querySelector('input[name="recurScope"][value="all"]');
+    if(all)all.checked=true;
+  }
+}
+
 window.saveModalTask=function(){
   const name=document.getElementById('modalTaskName').value.trim();
   if(!name)return;
@@ -273,12 +348,30 @@ window.saveModalTask=function(){
   const recurrence=document.getElementById('modalTaskRecurrence')?.value||'';
   const notes=document.getElementById('modalTaskNotes')?.value.trim()||'';
   const editId=document.getElementById('editTaskId').value;
+  const subtasks=_modalSubtasks.map(s=>({id:s.id,text:s.text,done:!!s.done}));
   if(editId){
     const t=(appData.projects||[]).find(x=>x.id===editId);
-    if(t){t.name=name;t.due=due;t.recurrence=recurrence||null;t.notes=notes||'';}
+    if(t){
+      // Recurring edit scope (#22)
+      const scope=document.querySelector('input[name="recurScope"]:checked')?.value||'all';
+      const wasRecurring=!!t.recurrence;
+      t.name=name;t.due=due;t.notes=notes||'';t.subtasks=subtasks;
+      if(wasRecurring&&scope==='occurrence'){
+        // This occurrence only: strip recurrence linkage
+        t.recurrence=null;
+        t.seriesId=null;
+      }else{
+        // All future: future spawns copy from this instance, so updating it
+        // (plus recurrence settings) is inherited by successors.
+        t.recurrence=recurrence||null;
+        if(t.recurrence&&!t.seriesId)t.seriesId=t.id;
+      }
+    }
     toast('✓ Task updated');
   }else{
-    appData.projects.push({id:uid(),name,due,done:false,created:todayStr(),recurrence:recurrence||null,notes:notes||''});
+    const t={id:uid(),name,due,done:false,created:todayStr(),recurrence:recurrence||null,notes:notes||'',subtasks};
+    if(t.recurrence)t.seriesId=t.id;
+    appData.projects.push(t);
     toast('✓ Task added');
   }
   saveData();renderTasks();renderFocusTasks();renderStats();
@@ -287,6 +380,7 @@ window.saveModalTask=function(){
   if(document.getElementById('modalTaskRecurrence'))document.getElementById('modalTaskRecurrence').value='';
   if(document.getElementById('modalTaskNotes'))document.getElementById('modalTaskNotes').value='';
   document.getElementById('editTaskId').value='';
+  _modalSubtasks=[];
   closeModal('newTaskModal');
   if(window._noteToTaskId){
     const nid=window._noteToTaskId;window._noteToTaskId=null;
@@ -303,6 +397,9 @@ window.openNewTaskModal=function(){
   const nn=document.getElementById('modalTaskNotes');
   if(nr)nr.value='';
   if(nn)nn.value='';
+  _modalSubtasks=[];
+  renderModalSubtasks();
+  updateRecurScopeVis(null);
   openModal('newTaskModal');
   setTimeout(()=>document.getElementById('modalTaskName').focus(),80);
 };
@@ -319,26 +416,16 @@ window.openEditTaskModal=function(id){
   if(nr)nr.value=t.recurrence||'';
   const nn=document.getElementById('modalTaskNotes');
   if(nn)nn.value=t.notes||'';
+  _modalSubtasks=(t.subtasks||[]).map(s=>({id:s.id,text:s.text,done:!!s.done}));
+  renderModalSubtasks();
+  updateRecurScopeVis(t);
   openModal('newTaskModal');
   setTimeout(()=>document.getElementById('modalTaskName').focus(),80);
 };
-window.confirmDeleteTask=function(id){
-  const row=document.querySelector(`.task-row[data-task-id="${id}"]`);
-  if(!row)return;
-  if(row.classList.contains('confirm-pending'))return;
-  row.classList.add('confirm-pending');
-  const conf=document.createElement('div');
-  conf.className='confirm-inline show';
-  conf.style.padding='0 16px 8px';
-  conf.innerHTML=`<span class="confirm-msg">Delete task?</span>
-    <button class="confirm-no" onclick="cancelConfirmTask('${id}')">No</button>
-    <button class="confirm-yes" onclick="deleteTask('${id}')">Yes</button>`;
-  row.after(conf);
-};
-window.cancelConfirmTask=function(id){
-  const row=document.querySelector(`.task-row[data-task-id="${id}"]`);
-  if(row){row.classList.remove('confirm-pending');row.nextElementSibling?.classList.contains('confirm-inline')&&row.nextElementSibling.remove();}
-};
+
+// Enter advances fields; Cmd/Ctrl+Enter saves (#11)
+setupModalEnterFlow('newTaskModal',['modalTaskName','modalTaskDue','modalTaskRecurrence','modalTaskNotes'],()=>saveModalTask());
+
 window.toggleTaskNotes=function(id){
   const el=document.getElementById('tnotes-'+id);
   if(el)el.classList.toggle('open');
@@ -408,6 +495,7 @@ function attachSwipeDelete(row){
     const dx=curX-startX;
     row.style.transition='transform .2s ease';
     if(dx<-THRESHOLD){
+      haptic(25); // swipe-to-delete trigger (#12) — synchronous in gesture handler
       // Snap open to show delete
       row.style.transform='translateX(-80px)';
       // Show delete indicator via background
@@ -420,11 +508,11 @@ function attachSwipeDelete(row){
       };
       setTimeout(reset,2000);
       document.addEventListener('touchstart',reset,{once:true,passive:true});
-      // If fully swiped (>100px), delete immediately
+      // If fully swiped (>100px), delete immediately (undo toast offers recovery)
       if(dx<-100){
         reset();
         const id=row.dataset.taskId;
-        if(id)confirmDeleteTask(id);
+        if(id)deleteTask(id);
       }
     } else {
       row.style.transform='';

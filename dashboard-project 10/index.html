@@ -642,7 +642,7 @@
   <div class="modal">
     <div class="modal-title" id="taskModalTitle">New Task</div>
     <input type="hidden" id="editTaskId">
-    <div class="form-group"><label class="form-label">What needs to get done?</label><input class="form-input" id="modalTaskName" placeholder="e.g. Replace air filter" onkeydown="if(event.key==='Enter')saveModalTask()"></div>
+    <div class="form-group"><label class="form-label">What needs to get done?</label><input class="form-input" id="modalTaskName" placeholder="e.g. Replace air filter"></div>
     <div class="form-group"><label class="form-label">Due date</label><input class="form-input" id="modalTaskDue" type="date"></div>
     <div class="form-group">
       <label class="form-label">Repeats</label>
@@ -652,6 +652,21 @@
         <option value="weekly">Weekly</option>
         <option value="monthly">Monthly</option>
       </select>
+    </div>
+    <div class="form-group" id="recurScopeGroup" style="display:none">
+      <label class="form-label">Apply changes to</label>
+      <div class="recur-scope-group">
+        <label><input type="radio" name="recurScope" value="all" checked> All future occurrences</label>
+        <label><input type="radio" name="recurScope" value="occurrence"> This occurrence only (stops repeating)</label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subtasks <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <div id="modalSubtaskList"></div>
+      <div class="subtask-add-row">
+        <input id="modalSubtaskInput" placeholder="Add a subtask..." onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();modalAddSubtask()}">
+        <button type="button" onclick="modalAddSubtask()">+ Add</button>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Notes <span style="color:var(--muted);font-weight:400">(optional)</span></label>

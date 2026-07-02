@@ -230,10 +230,20 @@ window.saveTxn=function(){
   document.getElementById('txnAmount').value='';
   closeModal('txnModal');renderFinanceTab();toast('✓ Transaction added');
 };
+// Immediate delete with 6s undo toast (#7)
 window.deleteTxn=function(id){
-  appData.transactions=appData.transactions.filter(t=>t.id!==id);
+  const idx=appData.transactions.findIndex(t=>t.id===id);
+  if(idx===-1)return;
+  const [removed]=appData.transactions.splice(idx,1);
   saveData();renderFinanceTab();
+  toastUndo(removed.name,()=>{
+    appData.transactions.splice(Math.min(idx,appData.transactions.length),0,removed);
+    saveData();renderFinanceTab();
+  });
 };
+
+// Enter advances fields; Cmd/Ctrl+Enter saves (#11)
+setupModalEnterFlow('txnModal',['txnName','txnAmount','txnCategory','txnType','txnDate'],()=>saveTxn());
 window.openBudgetModal=function(){
   document.getElementById('budgetIncome').value=appData.budget.income||appData.budget.monthly||'';
   const inp=document.getElementById('budgetInputs');

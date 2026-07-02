@@ -102,6 +102,19 @@ window.unarchiveProject=function(id){
   if(p){p.archived=false;saveData();renderProjects();toast('Project restored');}
 };
 
+// #21: nearest deadline among a project's linked tasks (p.tasks). Project tasks
+// rarely carry their own due dates, so fall back to the project dueDate with the
+// first open task as "next".
+function projectNextDue(p){
+  const open=(p.tasks||[]).filter(t=>!t.done);
+  if(!open.length&&!p.dueDate)return null;
+  const withDue=open.filter(t=>t.due).sort((a,b)=>a.due<b.due?-1:1);
+  const next=withDue[0]||open[0]||null;
+  const date=(next&&next.due)||p.dueDate||null;
+  if(!next&&!date)return null;
+  return{name:next?next.name:null,date};
+}
+
 function projectCardHTML(p){
   const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
   const tasks=p.tasks||[];
@@ -116,6 +129,16 @@ function projectCardHTML(p){
       <button class="proj-task-milestone-btn${t.milestone?' on':''}" onclick="event.stopPropagation();toggleProjTaskMilestone('${p.id}','${t.id}')" title="Toggle milestone">⚑</button>
     </div>`).join('');
   const notesSnip=p.notes?`<div class="proj-card-notes" title="${escHtml(p.notes)}">${escHtml(p.notes.slice(0,80))}${p.notes.length>80?'…':''}</div>`:'';
+  // #21: deadline rollup — "Next: <task> · <date>", overdue styling if past
+  let nextDueHTML='';
+  const nd=projectNextDue(p);
+  if(nd&&(nd.name||nd.date)){
+    const today=todayStr();
+    const overdue=nd.date&&nd.date<today;
+    const dateLbl=nd.date?new Date(nd.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    const parts=[nd.name?escHtml(nd.name):null,dateLbl||null].filter(Boolean).join(' · ');
+    if(parts)nextDueHTML=`<div class="proj-next-due${overdue?' overdue':''}">⏱ Next: ${parts}${overdue?' (overdue)':''}</div>`;
+  }
   const linkBtn=p.link?`<a class="proj-card-link" href="${escHtml(p.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>`:'';
   return`<div class="proj-card">
     <div class="proj-card-accent" style="background:${s.accent}"></div>
@@ -128,6 +151,7 @@ function projectCardHTML(p){
         </div>
       </div>
       <div class="proj-card-desc" onclick="openProjectModal('${p.id}')" style="cursor:pointer">${p.category||p.nextAction||'—'}</div>
+      ${nextDueHTML}
       ${notesSnip}
       <div class="proj-prog-row"><span style="font-weight:600;color:var(--sub)">Progress</span><span class="proj-prog-pct">${pct}%</span></div>
       <div class="proj-prog-track"><div class="proj-prog-fill" style="width:${pct}%;background:${s.accent}"></div></div>

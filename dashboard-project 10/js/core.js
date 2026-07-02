@@ -365,6 +365,7 @@ window.switchTab=function(tab){
   document.querySelectorAll('.nav-tab[data-tab],.bottom-tab[data-tab]').forEach(b=>{
     b.classList.toggle('active',b.dataset.tab===tab);
   });
+  haptic(10); // light tick on tab switch (#12)
   if(tab==='dashboard'){renderTodaySchedule();renderStats();syncTimetreeEvents();}
   if(tab==='finance')renderFinanceTab();
   if(tab==='habits'){renderHabitsGrid('habitsGridTab');updateHabitsSummary();}
@@ -381,6 +382,66 @@ function toast(msg,type=''){
   window._toastTimer=setTimeout(()=>el.className='toast',3000);
 }
 window.toast=toast;
+
+// ── UNDO DELETE (#7) ──────────────────────────────────────────────
+// One pending-undo slot: starting a new undoable delete finalizes the previous.
+let _pendingUndo=null;
+function _finalizePendingUndo(){
+  if(_pendingUndo){clearTimeout(_pendingUndo.timer);_pendingUndo=null;}
+}
+// Shows "Deleted 'X' — Undo" for 6s. undoFn restores the item and re-renders.
+function toastUndo(label,undoFn){
+  _finalizePendingUndo();
+  const el=document.getElementById('toast');
+  el.innerHTML='';
+  const txt=document.createElement('span');
+  txt.textContent=`Deleted ‘${label}’`;
+  const btn=document.createElement('button');
+  btn.className='toast-undo-btn';
+  btn.textContent='Undo';
+  btn.onclick=()=>{
+    haptic(20);
+    _finalizePendingUndo();
+    el.className='toast';
+    el.textContent='';
+    undoFn();
+  };
+  el.appendChild(txt);el.appendChild(btn);
+  el.className='toast show';
+  clearTimeout(window._toastTimer);
+  _pendingUndo={timer:setTimeout(()=>{
+    _pendingUndo=null;
+    el.className='toast';
+    el.textContent='';
+  },6000)};
+}
+window.toastUndo=toastUndo;
+
+// ── ENTER ADVANCES MODAL FIELDS (#11) ─────────────────────────────
+// Enter in a field moves focus to the next; Enter in the last (non-textarea)
+// field saves. Cmd/Ctrl+Enter anywhere in the modal saves.
+function setupModalEnterFlow(modalId,fieldIds,saveFn){
+  const modal=document.getElementById(modalId);
+  if(!modal)return;
+  modal.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();saveFn();}
+  });
+  fieldIds.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(el.tagName==='TEXTAREA')return; // Enter = newline; Cmd/Ctrl+Enter saves
+    el.addEventListener('keydown',e=>{
+      if(e.key!=='Enter'||e.metaKey||e.ctrlKey)return;
+      e.preventDefault();
+      for(let j=i+1;j<fieldIds.length;j++){
+        const next=document.getElementById(fieldIds[j]);
+        if(next){next.focus();return;}
+      }
+      saveFn(); // last field → save
+    });
+  });
+}
+window.setupModalEnterFlow=setupModalEnterFlow;
 // ── OFFLINE DETECTION ─────────────────────────────────────────────
 function updateOnlineStatus(){
   const banner=document.getElementById('offlineBanner');
@@ -535,27 +596,34 @@ function updateFontSizeBtns(){
 }
 updateFontSizeBtns();
 
-// ── HAPTIC FEEDBACK (#85/#9) ──────────────────────────────────────
-// iOS Safari has no navigator.vibrate. Toggling a hidden <input switch> inside a
-// label fires the system haptic on iOS 17.4+ when triggered within a user gesture.
-let _hapticSwitch=null;
-function _initHapticSwitch(){
-  if(_hapticSwitch)return;
-  const label=document.createElement('label');
-  label.setAttribute('aria-hidden','true');
-  label.style.cssText='position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
-  const input=document.createElement('input');
-  input.type='checkbox';
-  input.setAttribute('switch','');
-  label.appendChild(input);
-  document.body.appendChild(label);
-  _hapticSwitch=label;
-}
+// ── HAPTIC FEEDBACK (#12 rework) ──────────────────────────────────
+// iOS Safari has no navigator.vibrate. Clicking a hidden <input switch>
+// fires the system haptic on iOS 17.4+ IF it happens synchronously inside a
+// user gesture. Rules (learned the hard way):
+//  - element must be created ONCE, eagerly, at startup (not lazily on first call)
+//  - click() the INPUT itself, not the label
+//  - no 1px/overflow:hidden clipping — position:fixed + opacity:0 only
+//  - never call haptic() behind setTimeout/await — it must run inside the tap handler
+let _hapticInput=null;
+(function initHapticSwitch(){
+  try{
+    const label=document.createElement('label');
+    label.setAttribute('aria-hidden','true');
+    label.style.cssText='position:fixed;top:0;left:0;opacity:0;pointer-events:none;z-index:-1';
+    const input=document.createElement('input');
+    input.type='checkbox';
+    input.setAttribute('switch','');
+    input.tabIndex=-1;
+    label.appendChild(input);
+    document.body.appendChild(label);
+    _hapticInput=input;
+  }catch(e){}
+})();
 function haptic(ms=40){
-  // Android / browsers that support the Vibration API
+  // Android / browsers that support the Vibration API — called first
   try{if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}
-  // iOS Safari fallback
-  try{_initHapticSwitch();_hapticSwitch.click();}catch(e){}
+  // iOS Safari switch-toggle haptic (no-op elsewhere)
+  try{if(_hapticInput)_hapticInput.click();}catch(e){}
 }
 // ── PULL TO REFRESH (#75) ─────────────────────────────────────────
 (function(){
@@ -586,6 +654,7 @@ function haptic(ms=40){
     _ptrActive=false;
     const dy=e.changedTouches[0].clientY-_ptrStartY;
     if(dy>THRESHOLD&&!_ptrRefreshing){
+      haptic(25); // pull-to-refresh release (#12) — synchronous in gesture handler
       _ptrRefreshing=true;
       const el=ind();
       if(el&&spinner()&&txt()){
