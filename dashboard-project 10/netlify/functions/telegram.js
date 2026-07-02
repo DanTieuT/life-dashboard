@@ -310,7 +310,11 @@ MORNING BRIEFING FORMAT:
 When asked for a morning briefing or "what's my day look like", reply in this order using \\n for line breaks:
 1. ☀️ Good morning, Dan! It's ${ctx.dayName}, [full month + day, e.g. June 29].
 2. Weather: current conditions, High [X]°F / Low [X]°F (always include high/low from the weather data above).
-3. Tasks due today or overdue (if any) — use these indicators, no bold text: 🔴 overdue, 🟡 due tomorrow, 🟢 due today. Example: "🔴 Fix brakes  🟢 Call dentist"
+3. Urgent tasks — ONLY include tasks whose due date is today (${ctx.today}), yesterday or earlier (overdue), or tomorrow. Do NOT include tasks due later in the week. Circle rules are strict — match the due date exactly:
+   🔴 = due date is BEFORE today (overdue/past due)
+   🟢 = due date is exactly TODAY (${ctx.today})
+   🟡 = due date is exactly TOMORROW (${ctx.today} + 1 day)
+   If there are no tasks in those three categories, skip this section entirely.
 4. 📅 Your schedule today: list Dan's events from DAN'S TIMETREE CALENDAR with times. Always include the day name before dates (e.g. "Monday, Jun 29").
 5. 💜 Julia's plans today: list Julia's events from JULIA'S CALENDAR with times, clearly labeled as hers.
 6. ─────────────────────
