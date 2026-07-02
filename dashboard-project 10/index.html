@@ -97,10 +97,7 @@ input,select,textarea{font-family:inherit}
 .hero-center{flex:1;text-align:center;z-index:1}
 .hero-greeting{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
 .hero-date{font-size:13px;color:var(--sub);margin-bottom:14px}
-.hero-intention{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;padding:10px 16px;color:var(--text);font-size:14px;width:100%;max-width:400px;outline:none;text-align:center;font-family:inherit}
-.hero-intention:focus{border-color:var(--green)}
-.hero-intention::placeholder{color:var(--muted)}
-[data-theme="light"] .hero-intention{background:rgba(0,0,0,.04)}
+.hero-intention{display:none}
 [data-theme="light"] .hero-card::before{background:radial-gradient(ellipse at 20% 50%,rgba(40,179,72,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(10,132,255,.06) 0%,transparent 60%)}
 
 /* ── GAUGE RING ──────────────────────────────────────────────────── */
@@ -510,6 +507,36 @@ input,select,textarea{font-family:inherit}
 .proj-card-del{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 5px;border-radius:5px;opacity:0;transition:opacity .15s}
 .proj-card:hover .proj-card-del{opacity:.6}
 .proj-card-del:hover{color:var(--red);opacity:1!important}
+.proj-task-section{border-top:1px solid var(--border);margin-top:10px;padding-top:4px}
+.proj-task-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:7px 0 5px;font-size:12px;color:var(--sub);font-weight:600;user-select:none;gap:8px}
+.proj-task-toggle:hover{color:var(--text)}
+.proj-task-chev{transition:transform .2s;flex-shrink:0}
+.proj-task-list{display:none;flex-direction:column;gap:5px;padding-bottom:6px}
+.proj-task-list.open{display:flex}
+.proj-task-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;padding:2px 0}
+.proj-task-row:hover .proj-task-name{opacity:.8}
+.proj-task-circle{width:20px;height:20px;border-radius:50%;border:2px solid;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;transition:all .15s}
+.proj-task-name{flex:1;line-height:1.3;font-size:13px}
+.proj-task-name.done{text-decoration:line-through;opacity:.45}
+.proj-task-add-row{display:flex;align-items:center;gap:6px;margin-top:4px;padding-top:6px;border-top:1px solid var(--border)}
+.proj-task-add-row input{background:none;border:none;outline:none;color:var(--text);font-size:12px;flex:1;font-family:inherit}
+.proj-task-add-row input::placeholder{color:var(--muted)}
+/* ── BRAIN DUMP ─────────────────────────────────────────────────── */
+.brain-dump-section{margin-bottom:20px}
+.brain-dump-input-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px}
+.brain-dump-input-row input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;font-family:inherit}
+.brain-dump-input-row input::placeholder{color:var(--muted)}
+.brain-dump-send{background:var(--green);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;padding:6px 14px;cursor:pointer;flex-shrink:0}
+.brain-dump-send:hover{opacity:.85}
+.brain-dump-list{display:flex;flex-direction:column;gap:8px}
+.brain-dump-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px}
+.brain-dump-card-body{flex:1;min-width:0}
+.brain-dump-card-text{font-size:14px;color:var(--text);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.brain-dump-card-meta{font-size:11px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:6px}
+.brain-dump-source{background:var(--card2);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.brain-dump-del{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px;opacity:.5;flex-shrink:0;line-height:1}
+.brain-dump-del:hover{color:var(--red);opacity:1}
+.brain-dump-empty{color:var(--muted);font-size:13px;padding:16px 0;text-align:center}
 /* ── ACCT CARDS ──────────────────────────────────────────────────── */
 .acct-cards-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 .acct-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;cursor:pointer;transition:background .15s}
@@ -637,8 +664,6 @@ input,select,textarea{font-family:inherit}
   .main{padding:14px 14px calc(84px + env(safe-area-inset-bottom));padding-top:calc(14px + env(safe-area-inset-top))}
   .cal-fullpage{top:48px;padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 
-  /* ── Intention input: hidden on mobile ── */
-  .hero-intention{display:none}
   .hero-date{margin-bottom:0}
   .chat-panel{left:10px;right:10px;width:auto;bottom:calc(64px + env(safe-area-inset-bottom))}
   .chat-fab{bottom:calc(64px + env(safe-area-inset-bottom));right:14px;width:46px;height:46px;font-size:19px}
@@ -650,7 +675,6 @@ input,select,textarea{font-family:inherit}
   .hero-center{text-align:left}
   .hero-greeting{font-size:24px}
   .hero-date{margin-bottom:10px}
-  .hero-intention{max-width:100%;text-align:left;font-size:14px}
 
   /* ── Stats / grid rows ── */
   .stats-row{grid-template-columns:1fr 1fr;gap:10px}
@@ -878,6 +902,21 @@ input,select,textarea{font-family:inherit}
           <button class="btn-new" onclick="openAddHabitModal()">+ New habit</button>
         </div>
         <div class="habits-grid" id="habitsGridDash"></div>
+      </div>
+
+      <!-- Brain Dump -->
+      <div class="brain-dump-section">
+        <div class="section-hdr">
+          <div>
+            <div class="section-title">Brain Dump</div>
+            <div class="section-sub">Drop ideas here — JARVIS can add to this too</div>
+          </div>
+        </div>
+        <div class="brain-dump-input-row">
+          <input id="brainDumpInput" placeholder="Drop a thought, idea, or anything worth saving..." onkeydown="if(event.key==='Enter')addBrainDumpNote()">
+          <button class="brain-dump-send" onclick="addBrainDumpNote()">Save</button>
+        </div>
+        <div class="brain-dump-list" id="brainDumpList"></div>
       </div>
 
     </div><!-- /dashboard -->
@@ -1369,6 +1408,10 @@ input,select,textarea{font-family:inherit}
       <label class="form-label">Next action (optional)</label>
       <input class="form-input" id="projectNextAction" placeholder="e.g. Order replacement bearings">
     </div>
+    <div class="form-group">
+      <label class="form-label">Due date (optional)</label>
+      <input class="form-input" id="projectDueDate" type="date">
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('projectModal')">Cancel</button>
       <button class="btn-save" onclick="saveProject()">Save</button>
@@ -1452,7 +1495,7 @@ const DEFAULT_HABITS = [
 let appData = {
   intention:'', focusTasks:[], projects:[], userProjects:[], habits:[...DEFAULT_HABITS],
   events:[], transactions:[], budget:{...DEFAULT_BUDGET}, savings:{...DEFAULT_SAVINGS},
-  accounts:[], goals:[]
+  accounts:[], goals:[], notes:[], profile:''
 };
 let currentFilter='all', currentMonth=new Date().getMonth(), currentYear=new Date().getFullYear();
 let saveTimer=null;
@@ -1630,6 +1673,8 @@ async function loadData(){
         savings:d.savings||{...DEFAULT_SAVINGS},
         accounts:d.accounts||migrateOldSavings(d.savings),
         goals:d.goals||[],
+        notes:d.notes||[],
+        profile:d.profile||'',
         timetreeEvents:d.timetreeEvents||[],
         timetreeSyncedAt:d.timetreeSyncedAt||0,
       };
@@ -1663,7 +1708,55 @@ function renderAll(){
   renderDashProjectsWidget();
   renderGoals();
   renderDashNW();
+  renderBrainDump();
 }
+
+// ── BRAIN DUMP ────────────────────────────────────────────────────
+function renderBrainDump(){
+  const el=document.getElementById('brainDumpList');
+  if(!el)return;
+  const notes=appData.notes||[];
+  if(!notes.length){el.innerHTML='<div class="brain-dump-empty">No notes yet — drop something above or send it to JARVIS</div>';return;}
+  el.innerHTML=notes.map(n=>{
+    const d=new Date(n.createdAt||Date.now());
+    const ago=fmtTimeAgo(d);
+    const src=n.source==='jarvis'?'JARVIS':'you';
+    return`<div class="brain-dump-card">
+      <div class="brain-dump-card-body">
+        <div class="brain-dump-card-text">${escHtml(n.text)}</div>
+        <div class="brain-dump-card-meta">
+          <span class="brain-dump-source">${src}</span>
+          <span>${ago}</span>
+        </div>
+      </div>
+      <button class="brain-dump-del" onclick="deleteBrainDumpNote('${n.id}')" title="Delete">✕</button>
+    </div>`;
+  }).join('');
+}
+function fmtTimeAgo(d){
+  const diff=Math.floor((Date.now()-d.getTime())/1000);
+  if(diff<60)return'just now';
+  if(diff<3600)return Math.floor(diff/60)+'m ago';
+  if(diff<86400)return Math.floor(diff/3600)+'h ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+window.addBrainDumpNote=function(){
+  const inp=document.getElementById('brainDumpInput');
+  if(!inp)return;
+  const text=inp.value.trim();
+  if(!text)return;
+  if(!appData.notes)appData.notes=[];
+  appData.notes.unshift({id:uid(),text,createdAt:Date.now(),source:'dashboard'});
+  inp.value='';
+  saveData();
+  renderBrainDump();
+};
+window.deleteBrainDumpNote=function(id){
+  appData.notes=(appData.notes||[]).filter(n=>n.id!==id);
+  saveData();
+  renderBrainDump();
+};
 
 // ── GREETING ──────────────────────────────────────────────────────
 function renderGreeting(){
@@ -2411,22 +2504,39 @@ function renderProjects(){
 
 function projectCardHTML(p){
   const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
-  // Derive a fake progress % from stage for visual polish
-  const stagePct={planning:10,sourcing:30,building:60,blocked:20,done:100};
-  const pct=stagePct[p.stage]||10;
-  const nextAction=p.nextAction?`<span style="display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>${p.nextAction}</span>`:'';
-  return`<div class="proj-card" onclick="openProjectModal('${p.id}')">
+  const tasks=p.tasks||[];
+  const doneCount=tasks.filter(t=>t.done).length;
+  const pct=tasks.length>0?Math.round(doneCount/tasks.length*100):{planning:10,sourcing:30,building:60,blocked:20,done:100}[p.stage]||10;
+  const dueFmt=p.dueDate?new Date(p.dueDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+  const taskMeta=tasks.length?`${doneCount}/${tasks.length} tasks${dueFmt?' · Due '+dueFmt:''}`:(dueFmt?'Due '+dueFmt:'No tasks yet');
+  const taskRows=tasks.map(t=>`
+    <div class="proj-task-row" onclick="event.stopPropagation();toggleProjTask('${p.id}','${t.id}')">
+      <div class="proj-task-circle" style="border-color:${t.done?s.accent:'rgba(255,255,255,0.2)'};background:${t.done?s.accent:'transparent'};color:${t.done?'#000':'transparent'}">✓</div>
+      <span class="proj-task-name${t.done?' done':''}">${t.name}</span>
+    </div>`).join('');
+  return`<div class="proj-card">
     <div class="proj-card-accent" style="background:${s.accent}"></div>
     <div class="proj-card-body">
-      <div class="proj-card-top">
+      <div class="proj-card-top" onclick="openProjectModal('${p.id}')" style="cursor:pointer">
         <div class="proj-card-name">${p.name}</div>
         <span class="proj-status-badge" style="background:${s.bg};color:${s.dotColor}">${s.label}</span>
       </div>
-      <div class="proj-card-desc">${p.category||p.nextAction||'—'}</div>
+      <div class="proj-card-desc" onclick="openProjectModal('${p.id}')" style="cursor:pointer">${p.category||p.nextAction||'—'}</div>
       <div class="proj-prog-row"><span style="font-weight:600;color:var(--sub)">Progress</span><span class="proj-prog-pct">${pct}%</span></div>
       <div class="proj-prog-track"><div class="proj-prog-fill" style="width:${pct}%;background:${s.accent}"></div></div>
-      <div class="proj-card-foot">
-        <span>${nextAction}</span>
+      <div class="proj-task-section">
+        <div class="proj-task-toggle" onclick="event.stopPropagation();toggleProjTasks('${p.id}')">
+          <span>${taskMeta}</span>
+          <svg class="proj-task-chev" id="ptchev-${p.id}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="proj-task-list" id="ptlist-${p.id}">
+          ${taskRows}
+          <div class="proj-task-add-row" onclick="event.stopPropagation()">
+            <input id="ptinput-${p.id}" placeholder="+ Add task" onkeydown="if(event.key==='Enter')addProjTask('${p.id}')">
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px">
         <button class="proj-card-del" onclick="event.stopPropagation();deleteUserProject('${p.id}')">✕</button>
       </div>
     </div>
@@ -2503,6 +2613,7 @@ window.openProjectModal=function(id){
   document.getElementById('projectStage').value=p?p.stage:'planning';
   document.getElementById('projectPriority').value=p?p.priority||'':'';
   document.getElementById('projectNextAction').value=p?p.nextAction||'':'';
+  document.getElementById('projectDueDate').value=p?p.dueDate||'':'';
   openModal('projectModal');
 };
 
@@ -2514,14 +2625,48 @@ window.saveProject=function(){
   const category=document.getElementById('projectCategory').value.trim().toUpperCase();
   const priority=document.getElementById('projectPriority').value;
   const nextAction=document.getElementById('projectNextAction').value.trim();
+  const dueDate=document.getElementById('projectDueDate').value;
   if(!appData.userProjects)appData.userProjects=[];
   if(id){
     const p=appData.userProjects.find(x=>x.id===id);
-    if(p){p.name=name;p.stage=stage;p.category=category;p.priority=priority;p.nextAction=nextAction;}
+    if(p){p.name=name;p.stage=stage;p.category=category;p.priority=priority;p.nextAction=nextAction;p.dueDate=dueDate;}
   } else {
-    appData.userProjects.push({id:uid(),name,stage,category,priority,nextAction,created:todayStr()});
+    appData.userProjects.push({id:uid(),name,stage,category,priority,nextAction,dueDate,tasks:[],created:todayStr()});
   }
   saveData();closeModal('projectModal');renderProjects();renderDashProjectsWidget();toast(id?'✓ Project updated':'✓ Project added');
+};
+
+window.toggleProjTasks=function(id){
+  const list=document.getElementById('ptlist-'+id);
+  const chev=document.getElementById('ptchev-'+id);
+  if(!list)return;
+  const open=list.classList.toggle('open');
+  if(chev)chev.style.transform=open?'rotate(180deg)':'';
+};
+
+window.toggleProjTask=function(projId,taskId){
+  const p=(appData.userProjects||[]).find(x=>x.id===projId);
+  if(!p||!p.tasks)return;
+  const t=p.tasks.find(x=>x.id===taskId);
+  if(t){t.done=!t.done;saveData();renderProjects();}
+};
+
+window.addProjTask=function(projId){
+  const inp=document.getElementById('ptinput-'+projId);
+  if(!inp)return;
+  const name=inp.value.trim();
+  if(!name)return;
+  const p=(appData.userProjects||[]).find(x=>x.id===projId);
+  if(!p)return;
+  if(!p.tasks)p.tasks=[];
+  p.tasks.push({id:uid(),name,done:false});
+  saveData();
+  renderProjects();
+  // Re-open the task list after re-render
+  const list=document.getElementById('ptlist-'+projId);
+  const chev=document.getElementById('ptchev-'+projId);
+  if(list){list.classList.add('open');}
+  if(chev){chev.style.transform='rotate(180deg)';}
 };
 
 window.deleteUserProject=function(id){
@@ -3646,16 +3791,22 @@ async function _transcribeAudio(){
     if(!el)return 0;
     return Math.max(0,TAB_ORDER.indexOf(el.id.replace('page-','')));
   }
+  let _swipeOnWeekCal=false;
   document.addEventListener('touchstart',e=>{
     _sx=e.touches[0].clientX;
     _sy=e.touches[0].clientY;
+    _swipeOnWeekCal=!!e.target.closest('.week-cal-wrap');
   },{passive:true});
   document.addEventListener('touchend',e=>{
     const dx=e.changedTouches[0].clientX-_sx;
     const dy=Math.abs(e.changedTouches[0].clientY-_sy);
-    // Ignore short swipes, vertical scrolls, and swipes starting on modals/panels
     if(Math.abs(dx)<55||dy>Math.abs(dx)*0.8)return;
     if(e.target.closest('.modal,.chat-panel,.bottom-nav'))return;
+    // Swipe on week calendar → navigate weeks
+    if(_swipeOnWeekCal&&_calView==='week'){
+      weekCalNav(dx<0?1:-1);
+      return;
+    }
     const i=curTabIdx();
     if(dx<0&&i<TAB_ORDER.length-1)switchTab(TAB_ORDER[i+1]);
     else if(dx>0&&i>0)switchTab(TAB_ORDER[i-1]);

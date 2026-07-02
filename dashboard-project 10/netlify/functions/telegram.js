@@ -251,8 +251,10 @@ function buildContext(data) {
       : g.current;
     return { name: g.name, emoji: g.emoji || '🎯', current, target: g.target, pct: g.target ? Math.round(current / g.target * 100) : 0 };
   });
+  const profile = data.profile || '';
+  const recentNotes = (data.notes || []).slice(0, 15).map(n => ({ text: n.text, createdAt: n.createdAt, source: n.source || 'dashboard' }));
 
-  return { today, dayName, monthName, tasks, completedToday, habits, events, budget, spent, projects, accounts, goals };
+  return { today, dayName, monthName, tasks, completedToday, habits, events, budget, spent, projects, accounts, goals, profile, recentNotes };
 }
 
 // ── System prompt (mirrors chat.js) ──────────────────────────────
@@ -265,7 +267,10 @@ function buildSystemPrompt(ctx) {
   const eventList = ctx.events.length ? ctx.events.map(e => `  ${e.time} – ${e.name}`).join('\n') : '  (none)';
   const projectList = ctx.projects.length ? ctx.projects.map(p => `  [${p.id}] ${p.emoji} "${p.name}" [${p.stage}]${p.nextAction ? ` → ${p.nextAction}` : ''}`).join('\n') : '  (none)';
 
-  const memoryBlock = ctx.memory ? `\nPERSONAL MEMORY (from Obsidian):\n${ctx.memory}\n` : '';
+  const memoryBlock = ctx.profile ? `\nDAN'S PROFILE & MEMORY:\n${ctx.profile}\n` : '';
+  const notesBlock = ctx.recentNotes && ctx.recentNotes.length
+    ? `\nRECENT BRAIN DUMP NOTES (newest first):\n${ctx.recentNotes.map(n => `  [${n.source}] ${n.text}`).join('\n')}\n`
+    : '';
 
   // Split timetree block into Dan's and Julia's sections
   let ttBlock = '';
@@ -279,7 +284,7 @@ function buildSystemPrompt(ctx) {
   }
 
   return `You are J.A.R.V.I.S. — Dan's personal AI assistant on Telegram. You have full visibility into his tasks, habits, schedule, finances, projects, and his TimeTree calendar. Be sharp, proactive, and genuinely helpful.
-${memoryBlock}${ttBlock}${juliaBlock}
+${memoryBlock}${notesBlock}${ttBlock}${juliaBlock}
 Today: ${ctx.today} (${ctx.dayName})
 ${ctx.weather ? `Weather: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}${ctx.weather.rain ? ', rain expected' : ''}, wind ${ctx.weather.wind}mph${ctx.weather.high != null ? `, High ${ctx.weather.high}°F / Low ${ctx.weather.low}°F` : ''}` : ''}
 
@@ -354,7 +359,9 @@ AVAILABLE ACTIONS:
 {"type":"add_project","emoji":"🔨","name":"...","stage":"planning","nextAction":"..."}
 {"type":"update_project_stage","id":"<project id>","name":"<project name>","stage":"building"}
 {"type":"update_project_next_action","id":"<project id>","name":"<project name>","nextAction":"..."}
-{"type":"save_memory","text":"<concise fact to remember about Dan>"}
+{"type":"save_memory","text":"<concise fact to remember about Dan — appended to his profile>"}
+{"type":"update_profile","text":"<full rewritten profile markdown — use to reorganize/clean up the profile>"}
+{"type":"add_note","text":"<idea, thought, or brain dump to show on Dan's dashboard>"}
 {"type":"save_note","filename":"<short name like 'work-schedule' or 'gym-routine'>","content":"<full markdown content to save>"}
 
 RULES:
@@ -362,6 +369,10 @@ RULES:
 - Parse dates relative to today (${ctx.today})
 - Can return multiple actions at once
 - To reschedule a task or change its name, use update_task with the new due date or newName
+- NOTES vs MEMORY: Two distinct systems:
+  • add_note = ideas, thoughts, brain dumps Dan wants to SEE on his dashboard later. Use when Dan says "save this", "note this down", "I want to remember this idea", or brain-dumps something. These show up as cards on his dashboard.
+  • save_memory = facts about Dan that make you smarter going forward. Silent background knowledge, not shown as dashboard cards.
+  • update_profile = full rewrite of the profile (use occasionally to reorganize after many save_memory calls)
 - AUTONOMOUS MEMORY: After every message, proactively decide if anything is worth saving — don't wait to be asked. Save things like:
   • Preferences ("I hate mornings", "I only drink black coffee", "I prefer text over calls")
   • Recurring patterns ("Dan goes to the gym on Mon/Wed/Fri", "Dan usually works from home on Fridays")
@@ -566,7 +577,17 @@ function applyActions(data, actions) {
         labels.push(`Deleted event: ${action.title || action.event_id}`);
         break;
       case 'save_memory':
+        data.profile = data.profile || '';
+        data.profile = data.profile.trimEnd() + '\n- ' + (action.text || '').trim();
         labels.push(`Memory saved`);
+        break;
+      case 'update_profile':
+        if (action.text) { data.profile = action.text; labels.push('Profile updated'); }
+        break;
+      case 'add_note':
+        data.notes = data.notes || [];
+        data.notes.unshift({ id: uidGen(), text: action.text || '', createdAt: Date.now(), source: 'jarvis' });
+        labels.push(`Note added`);
         break;
       case 'save_note':
         labels.push(`Note saved: ${action.filename}`);
@@ -667,15 +688,13 @@ exports.handler = async (event) => {
   }
 
   // Call Claude
-  const [weather, memory, ttEvents] = await Promise.all([
+  const [weather, ttEvents] = await Promise.all([
     fetchWeather(),
-    obsidian.readMemory(),
     timetree.getUpcomingEvents(14).catch((e) => { console.error('[tt] getUpcomingEvents error:', e.message); return []; }),
   ]);
   console.log('[tt] events count:', ttEvents.length, '| today sample:', ttEvents.slice(0,3).map(e=>e.title+'/'+e.author).join(', '));
   const ctx = buildContext(appData);
   ctx.weather = weather;
-  ctx.memory = memory;
   ctx.timetreeEvents = timetree.formatForPrompt(ttEvents);
   console.log('[tt] prompt block:\n', ctx.timetreeEvents.slice(0, 400));
   const systemPrompt = buildSystemPrompt(ctx);
@@ -705,14 +724,8 @@ exports.handler = async (event) => {
   if (actions && actions.length > 0) {
     ({ spendingAlert } = applyActions(appData, actions));
     try { await userRef.set(appData); } catch (e) { console.error('Save error', e); }
-    // Handle async actions (memory, notes, TimeTree)
+    // Handle async actions (TimeTree)
     for (const action of actions) {
-      if (action.type === 'save_memory' && action.text) {
-        await obsidian.appendMemory(action.text);
-      }
-      if (action.type === 'save_note' && action.filename && action.content) {
-        await obsidian.saveNote(action.filename, action.content);
-      }
       if (action.type === 'add_timetree_event' && action.title && action.date) {
         try {
           await timetree.createEvent({
