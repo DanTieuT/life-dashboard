@@ -344,6 +344,7 @@ function goalBalanceWeekAgo(g){
 function renderGoals(){
   const el=document.getElementById('goalsGrid');
   if(!el)return;
+  if(!window._dataLoaded){el.innerHTML=window.skeletonHTML;return;}
   const goals=appData.goals||[];
   const sub=document.getElementById('goalsSub');
   if(sub){
@@ -609,6 +610,7 @@ function renderTxnListFiltered(mt){
   const countEl=document.getElementById('txnCount');
   const txnEl=document.getElementById('txnList');
   if(!txnEl)return;
+  if(!window._dataLoaded){txnEl.innerHTML=window.skeletonHTML;return;}
   const q=(searchEl?.value||'').trim().toLowerCase();
   let sorted=[...mt].sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(q)sorted=sorted.filter(t=>(t.name||'').toLowerCase().includes(q)||(t.category||'').toLowerCase().includes(q));

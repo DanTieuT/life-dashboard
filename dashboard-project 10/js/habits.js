@@ -2,6 +2,7 @@
 function renderHabitsGrid(containerId){
   const el=document.getElementById(containerId);
   if(!el)return;
+  if(!window._dataLoaded){el.innerHTML=window.skeletonHTML;return;}
   if(!appData.habits.length){
     el.innerHTML='<div class="habit-empty">No habits yet — add your first one above!</div>';
     return;

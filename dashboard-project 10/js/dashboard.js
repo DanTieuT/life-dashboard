@@ -109,6 +109,7 @@ window.renderBrainDump=renderBrainDump;
 function renderBrainDump(){
   const el=document.getElementById('brainDumpList');
   if(!el)return;
+  if(!window._dataLoaded){el.innerHTML=window.skeletonHTML;return;}
   let notes=(appData.notes||[]);
   // filter archived
   if(!_showArchivedNotes) notes=notes.filter(n=>!n.archived);
@@ -332,6 +333,7 @@ function renderFocusTasks(){
   const noDue=all.filter(t=>!t.done&&!t.due);
   const candidates=[...overdue,...todayTasks,...upcoming,...noDue].slice(0,3);
   const el=document.getElementById('focusTasksList');
+  if(!window._dataLoaded){el.innerHTML=window.skeletonHTML;return;}
   if(!candidates.length){
     el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:18px 0;text-align:center">No tasks yet — add some in Tasks tab</div>';
     return;
@@ -378,6 +380,7 @@ function renderTodaySchedule(){
   if(badge)badge.textContent=events.length+' event'+(events.length!==1?'s':'');
   const el=document.getElementById('todayEventsList');
   if(!el)return;
+  if(!window._dataLoaded){el.innerHTML=window.skeletonHTML;return;}
   if(!events.length){
     el.innerHTML='<div class="evt-empty">No events today — add one below</div>';
     return;

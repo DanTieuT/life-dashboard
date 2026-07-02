@@ -55,11 +55,14 @@ const DEFAULT_HABITS = [
 ];
 
 // ── STATE (window-scoped: shared across all modules) ─────────────
+// habits starts EMPTY (not defaults) so default habits never flash before
+// Firestore data arrives (item #9). loadData seeds DEFAULT_HABITS for new users.
 window.appData = {
-  intention:'', focusTasks:[], projects:[], userProjects:[], habits:[...DEFAULT_HABITS],
+  intention:'', focusTasks:[], projects:[], userProjects:[], habits:[],
   events:[], transactions:[], budget:{...DEFAULT_BUDGET}, savings:{...DEFAULT_SAVINGS},
-  accounts:[], goals:[], notes:[], profile:''
+  accounts:[], goals:[], notes:[], profile:'', categoryBudgets:{}, netWorthHistory:[]
 };
+window._dataLoaded=false; // true once loadData() resolves — render skeletons until then
 window.currentFilter='all';
 window.currentMonth=new Date().getMonth();
 window.currentYear=new Date().getFullYear();
@@ -219,7 +222,18 @@ function updateThemeSwitch(){
   toggle.classList.toggle('on',isDark);
 }
 // ── DATA ──────────────────────────────────────────────────────────
+// Snapshot of each top-level key as last persisted — used to compute dirty keys
+// so saves only write what changed (item #4).
+let _lastSavedJSON={};
+
+function _snapshotSavedState(){
+  _lastSavedJSON={};
+  for(const k of Object.keys(appData)) _lastSavedJSON[k]=JSON.stringify(appData[k]);
+}
+
 async function loadData(){
+  // Flush any queued offline write BEFORE the server doc overwrites local state (item #5)
+  await flushPendingSave();
   try{
     const snap=await getDoc(userRef);
     if(snap.exists()){
@@ -240,10 +254,47 @@ async function loadData(){
         profile:d.profile||'',
         timetreeEvents:d.timetreeEvents||[],
         timetreeSyncedAt:d.timetreeSyncedAt||0,
+        categoryBudgets:d.categoryBudgets||{},
+        netWorthHistory:d.netWorthHistory||[],
+        updatedAt:d.updatedAt||0,
       };
+    } else {
+      // New user: seed default habits
+      if(!appData.habits.length)appData.habits=[...DEFAULT_HABITS];
     }
   }catch(e){console.error('Load error',e);}
+  _snapshotSavedState();
+  _dataLoaded=true;
 }
+
+// ── OFFLINE WRITE QUEUE (item #5) ─────────────────────────────────
+function _queuePendingSave(){
+  try{
+    localStorage.setItem('pendingSave',JSON.stringify(appData));
+    const banner=document.getElementById('offlineBanner');
+    if(banner)banner.classList.add('show');
+  }catch(e){console.warn('Could not queue offline save',e.message);}
+}
+
+async function flushPendingSave(){
+  const raw=localStorage.getItem('pendingSave');
+  if(!raw||!userRef)return;
+  try{
+    const pending=JSON.parse(raw);
+    // Only push if the queued snapshot is newer than what the server has
+    let serverUpdatedAt=0;
+    try{
+      const snap=await getDoc(userRef);
+      if(snap.exists())serverUpdatedAt=snap.data().updatedAt||0;
+    }catch(e){return;} // still offline — keep the queue
+    if((pending.updatedAt||0)>serverUpdatedAt){
+      await setDoc(userRef,pending);
+    }
+    localStorage.removeItem('pendingSave');
+    updateOnlineStatus();
+  }catch(e){console.warn('Pending save flush failed',e.message);}
+}
+window.addEventListener('online',()=>{flushPendingSave();});
 
 function saveData(){
   // Log goal balance history daily before saving
@@ -253,7 +304,24 @@ function saveData(){
   clearTimeout(saveTimer);
   saveTimer=setTimeout(async()=>{
     if(!userRef)return;
-    try{await setDoc(userRef,appData);}catch(e){console.error('Save error',e);}
+    appData.updatedAt=Date.now();
+    // Compute dirty top-level keys (arrays are written wholesale — that's fine,
+    // Firestore replaces arrays on update, so deletions persist too)
+    const dirty={updatedAt:appData.updatedAt};
+    for(const k of Object.keys(appData)){
+      if(k==='updatedAt')continue;
+      const j=JSON.stringify(appData[k]);
+      if(_lastSavedJSON[k]!==j)dirty[k]=appData[k];
+    }
+    try{
+      // merge:true so keys we don't send are never wiped
+      await setDoc(userRef,dirty,{merge:true});
+      _snapshotSavedState();
+      localStorage.removeItem('pendingSave');
+    }catch(e){
+      console.error('Save error',e);
+      _queuePendingSave();
+    }
   },600);
 }
 
@@ -413,17 +481,18 @@ if('serviceWorker' in navigator){
   });
 }
 
-// ── SKELETON SCREENS ──────────────────────────────────────────────
-// Show skeletons during initial load (before renderAll fires)
+// ── SKELETON SCREENS (item #9) ────────────────────────────────────
+// Show skeletons during initial load; renderers keep showing them until
+// loadData() resolves (_dataLoaded flag) so defaults never flash.
+window.skeletonHTML=`<div class="skeleton-wrap">
+  <div class="skeleton-line tall"></div>
+  <div class="skeleton-line med"></div>
+  <div class="skeleton-line short"></div>
+</div>`;
 (function showSkeletons(){
-  const skeletonHTML=`<div class="skeleton-wrap">
-    <div class="skeleton-line tall"></div>
-    <div class="skeleton-line med"></div>
-    <div class="skeleton-line short"></div>
-  </div>`;
-  ['habitsGridDash','focusTasksList','todayEventsList','brainDumpList'].forEach(id=>{
+  ['habitsGridDash','habitsGridTab','focusTasksList','todayEventsList','brainDumpList','txnList','goalsGrid','projectsCardGrid'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el)el.innerHTML=skeletonHTML;
+    if(el)el.innerHTML=window.skeletonHTML;
   });
 })();
 // ── COMPACT MODE (#72) ────────────────────────────────────────────

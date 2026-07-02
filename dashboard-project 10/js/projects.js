@@ -57,6 +57,7 @@ function renderProjects(){
   // Card grid
   const gridEl=document.getElementById('projectsCardGrid');
   if(!gridEl)return;
+  if(!window._dataLoaded){gridEl.innerHTML=window.skeletonHTML;return;}
   let filtered=all;
   if(currentProjFilter==='on_track') filtered=all.filter(p=>STAGE_STATUS[p.stage]?.filterKey==='on_track');
   else if(currentProjFilter==='at_risk') filtered=all.filter(p=>STAGE_STATUS[p.stage]?.filterKey==='at_risk');
