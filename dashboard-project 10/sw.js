@@ -1,11 +1,20 @@
 // Service Worker — Command Center PWA
 // Caches the app shell for offline use
 
-const CACHE_NAME = 'cc-shell-v1';
+const CACHE_NAME = 'cc-shell-v2';
 const SHELL_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/styles.css',
+  '/js/main.js',
+  '/js/core.js',
+  '/js/habits.js',
+  '/js/tasks.js',
+  '/js/projects.js',
+  '/js/finance.js',
+  '/js/calendar.js',
+  '/js/dashboard.js',
 ];
 
 self.addEventListener('install', event => {
@@ -39,7 +48,7 @@ self.addEventListener('fetch', event => {
     fetch(event.request)
       .then(response => {
         // Cache shell pages on successful fetch
-        if (response.ok && (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/manifest.json')) {
+        if (response.ok && (url.pathname === '/' || SHELL_URLS.includes(url.pathname))) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
