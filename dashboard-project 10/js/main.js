@@ -7,3 +7,4 @@ import './projects.js';
 import './finance.js';
 import './calendar.js';
 import './dashboard.js';
+import './shipping.js';

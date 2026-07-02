@@ -23,3 +23,12 @@
 # sends a message when tomorrow is an RDO day — see rdo-nudge.js.
 [functions."rdo-nudge"]
   schedule = "0 2 * * *"
+
+# Shipping: scan Gmail label for new tracking numbers every 30 min;
+# poll 17TRACK for status changes every 2 hours. Both no-op until their
+# API keys are configured (GMAIL_* / TRACK17_API_KEY).
+[functions."gmail-scan"]
+  schedule = "*/30 * * * *"
+
+[functions."shipping-sync"]
+  schedule = "0 */2 * * *"

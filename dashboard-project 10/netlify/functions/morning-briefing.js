@@ -188,6 +188,18 @@ exports.handler = async (event) => {
       lines.push('');
     }
 
+    // Packages arriving today / out for delivery (shipping tracker)
+    const arriving = (data.packages || []).filter(p => {
+      if (p.archived || p.status === 'Delivered') return false;
+      const etaStr = p.eta ? new Date(p.eta).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }) : '';
+      return p.status === 'OutForDelivery' || etaStr === today;
+    });
+    if (arriving.length) {
+      lines.push(`📦 Arriving today:`);
+      arriving.forEach(p => lines.push(`  • ${p.description || p.retailer || p.trackingNumber}${p.carrier ? ` (${p.carrier})` : ''}`));
+      lines.push('');
+    }
+
     if (overdue.length) {
       lines.push(`🔴 Overdue — ${overdue.length} task${overdue.length > 1 ? 's' : ''} not done:`);
       overdue.forEach(t => lines.push(`  • ${t.name} (was due ${humanDate(t.due, today)})`));

@@ -273,6 +273,14 @@ function buildContext(data) {
   const rdoToday = isRDO(today, data.rdoSchedule);
   const rdoTomorrow = isRDO(tomorrowStr, data.rdoSchedule);
 
+  // ── Packages (shipping tracker) ────────────────────────────────
+  const packages = (data.packages || []).filter(p => !p.archived).map(p => ({
+    name: p.description || p.retailer || p.trackingNumber,
+    retailer: p.retailer || '', carrier: p.carrier || '', status: p.status,
+    eta: p.eta ? new Date(p.eta).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }) : '',
+    lastLocation: p.lastLocation || '',
+  }));
+
   const tasks = (data.projects || []).filter(t => !t.done).map(t => ({ id: t.id, name: t.name || '', due: t.due || '' }));
   const completedToday = (data.projects || []).filter(t => {
     if (!t.done) return false;
@@ -388,7 +396,7 @@ function buildContext(data) {
     today, dayName, monthName, tasks, completedToday, habits, events,
     budget, spent, projects, accounts, goals, profile, recentNotes,
     overdueTasks, weeklyHabitCounts, weeklySpend: { thisWeek: Math.round(thisWeekSpend), lastWeek: Math.round(lastWeekSpend) },
-    spendingPatterns, spendingTrends, rdoToday, rdoTomorrow,
+    spendingPatterns, spendingTrends, rdoToday, rdoTomorrow, packages,
   };
 }
 
@@ -472,6 +480,7 @@ ${goalList}
 
 PROJECTS (stages: planning/sourcing/building/blocked/done):
 ${projectList}
+${(ctx.packages || []).length ? `\nPACKAGES IN TRANSIT:\n${ctx.packages.map(p => `  📦 ${p.name}${p.retailer ? ` (${p.retailer})` : ''} — ${p.status}${p.eta ? `, ETA ${p.eta}` : ''}${p.eta === ctx.today ? ' ⬅ ARRIVING TODAY — mention this proactively in briefings' : ''}`).join('\n')}\n` : ''}
 
 WHAT TO FOCUS ON TODAY:
 When Dan asks "what should I focus on", "what should I work on", "what's my priority", or similar, respond with a ranked list of exactly 3 things based on: (1) tasks from OVERDUE TASKS section first, (2) tasks due today, (3) habits not yet done today, (4) project next actions. Be specific and direct — no fluff.

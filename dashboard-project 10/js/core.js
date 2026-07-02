@@ -76,7 +76,7 @@ window.appData = {
   intention:'', focusTasks:[], projects:[], userProjects:[], habits:[],
   events:[], transactions:[], budget:{...DEFAULT_BUDGET}, savings:{...DEFAULT_SAVINGS},
   accounts:[], goals:[], notes:[], profile:'', categoryBudgets:{}, netWorthHistory:[],
-  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}
+  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}, packages:[]
 };
 window._dataLoaded=false; // true once loadData() resolves — render skeletons until then
 window.currentFilter='all';
@@ -274,6 +274,7 @@ async function loadData(){
         netWorthHistory:d.netWorthHistory||[],
         updatedAt:d.updatedAt||0,
         rdoSchedule:d.rdoSchedule||{...DEFAULT_RDO_SCHEDULE},
+        packages:d.packages||[],
       };
     } else {
       // New user: seed default habits
@@ -362,6 +363,8 @@ function renderAll(){
   renderDashNW();
   renderBrainDump();
   renderJarvisHistory();
+  renderShipping();
+  renderDashShippingWidget();
   updateLastBackupLabel();
 }
 
@@ -390,6 +393,7 @@ window.switchTab=function(tab){
   if(tab==='projects')renderProjects();
   if(tab==='goals')renderGoals();
   if(tab==='calendar')renderCalendar();
+  if(tab==='shipping')renderShipping();
 };
 // ── TOAST ─────────────────────────────────────────────────────────
 function toast(msg,type=''){
