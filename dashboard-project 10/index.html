@@ -368,6 +368,14 @@ input,select,textarea{font-family:inherit}
 .form-label{font-size:12px;color:var(--sub);margin-bottom:6px;display:block}
 .form-input{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;outline:none}
 .form-input:focus{border-color:var(--green)}
+/* Normalize native date/time inputs (iOS Safari centers/top-aligns the value) */
+input[type="date"].form-input,input[type="time"].form-input,input[type="datetime-local"].form-input{
+  -webkit-appearance:none;appearance:none;min-height:41px;text-align:left}
+input[type="date"].form-input::-webkit-date-and-time-value,
+input[type="time"].form-input::-webkit-date-and-time-value,
+input[type="datetime-local"].form-input::-webkit-date-and-time-value{text-align:left;margin:0}
+input[type="date"].form-input::-webkit-calendar-picker-indicator,
+input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.6);cursor:pointer}
 .form-select{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;appearance:none}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
 .btn-cancel{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 18px;color:var(--sub);font-size:14px}
