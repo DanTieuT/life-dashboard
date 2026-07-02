@@ -10,5 +10,6 @@
 [functions."sync-timetree"]
   schedule = "*/5 * * * *"
 
+# 9pm PST Sunday = 05:00 UTC Monday (Netlify cron is UTC, no DST handling)
 [functions."weekly-review"]
-  schedule = "0 9 * * 0"
+  schedule = "0 5 * * 1"
