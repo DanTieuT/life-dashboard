@@ -1618,13 +1618,12 @@ async function loadData(){
     const snap=await getDoc(userRef);
     if(snap.exists()){
       const d=snap.data();
-      const existingIds=new Set((d.habits||[]).map(h=>h.id));
       appData={
         intention:d.intention||'',
         focusTasks:d.focusTasks||[],
         projects:d.projects||[],
         userProjects:d.userProjects||[],
-        habits:[...(d.habits||[]),...DEFAULT_HABITS.filter(h=>!existingIds.has(h.id))],
+        habits:d.habits!=null?d.habits:[...DEFAULT_HABITS],
         events:d.events||[],
         transactions:d.transactions||[],
         budget:d.budget||{...DEFAULT_BUDGET},
