@@ -53,6 +53,21 @@ const DEFAULT_HABITS = [
   {id:'get_outside',name:'Get Outside',sub:'Fresh air daily',emoji:'☀️',colorIdx:6,type:'weekly',target:5,log:{}},
   {id:'review_goals',name:'Review Goals',sub:'Monthly check-in',emoji:'🎯',colorIdx:5,type:'monthly',target:1,log:{}},
 ];
+// 9/80 work schedule: every-other-Monday RDO (day off). anchorDate is a known
+// RDO Monday; any Monday an even number of 14-day cycles from it is also RDO.
+const DEFAULT_RDO_SCHEDULE = { enabled:true, anchorDate:'2026-07-06', cycleDays:14 };
+// dateStr: 'YYYY-MM-DD'. Returns true if that date is an RDO day under appData.rdoSchedule.
+function isRDO(dateStr){
+  const sched=appData.rdoSchedule;
+  if(!sched||!sched.enabled||!sched.anchorDate)return false;
+  const d=new Date(dateStr+'T12:00:00');
+  if(d.getDay()!==1)return false; // RDOs land on Monday only
+  const anchor=new Date(sched.anchorDate+'T12:00:00');
+  const diffDays=Math.round((d-anchor)/86400000);
+  const cycle=sched.cycleDays||14;
+  return ((diffDays%cycle)+cycle)%cycle===0;
+}
+window.isRDO=isRDO;
 
 // ── STATE (window-scoped: shared across all modules) ─────────────
 // habits starts EMPTY (not defaults) so default habits never flash before
@@ -60,7 +75,8 @@ const DEFAULT_HABITS = [
 window.appData = {
   intention:'', focusTasks:[], projects:[], userProjects:[], habits:[],
   events:[], transactions:[], budget:{...DEFAULT_BUDGET}, savings:{...DEFAULT_SAVINGS},
-  accounts:[], goals:[], notes:[], profile:'', categoryBudgets:{}, netWorthHistory:[]
+  accounts:[], goals:[], notes:[], profile:'', categoryBudgets:{}, netWorthHistory:[],
+  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}
 };
 window._dataLoaded=false; // true once loadData() resolves — render skeletons until then
 window.currentFilter='all';
@@ -257,6 +273,7 @@ async function loadData(){
         categoryBudgets:d.categoryBudgets||{},
         netWorthHistory:d.netWorthHistory||[],
         updatedAt:d.updatedAt||0,
+        rdoSchedule:d.rdoSchedule||{...DEFAULT_RDO_SCHEDULE},
       };
     } else {
       // New user: seed default habits

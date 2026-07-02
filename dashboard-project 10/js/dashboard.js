@@ -198,6 +198,23 @@ function renderGreeting(){
   if(dateEl){
     const now=new Date();
     dateEl.textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    const today=todayStr();
+    const rdoToday=isRDO(today);
+    const tomorrow=new Date(now); tomorrow.setDate(now.getDate()+1);
+    const rdoTomorrow=isRDO(tomorrow.toLocaleDateString('en-CA'));
+    let badge=dateEl.querySelector('.rdo-badge');
+    if(rdoToday||rdoTomorrow){
+      if(!badge){
+        badge=document.createElement('span');
+        badge.className='rdo-badge';
+        badge.style.cssText='margin-left:8px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--green-dim);color:var(--green);vertical-align:middle';
+        dateEl.appendChild(badge);
+      }
+      badge.textContent=rdoToday?'RDO today':'RDO tomorrow';
+      badge.style.display='';
+    } else if(badge){
+      badge.style.display='none';
+    }
   }
 }
 

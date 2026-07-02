@@ -111,14 +111,21 @@ function renderCalendarGrid(){
   cells.forEach(({y,m,d,other})=>{
     const ds=calDateStr(y,m,d);
     const dow=new Date(y,m,d).getDay();
+    const rdo=isRDO(ds);
     const cell=document.createElement('div');
-    cell.className='cal-cell'+(other?' other-month':'')+(ds===today?' today':'')+(dow===0?' sunday':'');
+    cell.className='cal-cell'+(other?' other-month':'')+(ds===today?' today':'')+(dow===0?' sunday':'')+(rdo?' rdo-day':'');
     cell.onclick=()=>openCalEventModal(ds);
 
     const num=document.createElement('div');
     num.className='cal-day-num';
     num.textContent=d;
     cell.appendChild(num);
+    if(rdo){
+      const badge=document.createElement('div');
+      badge.className='cal-rdo-badge';
+      badge.textContent='RDO';
+      cell.appendChild(badge);
+    }
 
     const evtWrap=document.createElement('div');
     evtWrap.className='cal-events';

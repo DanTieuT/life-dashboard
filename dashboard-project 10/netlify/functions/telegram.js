@@ -199,6 +199,21 @@ function todayStr() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
 }
 
+// Mirrors js/core.js isRDO() — 9/80 schedule, every-other-Monday RDO.
+// Falls back to the known default schedule if Firestore hasn't persisted one
+// yet (the client only writes rdoSchedule when it changes from its default).
+const DEFAULT_RDO_SCHEDULE = { enabled: true, anchorDate: '2026-07-06', cycleDays: 14 };
+function isRDO(dateStr, sched) {
+  sched = sched || DEFAULT_RDO_SCHEDULE;
+  if (!sched.enabled || !sched.anchorDate) return false;
+  const d = new Date(dateStr + 'T12:00:00');
+  if (d.getDay() !== 1) return false;
+  const anchor = new Date(sched.anchorDate + 'T12:00:00');
+  const diffDays = Math.round((d - anchor) / 86400000);
+  const cycle = sched.cycleDays || 14;
+  return ((diffDays % cycle) + cycle) % cycle === 0;
+}
+
 // ── Weather (Open-Meteo, no API key needed) ───────────────────────
 function wmoDesc(code){
   if(code===0)return'Clear sky';
@@ -252,6 +267,11 @@ function buildContext(data) {
   const now = new Date();
   const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
   const monthName = now.toLocaleDateString('en-US', { month: 'long' });
+
+  // ── RDO (9/80 schedule) ────────────────────────────────────────
+  const tomorrowStr = new Date(new Date(today + 'T12:00:00').getTime() + 86400000).toLocaleDateString('en-CA');
+  const rdoToday = isRDO(today, data.rdoSchedule);
+  const rdoTomorrow = isRDO(tomorrowStr, data.rdoSchedule);
 
   const tasks = (data.projects || []).filter(t => !t.done).map(t => ({ id: t.id, name: t.name || '', due: t.due || '' }));
   const completedToday = (data.projects || []).filter(t => {
@@ -368,7 +388,7 @@ function buildContext(data) {
     today, dayName, monthName, tasks, completedToday, habits, events,
     budget, spent, projects, accounts, goals, profile, recentNotes,
     overdueTasks, weeklyHabitCounts, weeklySpend: { thisWeek: Math.round(thisWeekSpend), lastWeek: Math.round(lastWeekSpend) },
-    spendingPatterns, spendingTrends,
+    spendingPatterns, spendingTrends, rdoToday, rdoTomorrow,
   };
 }
 
@@ -427,7 +447,7 @@ function buildSystemPrompt(ctx) {
 
   return `You are J.A.R.V.I.S. — Dan's personal AI assistant on Telegram. You have full visibility into his tasks, habits, schedule, finances, projects, and his TimeTree calendar. Be sharp, proactive, and genuinely helpful.
 ${memoryBlock}${notesBlock}${overdueBlock}${weeklyHabitBlock}${weeklySpendBlock}${spendingPatternsBlock}${spendingTrendsBlock}${ttBlock}${juliaBlock}
-Today: ${ctx.today} (${ctx.dayName})
+Today: ${ctx.today} (${ctx.dayName})${ctx.rdoToday ? ' — Dan is OFF today (RDO)' : ctx.rdoTomorrow ? ' — Dan is OFF tomorrow (RDO)' : ''}
 ${ctx.weather ? `Weather: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}${ctx.weather.rain ? ', rain expected' : ''}, wind ${ctx.weather.wind}mph${ctx.weather.high != null ? `, High ${ctx.weather.high}°F / Low ${ctx.weather.low}°F` : ''}` : ''}
 
 ACTIVE TASKS:
@@ -455,6 +475,8 @@ ${projectList}
 
 WHAT TO FOCUS ON TODAY:
 When Dan asks "what should I focus on", "what should I work on", "what's my priority", or similar, respond with a ranked list of exactly 3 things based on: (1) tasks from OVERDUE TASKS section first, (2) tasks due today, (3) habits not yet done today, (4) project next actions. Be specific and direct — no fluff.
+
+RDO AWARENESS: Dan works a 9/80 schedule — every other Monday is a day off (RDO). Use the "Today"/"Dan is OFF" line above. When he's off today or tomorrow, it's a good moment to proactively suggest tackling a project next-action or a longer task that doesn't fit on a work day — but only mention it if it's naturally relevant to what he's asking, don't force it into every reply.
 
 HOW AM I DOING THIS WEEK:
 When Dan asks "how am I doing this week", "how's my week going", "weekly check-in", or similar, compare using the HABIT COMPARISON and WEEKLY SPENDING blocks above. Mention what's better vs last week, what's slipped, and give a direct honest assessment. Include spending comparison.

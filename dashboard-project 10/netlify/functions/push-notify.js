@@ -1,23 +1,27 @@
 /**
- * push-notify.js — Push notification infrastructure scaffold
- *
- * TODO: To fully enable push notifications, you need:
- *   1. Generate VAPID keys:
- *      npx web-push generate-vapid-keys
- *   2. Add to Netlify environment variables:
- *      VAPID_PUBLIC_KEY=<your public key>
- *      VAPID_PRIVATE_KEY=<your private key>
- *      VAPID_EMAIL=mailto:dantieut@gmail.com
- *   3. Install web-push: npm install web-push
- *   4. Uncomment the web-push sending code below
+ * push-notify.js — Web push notifications
  *
  * This function handles:
  *   POST /push-notify?action=subscribe  — store a push subscription
- *   POST /push-notify?action=send       — send a notification (requires VAPID keys)
+ *   POST /push-notify?action=send       — send a notification to all subscriptions
  *   GET  /push-notify?action=vapid-key  — return public VAPID key to browser
+ *
+ * Also exports sendPushToAll(db, {title, body, url}) for other scheduled
+ * functions (habit-reminder.js, rdo-nudge.js, weekly-review.js) to call directly.
  */
 
 const admin = require('firebase-admin');
+const webpush = require('web-push');
+
+if (!process.env.VAPID_PUBLIC_KEY) {
+  try {
+    const fs = require('fs'), path = require('path');
+    fs.readFileSync(path.resolve(__dirname, '../../.env'), 'utf8').split('\n').forEach(line => {
+      const m = line.match(/^([^#=\s]+)=(.+)$/);
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim();
+    });
+  } catch {}
+}
 
 function initFirebase() {
   if (admin.apps.length > 0) return;
@@ -27,7 +31,46 @@ function initFirebase() {
   admin.initializeApp({ credential: admin.credential.cert(sa) });
 }
 
+function initVapid() {
+  const vapidPublic = process.env.VAPID_PUBLIC_KEY;
+  const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
+  const vapidEmail = process.env.VAPID_EMAIL || 'mailto:dantieut@gmail.com';
+  if (!vapidPublic || !vapidPrivate) return false;
+  webpush.setVapidDetails(vapidEmail, vapidPublic, vapidPrivate);
+  return true;
+}
+
 const USER_UID = 'aqzJe5gq4IVYdKmUIW0pNJGL2ML2';
+
+// Sends { title, body, url } to every stored subscription for the one user
+// this app serves. Prunes subscriptions that report 404/410 (expired/revoked).
+// Silently no-ops if VAPID keys aren't configured — callers wrap this in
+// try/catch already, but this function itself never throws on missing config.
+async function sendPushToAll(db, { title = 'Command Center', body = '', url = '/' } = {}) {
+  if (!initVapid()) {
+    console.warn('[push-notify] VAPID keys not configured — skipping push');
+    return { sent: 0, failed: 0 };
+  }
+  const subsSnap = await db.collection(`users/${USER_UID}/pushSubscriptions`).get();
+  const payload = JSON.stringify({ title, body, url });
+  let sent = 0, failed = 0;
+  for (const docSnap of subsSnap.docs) {
+    const sub = docSnap.data().subscription;
+    try {
+      await webpush.sendNotification(sub, payload);
+      sent++;
+    } catch (e) {
+      failed++;
+      if (e.statusCode === 404 || e.statusCode === 410) {
+        await docSnap.ref.delete().catch(() => {});
+      } else {
+        console.warn('[push-notify] send failed:', e.message);
+      }
+    }
+  }
+  return { sent, failed };
+}
+module.exports.sendPushToAll = sendPushToAll;
 
 exports.handler = async (event) => {
   const action = event.queryStringParameters?.action || '';
@@ -85,11 +128,7 @@ exports.handler = async (event) => {
 
   // ── Send notification ────────────────────────────────────────────
   if (action === 'send') {
-    const vapidPublic = process.env.VAPID_PUBLIC_KEY;
-    const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
-    const vapidEmail = process.env.VAPID_EMAIL || 'mailto:dantieut@gmail.com';
-
-    if (!vapidPublic || !vapidPrivate) {
+    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -98,37 +137,15 @@ exports.handler = async (event) => {
         }),
       };
     }
-
-    // TODO: uncomment once web-push is installed
-    // const webpush = require('web-push');
-    // webpush.setVapidDetails(vapidEmail, vapidPublic, vapidPrivate);
-
     try {
       initFirebase();
       const db = admin.firestore();
-      const subsSnap = await db.collection(`users/${USER_UID}/pushSubscriptions`).get();
-      const subs = subsSnap.docs.map(d => d.data().subscription);
-
       const { title = 'Command Center', message = '', url = '/' } = body;
-      const payload = JSON.stringify({ title, body: message, url });
-
-      let sent = 0, failed = 0;
-      for (const sub of subs) {
-        try {
-          // TODO: uncomment once web-push is installed
-          // await webpush.sendNotification(sub, payload);
-          sent++;
-          console.log('Would send to:', sub.endpoint.slice(-20));
-        } catch (e) {
-          console.error('Push send failed:', e.message);
-          failed++;
-        }
-      }
-
+      const { sent, failed } = await sendPushToAll(db, { title, body: message, url });
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ok: true, sent, failed, note: 'web-push sending is stubbed — install web-push and uncomment the sendNotification calls' }),
+        body: JSON.stringify({ ok: true, sent, failed }),
       };
     } catch (e) {
       console.error('Send error:', e);
