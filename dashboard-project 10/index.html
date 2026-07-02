@@ -594,6 +594,73 @@ input,select,textarea{font-family:inherit}
 .page.active{animation:pageFadeIn .18s ease both}
 @keyframes pageFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── DARK/LIGHT TRANSITION (#70) ─────────────────────────────────── */
+:root{transition:background-color .3s ease,color .3s ease,border-color .3s ease}
+.habit-card,.stat-card,.focus-card,.today-card,.finance-card,.budget-cat,.txn-item,
+.modal,.top-nav,.bottom-nav,.chat-panel,.toast,.brain-dump-card,.goal-card,
+.tasks-section-body,.task-row,.week-cal,.month-cal,.spending-card,.payday-card,
+.nw-hero,.acct-card,.ring-stat-card,.proj-card,.dash-proj-wrap,.jarvis-history-wrap,
+input,select,textarea,button{transition:background-color .3s ease,color .3s ease,border-color .3s ease}
+
+/* ── COMPACT MODE (#72) ───────────────────────────────────────────── */
+[data-compact="true"] .habit-card{padding:10px 12px}
+[data-compact="true"] .habit-card-top{margin-bottom:8px}
+[data-compact="true"] .habit-icon{width:34px;height:34px;font-size:16px}
+[data-compact="true"] .section-hdr{margin-bottom:10px}
+[data-compact="true"] .stat-card{padding:14px}
+[data-compact="true"] .focus-card,.focus-card,[data-compact="true"] .today-card{padding:14px 16px}
+[data-compact="true"] .task-row{padding:9px 14px}
+[data-compact="true"] .goal-card{padding:14px}
+[data-compact="true"] .txn-item{padding:9px 0}
+[data-compact="true"] .main{padding-top:20px}
+[data-compact="true"] .hero-card{padding:20px 24px}
+[data-compact="true"] .hero-greeting{font-size:24px}
+[data-compact="true"] .brain-dump-card{padding:8px 12px}
+[data-compact="true"] .acct-card{padding:12px}
+[data-compact="true"] .payday-card{padding:10px 16px}
+[data-compact="true"] .spending-card{padding:14px}
+
+/* ── PULL TO REFRESH (#75) ───────────────────────────────────────── */
+.ptr-indicator{position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:180;
+  display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:6px 16px;font-size:13px;color:var(--sub);
+  opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.ptr-indicator.visible{opacity:1}
+.ptr-spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--green);
+  border-radius:50%;animation:ptr-spin .7s linear infinite;flex-shrink:0}
+@keyframes ptr-spin{to{transform:rotate(360deg)}}
+@media(max-width:768px){.ptr-indicator{top:calc(52px + env(safe-area-inset-top))}}
+
+/* ── TOAST MOBILE TOP (#79) ──────────────────────────────────────── */
+@media(max-width:768px){
+  .toast{bottom:auto;top:calc(52px + env(safe-area-inset-top) + 8px);right:10px;left:10px;max-width:none}
+}
+
+/* ── DRAG HANDLE FOR HABITS/TASKS (#5/#17) ───────────────────────── */
+.drag-handle{color:var(--muted);font-size:14px;cursor:grab;padding:0 6px 0 2px;
+  flex-shrink:0;opacity:0.35;user-select:none;display:flex;align-items:center;
+  touch-action:none}
+.drag-handle:active{cursor:grabbing}
+.habit-card{touch-action:none}
+.habit-card.dragging{opacity:0.4;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.habit-card.drag-over{outline:2px dashed var(--green);outline-offset:2px}
+
+/* ── HABIT COLOR PICKER (#8) ─────────────────────────────────────── */
+.habit-custom-color-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.habit-color-picker-input{width:40px;height:40px;border:none;border-radius:8px;
+  cursor:pointer;padding:2px;background:var(--card2)}
+
+/* ── CONFIRM INLINE (#81) ────────────────────────────────────────── */
+.confirm-inline{display:none;align-items:center;gap:6px;margin-top:6px}
+.confirm-inline.show{display:flex}
+.confirm-msg{font-size:12px;color:var(--sub);flex:1}
+.confirm-yes{background:var(--red);color:#fff;border:none;border-radius:6px;
+  padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.confirm-no{background:var(--card2);border:1px solid var(--border);border-radius:6px;
+  padding:4px 10px;font-size:12px;color:var(--sub);cursor:pointer;font-family:inherit}
+.task-row.confirm-pending{background:rgba(255,69,58,.05)}
+.habit-card.confirm-pending{outline:1px solid var(--red)}
+
 /* ── SKELETON LOADING ────────────────────────────────────────────── */
 .skeleton-wrap{padding:20px;display:flex;flex-direction:column;gap:12px}
 .skeleton-line{height:14px;border-radius:6px;background:linear-gradient(90deg,var(--card2) 25%,var(--border) 50%,var(--card2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
@@ -696,6 +763,12 @@ input,select,textarea{font-family:inherit}
 .pdd-divider{height:1px;background:var(--border);margin:4px 0}
 .pdd-label{font-size:14px;color:var(--text)}
 .pdd-signout{color:var(--red)!important;justify-content:flex-start}
+/* Font size buttons in dropdown */
+.pdd-font-btn{background:var(--card2);border:1px solid var(--border);border-radius:7px;
+  padding:4px 10px;font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;
+  font-family:inherit;transition:all .15s}
+.pdd-font-btn:hover,.pdd-font-btn.active{background:var(--green-dim);color:var(--green);border-color:rgba(48,209,88,.3)}
+
 /* iOS-style toggle switch */
 .pdd-toggle{
   width:44px;height:26px;border-radius:13px;background:var(--card2);
@@ -874,6 +947,18 @@ input,select,textarea{font-family:inherit}
     <div class="pdd-item" onclick="pddToggleTheme()">
       <span class="pdd-label">Dark Mode</span>
       <button class="pdd-toggle" id="pddThemeToggle" onclick="event.stopPropagation();pddToggleTheme()"><div class="pdd-knob"></div></button>
+    </div>
+    <div class="pdd-item" onclick="pddToggleCompact()">
+      <span class="pdd-label">Compact Mode</span>
+      <button class="pdd-toggle" id="pddCompactToggle" onclick="event.stopPropagation();pddToggleCompact()"><div class="pdd-knob"></div></button>
+    </div>
+    <div class="pdd-item" style="cursor:default">
+      <span class="pdd-label">Font Size</span>
+      <div style="display:flex;gap:4px">
+        <button class="pdd-font-btn" data-size="13" onclick="event.stopPropagation();setFontSize(13)">S</button>
+        <button class="pdd-font-btn" data-size="15" onclick="event.stopPropagation();setFontSize(15)">M</button>
+        <button class="pdd-font-btn" data-size="17" onclick="event.stopPropagation();setFontSize(17)">L</button>
+      </div>
     </div>
     <div class="pdd-divider"></div>
     <button class="pdd-item" onclick="closeProfileDropdown();enablePushNotifications()" id="pddPushBtn">
@@ -1337,7 +1422,14 @@ input,select,textarea{font-family:inherit}
     <div class="form-group">
       <label class="form-label">Color</label>
       <div class="habit-color-row" id="colorSwatches"></div>
+      <div class="habit-custom-color-row">
+        <label class="form-label" style="margin:0;flex-shrink:0">Custom:</label>
+        <input type="color" class="habit-color-picker-input" id="newHabitCustomColor" value="#30d158" oninput="selectCustomColor(this.value)">
+        <span style="font-size:12px;color:var(--sub)" id="customColorHex">#30d158</span>
+        <button class="btn-cancel" style="padding:4px 10px;font-size:12px" onclick="clearCustomColor()">Use preset</button>
+      </div>
       <input type="hidden" id="newHabitColor" value="0">
+      <input type="hidden" id="newHabitCustomColorVal" value="">
     </div>
     <div class="form-group"><label class="form-label">Frequency</label>
       <select class="form-select" id="newHabitType" onchange="updateHabitTargetVis()">
@@ -1558,6 +1650,12 @@ input,select,textarea{font-family:inherit}
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Pull to Refresh Indicator (#75) -->
+<div class="ptr-indicator" id="ptrIndicator">
+  <div class="ptr-spinner" id="ptrSpinner" style="display:none"></div>
+  <span id="ptrText">↓ Pull to refresh</span>
+</div>
 
 <!-- Offline Banner -->
 <div class="offline-banner" id="offlineBanner">⚡ Offline — changes will sync when you reconnect</div>
@@ -2303,7 +2401,17 @@ function renderHabitsGrid(containerId){
     el.innerHTML='<div class="habit-empty">No habits yet — add your first one above!</div>';
     return;
   }
-  el.innerHTML=appData.habits.map((h,idx)=>habitCardHTML(h,idx)).join('');
+  // Sort by order property if set
+  const sorted=[...appData.habits].sort((a,b)=>{
+    const ao=typeof a.order==='number'?a.order:9999;
+    const bo=typeof b.order==='number'?b.order:9999;
+    return ao-bo;
+  });
+  // habitCardHTMLWithCustom is defined later in same module scope (hoisted as fn declaration)
+  const cardFn=habitCardHTMLWithCustom||habitCardHTML;
+  el.innerHTML=sorted.map((h,idx)=>cardFn(h,idx)).join('');
+  // Attach drag listeners post-render
+  if(window._afterRenderHabitsGrid) window._afterRenderHabitsGrid(containerId);
 }
 
 // Progress-ring button: N arc segments around a circle, like HabitKit
@@ -2480,6 +2588,8 @@ function renderTaskSection(containerId,label,tasks,color){
   if(!tasks.length){el.innerHTML='';return;}
   const dotColors={red:'var(--red)',yellow:'var(--blue)','':'var(--muted)'};
   const dotColor=dotColors[color]||'var(--muted)';
+  // Use patched taskRowHTML if available (set by batch-1 confirm feature)
+  const rowFn=window._patchedTaskRowHTML||taskRowHTML;
   el.innerHTML=`<div class="tasks-section">
     <div class="tasks-section-hdr">
       <span class="tasks-section-dot" style="background:${dotColor}"></span>
@@ -2487,7 +2597,7 @@ function renderTaskSection(containerId,label,tasks,color){
       <span class="tasks-section-count">${tasks.length}</span>
     </div>
     <div class="tasks-section-body">
-      ${tasks.map(t=>taskRowHTML(t)).join('')}
+      ${tasks.map(t=>rowFn(t)).join('')}
     </div>
   </div>`;
 }
@@ -4396,6 +4506,526 @@ if('serviceWorker' in navigator){
   ['habitsGridDash','focusTasksList','todayEventsList','brainDumpList'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.innerHTML=skeletonHTML;
+  });
+})();
+
+// ── COMPACT MODE (#72) ────────────────────────────────────────────
+(function(){
+  const saved=localStorage.getItem('compact');
+  if(saved==='1')document.documentElement.setAttribute('data-compact','true');
+})();
+window.pddToggleCompact=function(){
+  const isOn=document.documentElement.getAttribute('data-compact')==='true';
+  if(isOn){
+    document.documentElement.removeAttribute('data-compact');
+    localStorage.setItem('compact','0');
+  }else{
+    document.documentElement.setAttribute('data-compact','true');
+    localStorage.setItem('compact','1');
+  }
+  updateCompactSwitch();
+};
+function updateCompactSwitch(){
+  const toggle=document.getElementById('pddCompactToggle');
+  if(!toggle)return;
+  const isOn=document.documentElement.getAttribute('data-compact')==='true';
+  toggle.classList.toggle('on',isOn);
+}
+// Init compact switch state when dropdown opens
+const _origOpenProfileDropdown=window.openProfileDropdown;
+window.openProfileDropdown=function(){
+  _origOpenProfileDropdown();
+  updateCompactSwitch();
+  updateFontSizeBtns();
+};
+
+// ── FONT SIZE (#73) ────────────────────────────────────────────────
+(function(){
+  const saved=localStorage.getItem('fontSize');
+  if(saved) document.documentElement.style.fontSize=saved+'px';
+})();
+window.setFontSize=function(px){
+  document.documentElement.style.fontSize=px+'px';
+  localStorage.setItem('fontSize',String(px));
+  updateFontSizeBtns();
+};
+function updateFontSizeBtns(){
+  const saved=localStorage.getItem('fontSize')||'15';
+  document.querySelectorAll('.pdd-font-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.size===saved);
+  });
+}
+updateFontSizeBtns();
+
+// ── HAPTIC FEEDBACK (#85/#9) ──────────────────────────────────────
+function haptic(ms=40){
+  try{if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}
+}
+
+// Patch logHabit to add haptic
+const _origLogHabit=window.logHabit;
+window.logHabit=function(id){
+  haptic(40);
+  _origLogHabit(id);
+};
+
+// Patch toggleTask to add haptic
+const _origToggleTask=window.toggleTask;
+window.toggleTask=function(id){
+  haptic(30);
+  _origToggleTask(id);
+};
+
+// ── HABIT COLOR CUSTOMIZATION (#8) ────────────────────────────────
+window.selectCustomColor=function(hex){
+  // Clear preset selection when custom color set
+  document.getElementById('newHabitCustomColorVal').value=hex;
+  document.getElementById('customColorHex').textContent=hex;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+};
+window.clearCustomColor=function(){
+  document.getElementById('newHabitCustomColorVal').value='';
+  // re-select first swatch
+  const first=document.querySelector('.color-swatch');
+  if(first){
+    first.classList.add('selected');
+    document.getElementById('newHabitColor').value='0';
+  }
+};
+
+// Override buildColorSwatches to show current selection
+const _origBuildColorSwatches=window.buildColorSwatches||function(){};
+window.buildColorSwatches=function(selectedIdx){
+  const el=document.getElementById('colorSwatches');
+  if(!el)return;
+  el.innerHTML=HABIT_COLORS_DARK.map((c,i)=>
+    `<div class="color-swatch${i===(selectedIdx||0)?' selected':''}" style="background:${c.dot}" onclick="selectColor(${i})" data-idx="${i}"></div>`
+  ).join('');
+};
+window.selectColor=function(i){
+  document.getElementById('newHabitColor').value=i;
+  document.getElementById('newHabitCustomColorVal').value=''; // clear custom
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',parseInt(s.dataset.idx)===i));
+};
+
+// Override openEditHabitModal to load customColor
+const _origOpenEditHabitModal=window.openEditHabitModal;
+window.openEditHabitModal=function(id){
+  const h=appData.habits.find(h=>h.id===id);
+  if(!h)return;
+  buildColorSwatches(h.colorIdx||0);
+  document.getElementById('habitModalTitle').textContent='Edit Habit';
+  document.getElementById('habitModalSaveBtn').textContent='Save Changes';
+  document.getElementById('editHabitId').value=id;
+  document.getElementById('newHabitName').value=h.name||'';
+  document.getElementById('newHabitSub').value=h.sub||'';
+  document.getElementById('newHabitEmoji').value=h.emoji||'';
+  document.getElementById('newHabitColor').value=h.colorIdx||0;
+  document.getElementById('newHabitCustomColorVal').value=h.customColor||'';
+  if(h.customColor){
+    document.getElementById('newHabitCustomColor').value=h.customColor;
+    document.getElementById('customColorHex').textContent=h.customColor;
+    document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  }
+  document.getElementById('newHabitType').value=h.type||'daily';
+  document.getElementById('newHabitTarget').value=h.target||3;
+  document.getElementById('newHabitDailyTarget').value=h.dailyTarget||1;
+  updateHabitTargetVis();
+  openModal('addHabitModal');
+};
+
+// Override openAddHabitModal to reset custom color
+const _origOpenAddHabitModal=window.openAddHabitModal;
+window.openAddHabitModal=function(){
+  buildColorSwatches(0);
+  document.getElementById('habitModalTitle').textContent='New Habit';
+  document.getElementById('habitModalSaveBtn').textContent='Add Habit';
+  document.getElementById('editHabitId').value='';
+  document.getElementById('newHabitName').value='';
+  document.getElementById('newHabitSub').value='';
+  document.getElementById('newHabitEmoji').value='';
+  document.getElementById('newHabitColor').value='0';
+  document.getElementById('newHabitCustomColorVal').value='';
+  document.getElementById('newHabitCustomColor').value='#30d158';
+  document.getElementById('customColorHex').textContent='#30d158';
+  document.getElementById('newHabitType').value='daily';
+  updateHabitTargetVis();
+  openModal('addHabitModal');
+};
+
+// Override saveHabitModal to persist customColor
+const _origSaveHabitModal=window.saveHabitModal;
+window.saveHabitModal=function(){
+  const name=document.getElementById('newHabitName').value.trim();
+  const sub=document.getElementById('newHabitSub').value.trim();
+  const emoji=document.getElementById('newHabitEmoji').value.trim()||'⭐';
+  const colorIdx=parseInt(document.getElementById('newHabitColor').value)||0;
+  const customColor=document.getElementById('newHabitCustomColorVal').value||'';
+  const type=document.getElementById('newHabitType').value;
+  const target=parseInt(document.getElementById('newHabitTarget').value)||1;
+  const dailyTarget=parseInt(document.getElementById('newHabitDailyTarget').value)||1;
+  const editId=document.getElementById('editHabitId').value;
+  if(!name)return;
+  if(editId){
+    const h=appData.habits.find(h=>h.id===editId);
+    if(h){
+      Object.assign(h,{name,sub,emoji,colorIdx,type});
+      if(customColor)h.customColor=customColor;else delete h.customColor;
+      if(type==='daily')h.dailyTarget=dailyTarget>1?dailyTarget:undefined;
+      else{h.target=target;delete h.dailyTarget;}
+    }
+  } else {
+    const h={id:uid(),name,sub,emoji,colorIdx,type,log:{}};
+    if(customColor)h.customColor=customColor;
+    if(type==='daily'&&dailyTarget>1)h.dailyTarget=dailyTarget;
+    if(type!=='daily')h.target=target;
+    appData.habits.push(h);
+  }
+  saveData();
+  closeModal('addHabitModal');
+  renderHabitsGrid('habitsGridDash');renderHabitsGrid('habitsGridTab');
+  updateHabitsSummary();toast(editId?'✓ Habit updated':'✓ Habit added');
+};
+
+// Override habitCardHTML to use customColor
+const _origHabitCardHTML=habitCardHTML;
+// We need to patch habitColors resolution to support customColor
+// Patch is done in habitCardHTML itself via inline override
+function habitCardHTMLWithCustom(h,idx){
+  const colors=habitColors();
+  const ci=typeof h.colorIdx==='number'?h.colorIdx:idx%colors.length;
+  let c=colors[ci];
+  // If custom color set, build a synthetic color object
+  if(h.customColor){
+    const hex=h.customColor;
+    c={bg:hex+'22',dot:hex,dim:hex+'33',btn:hex,ico:hex+'22'};
+  }
+  const today=todayStr();
+  const isWeekly=h.type==='weekly';
+  const dailyTarget=h.dailyTarget||1;
+  const weeklyTarget=h.target||1;
+  const count=habitCount(h,today);
+  const done=isWeekly?(count>0):(count>=dailyTarget);
+
+  const dots=[];
+  if(isWeekly){
+    for(let week=0;week<52;week++){
+      const baseAgo=(51-week)*7;
+      let sessionsThisWeek=0;
+      for(let day=0;day<7;day++){
+        const daysAgo=baseAgo+(6-day);
+        const d=new Date();d.setDate(d.getDate()-daysAgo);
+        sessionsThisWeek+=habitCount(h,d.toLocaleDateString('en-CA'));
+      }
+      sessionsThisWeek=Math.min(sessionsThisWeek,weeklyTarget);
+      for(let slot=0;slot<weeklyTarget;slot++){
+        dots.push(`<div class="yd" style="background:${slot<sessionsThisWeek?c.dot:c.dim}"></div>`);
+      }
+    }
+  } else {
+    for(let week=0;week<52;week++){
+      for(let day=0;day<7;day++){
+        const daysAgo=(51-week)*7+(6-day);
+        const d=new Date();d.setDate(d.getDate()-daysAgo);
+        const cnt=habitCount(h,d.toLocaleDateString('en-CA'));
+        const dotBg=cnt>0?c.dot:c.dim;
+        const dotOp=cnt>0?(cnt/dailyTarget).toFixed(2):'1';
+        dots.push(`<div class="yd" style="background:${dotBg};opacity:${dotOp}"></div>`);
+      }
+    }
+  }
+  const gridStyle=isWeekly
+    ?`grid-template-rows:repeat(${weeklyTarget},1fr);aspect-ratio:${52}/${weeklyTarget}`
+    :`grid-template-rows:repeat(7,1fr);aspect-ratio:52/7`;
+
+  const ringTarget=isWeekly?1:dailyTarget;
+  const btnContent=habitRingBtn(count,ringTarget,c);
+
+  return `<div class="habit-card" data-habit-id="${h.id}" style="background:${c.bg}" draggable="true">
+    <div class="habit-card-top">
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <div class="habit-icon" style="background:${c.dim}">${h.emoji||'⭐'}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-sub">${h.sub||h.name}</div>
+      </div>
+      <div class="habit-card-actions">
+        <button class="habit-action-btn" onclick="openEditHabitModal('${h.id}')" title="Edit">✎</button>
+        <button class="habit-action-btn habit-del-btn" onclick="confirmDeleteHabit('${h.id}')" title="Delete">✕</button>
+      </div>
+      <button class="habit-log-btn" style="background:${c.dim};padding:0;opacity:1"
+        onclick="logHabit('${h.id}')">
+        ${btnContent}
+      </button>
+    </div>
+    <div class="year-grid" style="${gridStyle}">${dots.join('')}</div>
+  </div>`;
+}
+
+// ── HABIT DRAG REORDER (#5) ────────────────────────────────────────
+let _dragHabitId=null;
+
+function attachHabitDragListeners(containerId){
+  const container=document.getElementById(containerId);
+  if(!container)return;
+  container.querySelectorAll('.habit-card[data-habit-id]').forEach(card=>{
+    card.addEventListener('dragstart',e=>{
+      _dragHabitId=card.dataset.habitId;
+      setTimeout(()=>card.classList.add('dragging'),0);
+      e.dataTransfer.effectAllowed='move';
+    });
+    card.addEventListener('dragend',()=>{
+      card.classList.remove('dragging');
+      container.querySelectorAll('.habit-card').forEach(c=>c.classList.remove('drag-over'));
+    });
+    card.addEventListener('dragover',e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      container.querySelectorAll('.habit-card').forEach(c=>c.classList.remove('drag-over'));
+      card.classList.add('drag-over');
+    });
+    card.addEventListener('drop',e=>{
+      e.preventDefault();
+      const fromId=_dragHabitId;
+      const toId=card.dataset.habitId;
+      if(fromId&&toId&&fromId!==toId){
+        const habits=appData.habits;
+        const fromIdx=habits.findIndex(h=>h.id===fromId);
+        const toIdx=habits.findIndex(h=>h.id===toId);
+        if(fromIdx>-1&&toIdx>-1){
+          const [moved]=habits.splice(fromIdx,1);
+          habits.splice(toIdx,0,moved);
+          // Update order property
+          habits.forEach((h,i)=>h.order=i);
+          saveData();
+          renderHabitsGrid('habitsGridDash');
+          renderHabitsGrid('habitsGridTab');
+          attachHabitDragListeners('habitsGridDash');
+          attachHabitDragListeners('habitsGridTab');
+        }
+      }
+      card.classList.remove('drag-over');
+    });
+  });
+
+  // Touch drag support for mobile
+  let touchDragCard=null,touchClone=null,touchStartY=0,touchStartX=0;
+  container.querySelectorAll('.drag-handle').forEach(handle=>{
+    handle.addEventListener('touchstart',e=>{
+      const card=handle.closest('.habit-card[data-habit-id]');
+      if(!card)return;
+      touchDragCard=card;
+      _dragHabitId=card.dataset.habitId;
+      const t=e.touches[0];
+      touchStartX=t.clientX;touchStartY=t.clientY;
+      // Create clone for visual feedback
+      touchClone=card.cloneNode(true);
+      touchClone.style.cssText=`position:fixed;top:${card.getBoundingClientRect().top}px;left:${card.getBoundingClientRect().left}px;width:${card.offsetWidth}px;opacity:0.7;z-index:9999;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);border-radius:var(--radius)`;
+      document.body.appendChild(touchClone);
+      card.style.opacity='0.3';
+    },{passive:true});
+    handle.addEventListener('touchmove',e=>{
+      if(!touchDragCard||!touchClone)return;
+      const t=e.touches[0];
+      const dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;
+      touchClone.style.transform=`translate(${dx}px,${dy}px)`;
+      // Find card under finger
+      touchClone.style.pointerEvents='none';
+      const el=document.elementFromPoint(t.clientX,t.clientY);
+      const overCard=el?.closest('.habit-card[data-habit-id]');
+      container.querySelectorAll('.habit-card').forEach(c=>c.classList.remove('drag-over'));
+      if(overCard&&overCard!==touchDragCard)overCard.classList.add('drag-over');
+    },{passive:true});
+    handle.addEventListener('touchend',e=>{
+      if(!touchDragCard)return;
+      const t=e.changedTouches[0];
+      const el=document.elementFromPoint(t.clientX,t.clientY);
+      const overCard=el?.closest('.habit-card[data-habit-id]');
+      if(overCard&&overCard!==touchDragCard){
+        const fromId=_dragHabitId;
+        const toId=overCard.dataset.habitId;
+        const habits=appData.habits;
+        const fromIdx=habits.findIndex(h=>h.id===fromId);
+        const toIdx=habits.findIndex(h=>h.id===toId);
+        if(fromIdx>-1&&toIdx>-1){
+          const [moved]=habits.splice(fromIdx,1);
+          habits.splice(toIdx,0,moved);
+          habits.forEach((h,i)=>h.order=i);
+          saveData();
+          renderHabitsGrid('habitsGridDash');
+          renderHabitsGrid('habitsGridTab');
+          attachHabitDragListeners('habitsGridDash');
+          attachHabitDragListeners('habitsGridTab');
+        }
+      }
+      if(touchClone){touchClone.remove();touchClone=null;}
+      if(touchDragCard){touchDragCard.style.opacity='';touchDragCard=null;}
+      container.querySelectorAll('.habit-card').forEach(c=>c.classList.remove('drag-over'));
+    },{passive:true});
+  });
+}
+
+// After renderHabitsGrid runs, attach drag listeners.
+// We register a post-render hook picked up inside renderHabitsGrid.
+window._afterRenderHabitsGrid=function(containerId){
+  if(typeof attachHabitDragListeners==='function') attachHabitDragListeners(containerId);
+};
+
+// ── CONFIRM DIALOGS (#81) ─────────────────────────────────────────
+window.confirmDeleteHabit=function(id){
+  const card=document.querySelector(`.habit-card[data-habit-id="${id}"]`);
+  if(!card)return;
+  // Check if already in confirm mode
+  if(card.classList.contains('confirm-pending')){
+    return;
+  }
+  card.classList.add('confirm-pending');
+  const existing=card.querySelector('.confirm-inline');
+  if(existing){existing.classList.add('show');return;}
+  const confirm=document.createElement('div');
+  confirm.className='confirm-inline show';
+  confirm.innerHTML=`<span class="confirm-msg">Delete habit?</span>
+    <button class="confirm-no" onclick="cancelConfirmHabit('${id}')">No</button>
+    <button class="confirm-yes" onclick="deleteHabit('${id}')">Yes, delete</button>`;
+  const yearGrid=card.querySelector('.year-grid');
+  if(yearGrid)card.insertBefore(confirm,yearGrid);
+  else card.appendChild(confirm);
+};
+window.cancelConfirmHabit=function(id){
+  const card=document.querySelector(`.habit-card[data-habit-id="${id}"]`);
+  if(!card)return;
+  card.classList.remove('confirm-pending');
+  const conf=card.querySelector('.confirm-inline');
+  if(conf)conf.classList.remove('show');
+};
+
+window.confirmDeleteTask=function(id){
+  const row=document.querySelector(`.task-row[data-task-id="${id}"]`);
+  if(!row)return;
+  if(row.classList.contains('confirm-pending'))return;
+  row.classList.add('confirm-pending');
+  const conf=document.createElement('div');
+  conf.className='confirm-inline show';
+  conf.style.padding='0 16px 8px';
+  conf.innerHTML=`<span class="confirm-msg">Delete task?</span>
+    <button class="confirm-no" onclick="cancelConfirmTask('${id}')">No</button>
+    <button class="confirm-yes" onclick="deleteTask('${id}')">Yes</button>`;
+  row.after(conf);
+};
+window.cancelConfirmTask=function(id){
+  const row=document.querySelector(`.task-row[data-task-id="${id}"]`);
+  if(row){row.classList.remove('confirm-pending');row.nextElementSibling?.classList.contains('confirm-inline')&&row.nextElementSibling.remove();}
+};
+
+// Patch deleteHabit to not use confirm() — inline confirm handles it
+const _origDeleteHabit=window.deleteHabit;
+window.deleteHabit=function(id){
+  appData.habits=appData.habits.filter(h=>h.id!==id);
+  saveData();
+  renderHabitsGrid('habitsGridDash');renderHabitsGrid('habitsGridTab');
+  updateHabitsSummary();renderStats();toast('Habit deleted');
+};
+
+// Patch taskRowHTML to add data-task-id and use confirmDeleteTask
+function taskRowHTMLWithConfirm(t){
+  const today=todayStr();
+  let duePill='';
+  if(t.due){
+    let cls,label;
+    if(t.due<today){cls='overdue';label=humanDate(t.due,today);}
+    else if(t.due===today){cls='today';label='Today';}
+    else{cls='upcoming';label=humanDate(t.due,today);}
+    duePill=`<span class="due-pill ${cls}">${label}</span>`;
+  }
+  const recentDone=isRecentDone(t);
+  const rowCls=t.done?(recentDone?'recent-done-row':'done-row'):'';
+  return`<div class="task-row${rowCls?' '+rowCls:''}" data-task-id="${t.id}">
+    <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</button>
+    <span class="task-label${t.done?' done-text':''}" onclick="toggleTask('${t.id}')" style="cursor:pointer;flex:1">${t.name}</span>
+    ${duePill}
+    <button class="task-row-edit" onclick="openEditTaskModal('${t.id}')" title="Edit">✎</button>
+    <button class="task-row-del" onclick="confirmDeleteTask('${t.id}')">✕</button>
+  </div>`;
+}
+// Register patched task row renderer — picked up by renderTaskSection via window._patchedTaskRowHTML
+window._patchedTaskRowHTML=taskRowHTMLWithConfirm;
+
+// ── PULL TO REFRESH (#75) ─────────────────────────────────────────
+(function(){
+  let _ptrStartY=0,_ptrActive=false,_ptrRefreshing=false;
+  const THRESHOLD=60;
+  const ind=()=>document.getElementById('ptrIndicator');
+  const spinner=()=>document.getElementById('ptrSpinner');
+  const txt=()=>document.getElementById('ptrText');
+  document.addEventListener('touchstart',e=>{
+    if(window.scrollY===0&&!_ptrRefreshing){
+      _ptrStartY=e.touches[0].clientY;
+      _ptrActive=true;
+    }
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!_ptrActive||_ptrRefreshing)return;
+    const dy=e.touches[0].clientY-_ptrStartY;
+    if(dy>20){
+      const el=ind();
+      if(el){
+        el.classList.add('visible');
+        if(txt())txt().textContent=dy>THRESHOLD?'↑ Release to refresh':'↓ Pull to refresh';
+      }
+    }
+  },{passive:true});
+  document.addEventListener('touchend',async e=>{
+    if(!_ptrActive)return;
+    _ptrActive=false;
+    const dy=e.changedTouches[0].clientY-_ptrStartY;
+    if(dy>THRESHOLD&&!_ptrRefreshing){
+      _ptrRefreshing=true;
+      const el=ind();
+      if(el&&spinner()&&txt()){
+        spinner().style.display='block';
+        txt().textContent='Refreshing…';
+      }
+      try{
+        await syncTimetreeEvents(true);
+        renderAll();
+      }catch(err){}
+      _ptrRefreshing=false;
+      if(el){el.classList.remove('visible');}
+      if(spinner())spinner().style.display='none';
+      if(txt())txt().textContent='↓ Pull to refresh';
+      toast('✓ Refreshed');
+    } else {
+      const el=ind();
+      if(el)el.classList.remove('visible');
+    }
+  },{passive:true});
+})();
+
+// ── KEYBOARD HEIGHT HANDLING (#87) ────────────────────────────────
+(function(){
+  if(!window.visualViewport)return;
+  const mainEl=()=>document.querySelector('.main');
+  let _basePad=0;
+  window.visualViewport.addEventListener('resize',()=>{
+    const main=mainEl();
+    if(!main)return;
+    const focused=document.activeElement;
+    const isInput=focused&&(focused.tagName==='INPUT'||focused.tagName==='TEXTAREA'||focused.tagName==='SELECT');
+    if(!isInput){main.style.paddingBottom='';return;}
+    const kbHeight=window.innerHeight-window.visualViewport.height;
+    if(kbHeight>50){
+      main.style.paddingBottom=kbHeight+'px';
+    } else {
+      main.style.paddingBottom='';
+    }
+  });
+  document.addEventListener('focusout',()=>{
+    setTimeout(()=>{
+      const main=mainEl();
+      if(main&&!document.activeElement?.tagName.match(/INPUT|TEXTAREA|SELECT/)){
+        main.style.paddingBottom='';
+      }
+    },150);
   });
 })();
 
