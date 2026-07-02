@@ -104,7 +104,7 @@ input,select,textarea{font-family:inherit}
 .gauge-svg{overflow:visible}
 
 /* ── STAT TILES ──────────────────────────────────────────────────── */
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
 .stat-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 
@@ -826,12 +826,6 @@ input,select,textarea{font-family:inherit}
           <div id="statsRingTasks"></div>
           <div class="ring-stat-sub"><span id="tasksDoneNum">0</span> / <span id="tasksTotalNum">0</span> today</div>
           <div class="ring-stat-badge green" id="tasksBadge">↑ 0</div>
-        </div>
-        <div class="ring-stat-card">
-          <div class="ring-stat-title">Habit Consistency</div>
-          <div id="statsRingHabits"></div>
-          <div class="ring-stat-sub"><span id="statsHabitsDoneN">0</span>/<span id="statsHabitsTotalN">0</span> today</div>
-          <div class="ring-stat-badge green" id="completionBadge"><span id="completionNum">0</span>%</div>
         </div>
         <div class="ring-stat-card">
           <div class="ring-stat-title">Budget</div>
