@@ -169,6 +169,30 @@ function sendPhoto(chatId, pngBuffer, caption) {
   });
 }
 
+// Send a voice note (opus/ogg) via Telegram sendVoice (#25)
+function sendVoice(chatId, opusBuffer) {
+  return new Promise((resolve, reject) => {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const boundary = '----TGVoice' + Date.now();
+    const CRLF = '\r\n';
+    const metaPart = Buffer.from(
+      `--${boundary}${CRLF}Content-Disposition: form-data; name="chat_id"${CRLF}${CRLF}${chatId}${CRLF}` +
+      `--${boundary}${CRLF}Content-Disposition: form-data; name="voice"; filename="reply.ogg"${CRLF}Content-Type: audio/ogg${CRLF}${CRLF}`
+    );
+    const tail = Buffer.from(`${CRLF}--${boundary}--${CRLF}`);
+    const body = Buffer.concat([metaPart, opusBuffer, tail]);
+    const req = https.request({
+      hostname: 'api.telegram.org',
+      path: `/bot${token}/sendVoice`,
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}`, 'Content-Length': body.length }
+    }, (res) => { res.resume(); res.on('end', resolve); });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 const uidGen = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
 function todayStr() {
@@ -315,11 +339,36 @@ function buildContext(data) {
       return { category: cat, count, total };
     });
 
+  // ── Spending trends (#16): current month per-category vs 3-month average ──
+  // Categories deviating >20% from their prior-3-month average get flagged.
+  const monthKey = (d) => `${d.getFullYear()}-${d.getMonth()}`;
+  const curKey = monthKey(now);
+  const priorKeys = [1, 2, 3].map(i => monthKey(new Date(now.getFullYear(), now.getMonth() - i, 1)));
+  const catCur = {}, catPrior = {};
+  (data.transactions || []).forEach(t => {
+    if (t.type !== 'out') return;
+    const d = new Date(t.date);
+    if (isNaN(d)) return;
+    const k = monthKey(d);
+    const cat = t.category || 'Other';
+    if (k === curKey) catCur[cat] = (catCur[cat] || 0) + (t.amount || 0);
+    else if (priorKeys.includes(k)) catPrior[cat] = (catPrior[cat] || 0) + (t.amount || 0);
+  });
+  const spendingTrends = [];
+  for (const cat of new Set([...Object.keys(catCur), ...Object.keys(catPrior)])) {
+    const cur = Math.round(catCur[cat] || 0);
+    const avg = Math.round((catPrior[cat] || 0) / 3);
+    if (avg < 20 && cur < 20) continue; // ignore noise
+    if (avg === 0) { if (cur >= 50) spendingTrends.push({ category: cat, current: cur, avg, pct: null }); continue; }
+    const pct = Math.round((cur - avg) / avg * 100);
+    if (Math.abs(pct) > 20) spendingTrends.push({ category: cat, current: cur, avg, pct });
+  }
+
   return {
     today, dayName, monthName, tasks, completedToday, habits, events,
     budget, spent, projects, accounts, goals, profile, recentNotes,
     overdueTasks, weeklyHabitCounts, weeklySpend: { thisWeek: Math.round(thisWeekSpend), lastWeek: Math.round(lastWeekSpend) },
-    spendingPatterns,
+    spendingPatterns, spendingTrends,
   };
 }
 
@@ -358,6 +407,13 @@ function buildSystemPrompt(ctx) {
     ? `\nSPENDING PATTERNS THIS WEEK (mention proactively when relevant):\n${ctx.spendingPatterns.map(p => `  ${p.category}: ${p.count} transactions, $${Math.round(p.total)} total`).join('\n')}\n`
     : '';
 
+  // Spending trends vs 3-month average (#16)
+  const spendingTrendsBlock = ctx.spendingTrends && ctx.spendingTrends.length
+    ? `\nSPENDING TRENDS (this month vs prior 3-month average — categories deviating >20%; weave these in naturally when finances come up):\n${ctx.spendingTrends.map(t => t.pct === null
+        ? `  ${t.category}: $${t.current} this month vs $0 avg (new spending)`
+        : `  ${t.category}: $${t.current} this month vs $${t.avg} avg (${t.pct > 0 ? '+' : ''}${t.pct}%)`).join('\n')}\n`
+    : '';
+
   // Split timetree block into Dan's and Julia's sections
   let ttBlock = '';
   let juliaBlock = '';
@@ -370,7 +426,7 @@ function buildSystemPrompt(ctx) {
   }
 
   return `You are J.A.R.V.I.S. — Dan's personal AI assistant on Telegram. You have full visibility into his tasks, habits, schedule, finances, projects, and his TimeTree calendar. Be sharp, proactive, and genuinely helpful.
-${memoryBlock}${notesBlock}${overdueBlock}${weeklyHabitBlock}${weeklySpendBlock}${spendingPatternsBlock}${ttBlock}${juliaBlock}
+${memoryBlock}${notesBlock}${overdueBlock}${weeklyHabitBlock}${weeklySpendBlock}${spendingPatternsBlock}${spendingTrendsBlock}${ttBlock}${juliaBlock}
 Today: ${ctx.today} (${ctx.dayName})
 ${ctx.weather ? `Weather: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}${ctx.weather.rain ? ', rain expected' : ''}, wind ${ctx.weather.wind}mph${ctx.weather.high != null ? `, High ${ctx.weather.high}°F / Low ${ctx.weather.low}°F` : ''}` : ''}
 
@@ -877,6 +933,26 @@ exports.handler = async (event) => {
   // Send reply to Telegram
   if (reply && reply.trim()) await sendMessage(chatId, reply);
   if (spendingAlert) await sendMessage(chatId, spendingAlert);
+
+  // Voice replies (#25): if the incoming message was a voice note, also send the
+  // reply as speech. Text already went out above (accessibility + skimming), so
+  // a TTS failure costs nothing.
+  if (isVoice && reply && reply.trim()) {
+    try {
+      const { synthesizeSpeech } = require('./tts.js');
+      const clean = reply
+        .replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1')
+        .replace(/`(.+?)`/g, '$1')
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '') // strip emoji for speech
+        .trim();
+      if (clean) {
+        const opus = await synthesizeSpeech(clean, { voice: 'alloy', speed: 1.1, format: 'opus' });
+        await sendVoice(chatId, opus);
+      }
+    } catch (e) {
+      console.error('Voice reply TTS error (text already sent):', e.message);
+    }
+  }
 
   return { statusCode: 200, body: 'OK' };
 };

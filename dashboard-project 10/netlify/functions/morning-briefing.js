@@ -157,9 +157,30 @@ exports.handler = async (event) => {
     }).reduce((s, t) => s + (t.amount || 0), 0));
     const budgetPct = budget > 0 ? Math.round(spent / budget * 100) : null;
 
+    // ── Top 3 today (#24): overdue (oldest first) > due today > due tomorrow
+    //    > tasks tied to a project with a near deadline (within 7 days) ──────
+    const tomorrow = (() => { const d = new Date(today + 'T12:00:00'); d.setDate(d.getDate() + 1); return d.toLocaleDateString('en-CA'); })();
+    const daysOverdue = t => Math.round((new Date(today + 'T12:00:00') - new Date(t.due + 'T12:00:00')) / 86400000);
+    const nearProjects = (data.userProjects || []).filter(p => !p.archived && p.stage !== 'done' && p.dueDate && p.dueDate >= today && (new Date(p.dueDate + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000 <= 7);
+    const ranked = [];
+    overdue.forEach(t => ranked.push({ name: t.name, reason: `overdue ${daysOverdue(t)}d` }));
+    dueToday.forEach(t => ranked.push({ name: t.name, reason: 'due today' }));
+    (data.projects || []).filter(t => !t.done && t.due === tomorrow).forEach(t => ranked.push({ name: t.name, reason: 'due tomorrow' }));
+    nearProjects.forEach(p => {
+      const openTask = (p.tasks || []).find(t => !t.done);
+      ranked.push({ name: openTask ? `${openTask.name} (${p.name})` : `Push "${p.name}" forward`, reason: `project deadline ${humanDate(p.dueDate, today)}` });
+    });
+    const top3 = ranked.slice(0, 3);
+
     const lines = [];
     lines.push(`☀️ Good morning, Dan! Happy ${dayName}, ${monthDay}.`);
     lines.push('');
+
+    if (top3.length) {
+      lines.push('🎯 Top 3 today:');
+      top3.forEach((r, i) => lines.push(`  ${i + 1}. ${r.name} — ${r.reason}`));
+      lines.push('');
+    }
 
     if (weather) {
       const weatherEmoji = weather.rain ? '🌧️' : weather.temp > 80 ? '🌞' : weather.temp < 50 ? '🥶' : '🌤️';

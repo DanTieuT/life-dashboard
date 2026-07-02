@@ -13,3 +13,8 @@
 # 9pm PST Sunday = 05:00 UTC Monday (Netlify cron is UTC, no DST handling)
 [functions."weekly-review"]
   schedule = "0 5 * * 1"
+
+# 8pm PST daily = 03:00 UTC next day (Netlify cron is UTC, no DST handling —
+# during PDT this fires at 8pm PT; during PST it's 7pm. Close enough for a nudge.)
+[functions."habit-reminder"]
+  schedule = "0 3 * * *"

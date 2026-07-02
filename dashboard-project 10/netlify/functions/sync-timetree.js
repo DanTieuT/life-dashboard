@@ -59,7 +59,7 @@ exports.handler = async () => {
     console.log(`[sync-timetree] synced ${events.length} events`);
     return { statusCode: 200, headers, body: JSON.stringify({ events, syncedAt }) };
   } catch (e) {
-    console.error('[sync-timetree] error:', e.message);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
+    console.error('[sync-timetree] error:', e.message, e.body);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: e.message, detail: e.body }) };
   }
 };

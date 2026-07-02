@@ -723,6 +723,55 @@ async function speakReply(text){
 
 let _chatHistory=[];
 
+const ACTIONS_MARKER='<<<ACTIONS>>>';
+
+// Consume the chat SSE stream, appending tokens live into msgEl (#23).
+// Returns {reply, actions}.
+async function _consumeChatStream(res,msgEl){
+  const messages=document.getElementById('chatMessages');
+  const reader=res.body.getReader();
+  const dec=new TextDecoder();
+  let buf='',full='';
+  while(true){
+    const {done,value}=await reader.read();
+    if(done)break;
+    buf+=dec.decode(value,{stream:true});
+    let idx;
+    while((idx=buf.indexOf('\n\n'))>-1){
+      const rawEvent=buf.slice(0,idx);
+      buf=buf.slice(idx+2);
+      for(const line of rawEvent.split('\n')){
+        if(!line.startsWith('data:'))continue;
+        const payload=line.slice(5).trim();
+        if(!payload)continue;
+        try{
+          const d=JSON.parse(payload);
+          if(d.text){
+            full+=d.text;
+            // Never show the actions block — only text before the marker
+            msgEl.textContent=full.split(ACTIONS_MARKER)[0].trimStart();
+            messages.scrollTop=messages.scrollHeight;
+          }
+        }catch(e){}
+      }
+    }
+  }
+  let reply=full,actions=[];
+  const mi=full.indexOf(ACTIONS_MARKER);
+  if(mi>-1){
+    reply=full.slice(0,mi).trim();
+    try{actions=JSON.parse(full.slice(mi+ACTIONS_MARKER.length).trim());}catch(e){}
+  }else{
+    reply=full.trim();
+    // Safety: if the model wrapped everything in the legacy JSON shape, unwrap it
+    if(reply.startsWith('{')){
+      try{const p=JSON.parse(reply);if(p.reply){reply=p.reply;actions=p.actions||[];}}catch(e){}
+    }
+  }
+  msgEl.textContent=reply;
+  return{reply,actions};
+}
+
 window.sendChat=async function(){
   const input=document.getElementById('chatInput');
   const msg=input.value.trim();
@@ -739,21 +788,32 @@ window.sendChat=async function(){
       body:JSON.stringify({message:msg,context:buildChatContext(await fetchWeather()),history:_chatHistory})
     });
     if(!res.ok)throw new Error('HTTP '+res.status);
-    const data=await res.json();
+    const ctype=res.headers.get('content-type')||'';
+    let reply,actions,msgEl;
+    if(ctype.includes('text/event-stream')&&res.body){
+      // Streaming path — append tokens live
+      thinkEl.remove();
+      msgEl=appendChatMsg('','ai');
+      ({reply,actions}=await _consumeChatStream(res,msgEl));
+    }else{
+      // Fallback: plain JSON (local dev / older function)
+      const data=await res.json();
+      reply=data.reply;actions=data.actions||[];
+      thinkEl.remove();
+      msgEl=appendChatMsg(reply,'ai');
+    }
     _chatHistory.push({role:'user',content:msg});
-    _chatHistory.push({role:'assistant',content:data.reply});
+    _chatHistory.push({role:'assistant',content:reply});
     if(_chatHistory.length>40)_chatHistory=_chatHistory.slice(-40);
-    if(voiceMode)_prefetchSpeech(data.reply);
-    thinkEl.remove();
-    const labels=await executeActions(data.actions);
-    const msgEl=appendChatMsg(data.reply,'ai');
+    if(voiceMode)_prefetchSpeech(reply);
+    const labels=await executeActions(actions);
     if(labels.length){
       const row=document.createElement('div');
       row.className='chat-actions-row';
       labels.forEach(l=>{const b=document.createElement('span');b.className='chat-action-tag';b.textContent=l;row.appendChild(b);});
       msgEl.appendChild(row);
     }
-    if(voiceMode){await speakReply(data.reply);if(voiceMode)startListening();}
+    if(voiceMode){await speakReply(reply);if(voiceMode)startListening();}
   }catch(e){
     thinkEl.remove();
     appendChatMsg('Could not reach the AI. Make sure the Netlify function is deployed and ANTHROPIC_API_KEY is set.','ai');
