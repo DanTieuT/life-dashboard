@@ -639,7 +639,8 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
   flex-shrink:0;opacity:0.35;user-select:none;display:flex;align-items:center;
   touch-action:none}
 .drag-handle:active{cursor:grabbing}
-.habit-card{touch-action:none}
+/* touch-action:none lives on .drag-handle only — putting it on the whole
+   card blocks vertical page scrolling that starts on a habit card */
 .habit-card.dragging{opacity:0.4;box-shadow:0 8px 32px rgba(0,0,0,.4)}
 .habit-card.drag-over{outline:2px dashed var(--green);outline-offset:2px}
 
