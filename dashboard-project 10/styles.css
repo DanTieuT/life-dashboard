@@ -188,8 +188,8 @@ input,select,textarea{font-family:inherit}
 .habit-info{flex:1;min-width:0}
 .habit-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .habit-sub{font-size:12px;opacity:.5;margin-top:2px}
-.habit-card-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s;flex-shrink:0}
-.habit-card:hover .habit-card-actions{opacity:1}
+.habit-card-actions{display:flex;gap:2px;opacity:0;pointer-events:none;transition:opacity .15s;flex-shrink:0}
+.habit-card:hover .habit-card-actions{opacity:1;pointer-events:auto}
 .habit-action-btn{background:none;border:none;color:var(--sub);font-size:13px;padding:4px 6px;border-radius:6px;cursor:pointer;transition:color .15s}
 .habit-action-btn:hover{color:rgba(255,255,255,.9)}
 .habit-del-btn:hover{color:var(--red)}
@@ -262,8 +262,10 @@ input,select,textarea{font-family:inherit}
 .due-pill.overdue{background:var(--red-dim);color:var(--red)}
 .due-pill.today{background:var(--blue-dim);color:var(--blue)}
 .due-pill.upcoming{background:var(--card2);color:var(--sub)}
-.task-row-del,.task-row-edit{background:none;border:none;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px;flex-shrink:0;opacity:0;transition:opacity .15s;cursor:pointer}
-.task-row:hover .task-row-del,.task-row:hover .task-row-edit{opacity:.6}
+/* pointer-events:none while hidden — an opacity-0 button still swallows taps,
+   which on mobile made "tap task to complete" open the edit modal instead */
+.task-row-del,.task-row-edit{background:none;border:none;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px;flex-shrink:0;opacity:0;pointer-events:none;transition:opacity .15s;cursor:pointer}
+.task-row:hover .task-row-del,.task-row:hover .task-row-edit{opacity:.6;pointer-events:auto}
 .task-row-del:hover{color:var(--red);opacity:1}
 .task-row-edit:hover{color:var(--text);opacity:1}
 .done-toggle-btn{background:none;border:none;color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;padding:0}
@@ -935,13 +937,17 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
   .habits-grid{grid-template-columns:1fr}
   .habit-tab-grid{grid-template-columns:1fr}
   /* On touch devices, show edit/delete at low opacity always so first tap logs the habit */
-  .habit-card-actions{opacity:0.4}
+  .habit-card-actions{opacity:0.4;pointer-events:auto}
   .habit-card:hover .habit-card-actions{opacity:0.4}
 
   /* ── Tasks ── */
   .tasks-quick-add{flex-wrap:wrap}
   .tasks-add-input{width:100%}
   .tasks-add-date{flex:1;min-width:0}
+  /* No hover on touch: show the edit pencil as a real (intentional) target;
+     hide delete entirely — swipe-left already deletes on mobile */
+  .task-row-edit{opacity:.45;pointer-events:auto}
+  .task-row-del{display:none}
 
   /* ── Finance ── */
   .finance-tab-grid{grid-template-columns:1fr}
