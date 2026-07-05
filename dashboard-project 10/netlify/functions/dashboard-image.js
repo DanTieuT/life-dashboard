@@ -63,10 +63,12 @@ function dot(x, y, color) {
 }
 
 exports.buildDashboardSvg = function(data) {
-  const today = new Date().toISOString().slice(0, 10);
+  // Netlify servers run UTC — compute "today" in Pacific or evening renders
+  // (5pm–midnight PT) shift every task/date off by one day.
   const now = new Date();
-  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
-  const dateLabel = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const today = now.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+  const dayName = now.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long' });
+  const dateLabel = now.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long', day: 'numeric', year: 'numeric' });
 
   const allTasks = data.projects || [];
   const overdue = allTasks.filter(t => !t.done && t.due && t.due < today).sort((a, b) => a.due < b.due ? -1 : 1);

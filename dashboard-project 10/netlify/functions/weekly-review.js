@@ -88,11 +88,13 @@ exports.handler = async (event) => {
     const today = todayPacific();
     const todayDate = new Date(today + 'T12:00:00');
 
-    // Week boundaries: last Monday → last Sunday (the week just finished)
+    // Week boundaries: this Monday → this Sunday. Runs Sunday 9pm PT, so this
+    // is the week ending tonight (the old "-7" targeted the last complete week,
+    // which made a Sunday-night review cover 8-13 day old data).
     const dayOfWeek = todayDate.getDay(); // 0=Sun
     const daysToLastMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const weekStart = new Date(todayDate);
-    weekStart.setDate(todayDate.getDate() - daysToLastMon - 7);
+    weekStart.setDate(todayDate.getDate() - daysToLastMon);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
     const weekStartStr = weekStart.toISOString().slice(0, 10);

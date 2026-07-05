@@ -265,8 +265,10 @@ const timetree = require('./timetree.js');
 function buildContext(data) {
   const today = todayStr();
   const now = new Date();
-  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
-  const monthName = now.toLocaleDateString('en-US', { month: 'long' });
+  // Netlify servers run UTC — always format in Pacific or the day name is
+  // wrong every evening after 5pm PT (midnight UTC).
+  const dayName = now.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long' });
+  const monthName = now.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long' });
 
   // ── RDO (9/80 schedule) ────────────────────────────────────────
   const tomorrowStr = new Date(new Date(today + 'T12:00:00').getTime() + 86400000).toLocaleDateString('en-CA');
@@ -422,7 +424,10 @@ function ptToEpoch(dateStr, timeStr) {
 
 // ── System prompt (mirrors chat.js) ──────────────────────────────
 function buildSystemPrompt(ctx) {
-  const taskList = ctx.tasks.length ? ctx.tasks.map(t => `  [${t.id}] "${t.name}"${t.due ? ` due:${t.due}` : ''}`).join('\n') : '  (none)';
+  // Weekday next to every date so the model never has to compute day-of-week
+  // itself (LLMs get that arithmetic wrong).
+  const dow = ds => { try { return new Date(ds + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }); } catch { return ''; } };
+  const taskList = ctx.tasks.length ? ctx.tasks.map(t => `  [${t.id}] "${t.name}"${t.due ? ` due:${t.due} (${dow(t.due)})` : ''}`).join('\n') : '  (none)';
   const completedTodayList = ctx.completedToday?.length ? ctx.completedToday.map(t => `  ✓ "${t.name}"`).join('\n') : '  (none)';
   const habitList = ctx.habits.length ? ctx.habits.map(h => `  [${h.id}] "${h.name}" (${h.type})${h.doneToday ? ' ✓' : ''}`).join('\n') : '  (none)';
   const accountList = (ctx.accounts||[]).length ? ctx.accounts.map(a => `  ${a.name} (${a.type}): $${a.balance.toLocaleString()}`).join('\n') : '  (none)';
@@ -437,7 +442,7 @@ function buildSystemPrompt(ctx) {
 
   // Overdue escalation (3+ days)
   const overdueBlock = ctx.overdueTasks && ctx.overdueTasks.length
-    ? `\nOVERDUE TASKS (3+ days — flag these urgently in morning briefings):\n${ctx.overdueTasks.map(t => `  [${t.id}] "${t.name}" — ${t.daysOverdue} days overdue (was due ${t.due})`).join('\n')}\n`
+    ? `\nOVERDUE TASKS (3+ days — flag these urgently in morning briefings):\n${ctx.overdueTasks.map(t => `  [${t.id}] "${t.name}" — ${t.daysOverdue} days overdue (was due ${t.due} ${dow(t.due)})`).join('\n')}\n`
     : '';
 
   // Weekly habit comparison
@@ -903,7 +908,7 @@ exports.handler = async (event) => {
       await sendMessage(chatId, '📊 Generating your dashboard...');
       const { buildDashboardPng } = require('./dashboard-image.js');
       const png = buildDashboardPng(appData);
-      const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      const today = new Date().toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long', month: 'long', day: 'numeric' });
       await sendPhoto(chatId, png, `Command Center · ${today}`);
     } catch (e) {
       console.error('Dashboard image error:', e);
