@@ -605,7 +605,11 @@ function buildChatContext(weather){
   }).map(([cat])=>cat);
   if(overBudgetCats.length)budgetAlert+=(budgetAlert?' · ':'')+`Over budget: ${overBudgetCats.join(', ')}`;
   const savingsRate=income>0?Math.round((income-spent)/income*100):null;
-  return{today,dayName,monthName,tasks,habits,events,budget:Math.round(budget),spent,projects,weather:weather||null,monthlyIncome:income,savingsRate,budgetAlert};
+  const nowTime=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const reminders=(appData.reminders||[]).filter(r=>!r.sent).sort((a,b)=>a.dueAt-b.dueAt).slice(0,10).map(r=>({
+    id:r.id,text:r.text,recurrence:r.recurrence||'',when:fmtReminderWhen(r.dueAt),
+  }));
+  return{today,dayName,monthName,tasks,habits,events,budget:Math.round(budget),spent,projects,weather:weather||null,monthlyIncome:income,savingsRate,budgetAlert,nowTime,reminders};
 }
 
 function appendChatMsg(text,cls){
@@ -666,6 +670,19 @@ async function executeActions(actions){
       case 'update_project_next_action':{
         const proj2=(appData.userProjects||[]).find(p=>p.id===action.id);
         if(proj2){proj2.nextAction=action.nextAction;labels.push(`Updated next action for ${proj2.name}`);}
+        break;}
+      case 'add_reminder':{
+        // date/time are PT; the browser runs in Dan's local (PT) timezone
+        const dueAt=new Date(`${action.date}T${action.time||'09:00'}:00`).getTime();
+        if(!dueAt||isNaN(dueAt))break;
+        if(!appData.reminders)appData.reminders=[];
+        appData.reminders.push({id:uid(),text:action.text||'Reminder',dueAt,recurrence:action.recurrence||'',sent:false,createdAt:Date.now(),source:'dashboard'});
+        labels.push(`⏰ ${action.text}`);
+        break;}
+      case 'cancel_reminder':{
+        const before=(appData.reminders||[]).length;
+        appData.reminders=(appData.reminders||[]).filter(r=>r.id!==action.id);
+        if(before!==appData.reminders.length)labels.push('Reminder cancelled');
         break;}
     }
   }
@@ -1044,8 +1061,50 @@ window.focusBrainDump=function(){
   },100);
 };
 
+// ── REMINDERS WIDGET ──────────────────────────────────────────────
+// Upcoming reminders on the dashboard. Reminders are created by telling
+// JARVIS ("remind me to X at Y") — this widget shows and cancels them.
+function fmtReminderWhen(ts){
+  const d=new Date(ts);
+  const today=todayStr();
+  const ds=d.toLocaleDateString('en-CA');
+  const time=d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  if(ds===today)return`Today ${time}`;
+  const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
+  if(ds===tomorrow.toLocaleDateString('en-CA'))return`Tomorrow ${time}`;
+  return`${d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})} ${time}`;
+}
+function renderRemindersWidget(){
+  const el=document.getElementById('dashRemindersWidget');
+  if(!el)return;
+  const upcoming=(appData.reminders||[]).filter(r=>!r.sent).sort((a,b)=>a.dueAt-b.dueAt);
+  if(!upcoming.length){el.style.display='none';return;}
+  el.style.display='';
+  el.innerHTML=`<div class="section-hdr" style="margin-bottom:6px">
+      <div><div class="section-title">⏰ Reminders</div><div class="section-sub">${upcoming.length} upcoming</div></div>
+    </div>
+    ${upcoming.slice(0,5).map(r=>`<div class="reminder-row">
+      <span class="reminder-text">${escHtml(r.text)}${r.recurrence?` <span class="reminder-recur">↻ ${r.recurrence}</span>`:''}</span>
+      <span class="reminder-when">${fmtReminderWhen(r.dueAt)}</span>
+      <button class="reminder-del" onclick="deleteReminder('${r.id}')" title="Cancel">✕</button>
+    </div>`).join('')}`;
+}
+window.deleteReminder=function(id){
+  const idx=(appData.reminders||[]).findIndex(r=>r.id===id);
+  if(idx<0)return;
+  const [removed]=appData.reminders.splice(idx,1);
+  saveData();
+  renderRemindersWidget();
+  toastUndo(removed.text,()=>{
+    appData.reminders.splice(idx,0,removed);
+    saveData();
+    renderRemindersWidget();
+  });
+};
+
 // ── GLOBAL EXPORTS ──
 Object.assign(window, {
   renderGreeting, renderStats, renderFocusTasks, renderTodaySchedule,
   renderIntention, renderJarvisHistory, gaugeRingSVG, fmtTimeAgo,
+  renderRemindersWidget,
 });

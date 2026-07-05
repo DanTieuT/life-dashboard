@@ -76,7 +76,7 @@ window.appData = {
   intention:'', focusTasks:[], projects:[], userProjects:[], habits:[],
   events:[], transactions:[], budget:{...DEFAULT_BUDGET}, savings:{...DEFAULT_SAVINGS},
   accounts:[], goals:[], notes:[], profile:'', categoryBudgets:{}, netWorthHistory:[],
-  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}, packages:[]
+  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}, packages:[], reminders:[]
 };
 window._dataLoaded=false; // true once loadData() resolves — render skeletons until then
 window.currentFilter='all';
@@ -275,6 +275,7 @@ async function loadData(){
         updatedAt:d.updatedAt||0,
         rdoSchedule:d.rdoSchedule||{...DEFAULT_RDO_SCHEDULE},
         packages:d.packages||[],
+        reminders:d.reminders||[],
       };
     } else {
       // New user: seed default habits
@@ -365,6 +366,7 @@ function renderAll(){
   renderJarvisHistory();
   renderShipping();
   renderDashShippingWidget();
+  renderRemindersWidget();
   updateLastBackupLabel();
 }
 

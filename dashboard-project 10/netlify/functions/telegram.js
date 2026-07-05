@@ -281,6 +281,13 @@ function buildContext(data) {
     lastLocation: p.lastLocation || '',
   }));
 
+  // ── Reminders ──────────────────────────────────────────────────
+  const nowPT = now.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', hour12: false });
+  const reminders = (data.reminders || []).filter(r => !r.sent).sort((a, b) => a.dueAt - b.dueAt).slice(0, 15).map(r => ({
+    id: r.id, text: r.text, recurrence: r.recurrence || '',
+    when: new Date(r.dueAt).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
+  }));
+
   const tasks = (data.projects || []).filter(t => !t.done).map(t => ({ id: t.id, name: t.name || '', due: t.due || '' }));
   const completedToday = (data.projects || []).filter(t => {
     if (!t.done) return false;
@@ -397,7 +404,20 @@ function buildContext(data) {
     budget, spent, projects, accounts, goals, profile, recentNotes,
     overdueTasks, weeklyHabitCounts, weeklySpend: { thisWeek: Math.round(thisWeekSpend), lastWeek: Math.round(lastWeekSpend) },
     spendingPatterns, spendingTrends, rdoToday, rdoTomorrow, packages,
+    nowPT, reminders,
   };
+}
+
+// Converts a Pacific-time "YYYY-MM-DD" + "HH:MM" to epoch ms, handling
+// PDT (-07:00) vs PST (-08:00) by checking which offset round-trips.
+function ptToEpoch(dateStr, timeStr) {
+  for (const off of ['-07:00', '-08:00']) {
+    const d = new Date(`${dateStr}T${timeStr}:00${off}`);
+    if (isNaN(d)) continue;
+    const back = d.toLocaleString('sv-SE', { timeZone: 'America/Los_Angeles' }); // "YYYY-MM-DD HH:MM:SS"
+    if (back.startsWith(`${dateStr} ${timeStr}`)) return d.getTime();
+  }
+  return Date.parse(`${dateStr}T${timeStr}:00-07:00`); // fallback
 }
 
 // ── System prompt (mirrors chat.js) ──────────────────────────────
@@ -456,6 +476,7 @@ function buildSystemPrompt(ctx) {
   return `You are J.A.R.V.I.S. — Dan's personal AI assistant on Telegram. You have full visibility into his tasks, habits, schedule, finances, projects, and his TimeTree calendar. Be sharp, proactive, and genuinely helpful.
 ${memoryBlock}${notesBlock}${overdueBlock}${weeklyHabitBlock}${weeklySpendBlock}${spendingPatternsBlock}${spendingTrendsBlock}${ttBlock}${juliaBlock}
 Today: ${ctx.today} (${ctx.dayName})${ctx.rdoToday ? ' — Dan is OFF today (RDO)' : ctx.rdoTomorrow ? ' — Dan is OFF tomorrow (RDO)' : ''}
+Current time: ${ctx.nowPT} Pacific
 ${ctx.weather ? `Weather: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}${ctx.weather.rain ? ', rain expected' : ''}, wind ${ctx.weather.wind}mph${ctx.weather.high != null ? `, High ${ctx.weather.high}°F / Low ${ctx.weather.low}°F` : ''}` : ''}
 
 ACTIVE TASKS:
@@ -481,6 +502,7 @@ ${goalList}
 PROJECTS (stages: planning/sourcing/building/blocked/done):
 ${projectList}
 ${(ctx.packages || []).length ? `\nPACKAGES IN TRANSIT:\n${ctx.packages.map(p => `  📦 ${p.name}${p.retailer ? ` (${p.retailer})` : ''} — ${p.status}${p.eta ? `, ETA ${p.eta}` : ''}${p.eta === ctx.today ? ' ⬅ ARRIVING TODAY — mention this proactively in briefings' : ''}`).join('\n')}\n` : ''}
+${(ctx.reminders || []).length ? `\nUPCOMING REMINDERS:\n${ctx.reminders.map(r => `  [${r.id}] "${r.text}" — ${r.when}${r.recurrence ? ` (repeats ${r.recurrence})` : ''}`).join('\n')}\n` : ''}
 
 WHAT TO FOCUS ON TODAY:
 When Dan asks "what should I focus on", "what should I work on", "what's my priority", or similar, respond with a ranked list of exactly 3 things based on: (1) tasks from OVERDUE TASKS section first, (2) tasks due today, (3) habits not yet done today, (4) project next actions. Be specific and direct — no fluff.
@@ -542,10 +564,13 @@ AVAILABLE ACTIONS:
 {"type":"update_profile","text":"<full rewritten profile markdown — use to reorganize/clean up the profile>"}
 {"type":"add_note","text":"<idea, thought, or brain dump to show on Dan's dashboard>"}
 {"type":"save_note","filename":"<short name like 'work-schedule' or 'gym-routine'>","content":"<full markdown content to save>"}
+{"type":"add_reminder","text":"<what to remind Dan about>","date":"YYYY-MM-DD","time":"HH:MM","recurrence":""}
+{"type":"cancel_reminder","id":"<reminder id from UPCOMING REMINDERS>","text":"<reminder text for confirmation>"}
 
 RULES:
 - Use exact IDs from the lists above
 - Parse dates relative to today (${ctx.today})
+- REMINDERS: when Dan says "remind me to X at/in Y", use add_reminder. Resolve relative times from Current time above ("in 20 minutes", "tonight"≈20:00, "tomorrow morning"≈09:00). date/time are Pacific. recurrence: "" for one-time, or "daily"/"weekdays"/"weekly"/"monthly" ("every Sunday at 9" → weekly, first occurrence next Sunday). If no time given, ask. Reminders fire as Telegram + push at that time — distinct from add_task (a to-do) and add_event (calendar).
 - Can return multiple actions at once
 - To reschedule a task or change its name, use update_task with the new due date or newName
 - NOTES vs MEMORY: Two distinct systems:
@@ -774,6 +799,24 @@ function applyActions(data, actions) {
       case 'save_note':
         labels.push(`Note saved: ${action.filename}`);
         break;
+      case 'add_reminder': {
+        const dueAt = ptToEpoch(action.date, action.time || '09:00');
+        if (!dueAt || isNaN(dueAt)) { labels.push('Reminder failed: bad date/time'); break; }
+        data.reminders = data.reminders || [];
+        data.reminders.push({
+          id: uidGen(), text: action.text || 'Reminder', dueAt,
+          recurrence: action.recurrence || '', sent: false,
+          createdAt: Date.now(), source: 'jarvis',
+        });
+        labels.push(`Reminder set`);
+        break;
+      }
+      case 'cancel_reminder': {
+        const before = (data.reminders || []).length;
+        data.reminders = (data.reminders || []).filter(r => r.id !== action.id);
+        labels.push(before !== data.reminders.length ? 'Reminder cancelled' : 'Reminder not found');
+        break;
+      }
     }
   }
   return { labels, spendingAlert };
