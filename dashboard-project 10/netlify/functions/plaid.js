@@ -39,6 +39,19 @@ async function call(path, body = {}) {
   return json;
 }
 
+function titleCase(s) {
+  return (s || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+// "CHASE COLLEGE" + inst "Chase" → "Chase College" (no double Chase);
+// "CREDIT CARD" + "Chase" → "Chase Credit Card".
+function cleanAccountName(institution, rawName) {
+  const nm = titleCase(rawName).replace(/\b(\w+)\s+\1\b/gi, '$1'); // collapse dup words
+  const inst = titleCase(institution || '');
+  if (!inst) return nm;
+  if (nm.toLowerCase().startsWith(inst.toLowerCase())) return nm;
+  return `${inst} ${nm}`;
+}
+
 // Plaid account type/subtype → dashboard account type
 function mapAccountType(type, subtype) {
   if (type === 'depository') return subtype === 'savings' ? 'savings' : 'checking';
@@ -103,6 +116,7 @@ module.exports = {
   getBalances: (accessToken) => call('/accounts/get', { access_token: accessToken }),
   transactionsSync: (accessToken, cursor) => call('/transactions/sync', { access_token: accessToken, cursor: cursor || undefined, count: 200 }),
   mapAccountType,
+  cleanAccountName,
   mapTxnCategory,
   mapTransaction,
 };

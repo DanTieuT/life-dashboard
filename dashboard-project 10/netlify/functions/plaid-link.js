@@ -71,11 +71,10 @@ exports.handler = async (event) => {
           existing.balance = stored;
           existing.updatedAt = Date.now();
         } else {
-          // include the •••4 mask so same-named accounts (e.g. 3 credit cards) are distinguishable
-          const base = body.institution ? `${body.institution} ${a.name}` : a.name;
           accounts.push({
             id: uidGen(),
-            name: a.mask ? `${base} ••${a.mask}` : base,
+            name: plaid.cleanAccountName(body.institution, a.name),
+            mask: a.mask || '',
             type,
             balance: stored,
             plaidAccountId: a.account_id,

@@ -83,17 +83,19 @@ function renderFinanceTab(){
     if(!accounts.length){
       acctRow.innerHTML=`<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:13px">No accounts yet — click <b>+ Account</b> to add one.</div>`;
     } else {
-      const ACCT_ICON={checking:'💳',savings:'🛡️',investment:'📈',crypto:'₿',property:'🏠',debt:'💸'};
+      const ACCT_ICON={checking:'🏦',savings:'🐷',investment:'📈',crypto:'₿',property:'🏠',debt:'💳'};
       acctRow.innerHTML=accounts.map(a=>{
         const meta=ACCT_TYPE_META[a.type]||{label:a.type,color:'#888'};
         const isDebt=a.type==='debt';
-        const last4=a.id.slice(-4).toUpperCase();
+        // real card mask if synced; nothing for manual accounts (no fake digits)
+        const mask=a.mask||'';
         const creditLimit=a.creditLimit||0;
         const barPct=isDebt&&creditLimit>0?Math.min(a.balance/creditLimit*100,100):0;
         return`<div class="acct-card" onclick="openAccountModal('${a.id}')">
+          ${a.source==='plaid'?'<span class="acct-plaid-badge" title="Synced via Plaid">🔗</span>':''}
           <div class="acct-card-icon" style="background:${meta.color}22">${ACCT_ICON[a.type]||'💰'}</div>
-          <div class="acct-card-name">${a.name}${a.source==='plaid'?' <span class="acct-plaid-badge" title="Synced via Plaid">🔗</span>':''}</div>
-          <div class="acct-card-num">•••• ${last4}</div>
+          <div class="acct-card-name">${a.name}</div>
+          <div class="acct-card-num">${mask?'•••• '+mask:meta.label}</div>
           <div class="acct-card-bal${isDebt?' red':''}">${isDebt?'-':''}${fmtM(a.balance)}</div>
           ${isDebt&&creditLimit>0?`
             <div class="acct-card-bar"><div class="acct-card-bar-fill" style="width:${barPct}%;background:${meta.color}"></div></div>
