@@ -114,8 +114,8 @@ function callClaudeWithImage(systemPrompt, history, imageBuffer, mimeType, capti
       { type: 'image', source: { type: 'base64', media_type: mimeType, data: b64 } },
       { type: 'text', text: caption || 'What do you see in this image? If it is a work schedule or roster, extract every shift date and time and create add_event actions for each shift so they appear on my calendar. Also save_note with the full schedule. If it contains tasks or other info, take appropriate actions.' }
     ];
-    // Only include text-only history (no image messages)
-    const textHistory = history.slice(-10).filter(m => typeof m.content === 'string');
+    // Only include text-only history (no image messages); strip bookkeeping fields
+    const textHistory = history.slice(-10).filter(m => typeof m.content === 'string').map(({ role, content }) => ({ role, content }));
     const messages = [...textHistory, { role: 'user', content: userContent }];
     const payload = JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4096, system: systemPrompt, messages });
     console.log('Sending image to Claude, payload size:', payload.length);
@@ -574,6 +574,7 @@ AVAILABLE ACTIONS:
 
 RULES:
 - Use exact IDs from the lists above
+- DATES: trust ONLY the "Today" and "Current time" lines above for date math. Conversation history may be days old — user messages carry a [sent ...] timestamp showing when they were written. "Tomorrow" always means the day after ${ctx.today}, never a date implied by an older message.
 - Parse dates relative to today (${ctx.today})
 - REMINDERS: when Dan says "remind me to X at/in Y", use add_reminder. Resolve relative times from Current time above ("in 20 minutes", "tonight"≈20:00, "tomorrow morning"≈09:00). date/time are Pacific. recurrence: "" for one-time, or "daily"/"weekdays"/"weekly"/"monthly" ("every Sunday at 9" → weekly, first occurrence next Sunday). If no time given, ask. Reminders fire as Telegram + push at that time — distinct from add_task (a to-do) and add_event (calendar).
 - Can return multiple actions at once
@@ -638,7 +639,9 @@ function extractJSON(text) {
 
 // ── Call Claude ───────────────────────────────────────────────────
 function callClaude(systemPrompt, history, message) {
-  const messages = [...history.slice(-20), { role: 'user', content: message }];
+  // Strip our bookkeeping fields (at) — the API rejects unknown keys
+  const past = history.slice(-20).map(({ role, content }) => ({ role, content }));
+  const messages = [...past, { role: 'user', content: message }];
   const payload = JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2048, system: systemPrompt, messages });
 
   return new Promise((resolve) => {
@@ -893,6 +896,11 @@ exports.handler = async (event) => {
     const hSnap = await historyRef.get();
     if (hSnap.exists) history = hSnap.data().messages || [];
   } catch {}
+  // Expire stale turns: replayed multi-day-old chats made the model anchor on
+  // OLD dates ("tomorrow" computed from a 3-day-old exchange) instead of the
+  // Today line. Entries without a timestamp predate this fix — drop them too.
+  const historyCutoff = Date.now() - 48 * 3600000;
+  history = history.filter(m => m.at && m.at > historyCutoff);
 
   // Clear history command
   if (/^\/clear|^clear (history|chat|context)/i.test(text)) {
@@ -946,7 +954,10 @@ exports.handler = async (event) => {
       actions = [];
     }
   } else {
-    ({ reply, actions } = await callClaude(systemPrompt, history, text));
+    // Timestamp the message so date math anchors to NOW, not to whenever the
+    // replayed history happened (see the [sent ...] prefix on saved turns too).
+    const nowStamp = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    ({ reply, actions } = await callClaude(systemPrompt, history, `[sent ${nowStamp}] ${text}`));
   }
 
   // Apply actions and save data
@@ -1002,10 +1013,12 @@ exports.handler = async (event) => {
     }
   }
 
-  // Save updated conversation history
-  const userHistoryContent = isVoice ? `[voice message: "${text}"]` : isPhoto ? `[sent an image${text ? ': ' + text : ''}]` : text;
-  history.push({ role: 'user', content: userHistoryContent });
-  history.push({ role: 'assistant', content: reply });
+  // Save updated conversation history (timestamped — replay filters on `at`,
+  // and the [sent ...] prefix lets the model see how old each turn is)
+  const saveStamp = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const userHistoryContent = isVoice ? `[sent ${saveStamp}] [voice message: "${text}"]` : isPhoto ? `[sent ${saveStamp}] [sent an image${text ? ': ' + text : ''}]` : `[sent ${saveStamp}] ${text}`;
+  history.push({ role: 'user', content: userHistoryContent, at: Date.now() });
+  history.push({ role: 'assistant', content: reply, at: Date.now() });
   if (history.length > 40) history = history.slice(-40);
   try { await historyRef.set({ messages: history }); } catch {}
 
