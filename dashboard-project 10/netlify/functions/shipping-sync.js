@@ -1,13 +1,14 @@
 // Shipping sync — scheduled every 2h (see netlify.toml). For each active
-// package: registers it with 17TRACK if needed, pulls latest status, and on
-// a status CHANGE sends a push notification (+ Telegram for the big ones:
-// out for delivery / delivered / exception). Auto-archives packages
-// delivered more than 3 days ago. No-ops gracefully if TRACK17_API_KEY
-// isn't configured. Manual trigger: /shipping-sync?trigger=manual
+// package: pulls latest status via free direct carrier APIs (UPS/FedEx/USPS,
+// see carriers.js), with 17TRACK as an optional fallback for other carriers.
+// On a status CHANGE sends a push notification (+ Telegram for the big ones:
+// out for delivery / delivered / exception). Auto-archives packages delivered
+// more than 3 days ago. No-ops gracefully until at least one carrier (or
+// 17TRACK) is configured. Manual trigger: /shipping-sync?trigger=manual
 const https = require('https');
 const admin = require('firebase-admin');
 
-if (!process.env.TRACK17_API_KEY) {
+if (!process.env.TRACK17_API_KEY && !process.env.UPS_CLIENT_ID && !process.env.FEDEX_API_KEY && !process.env.USPS_CLIENT_ID) {
   try {
     const fs = require('fs'), path = require('path');
     fs.readFileSync(path.resolve(__dirname, '../../.env'), 'utf8').split('\n').forEach(line => {
@@ -18,6 +19,7 @@ if (!process.env.TRACK17_API_KEY) {
 }
 
 const track17 = require('./track17.js');
+const carriers = require('./carriers.js');
 
 function initFirebase() {
   if (admin.apps.length > 0) return;
@@ -56,9 +58,9 @@ const STATUS_LABEL = {
 };
 
 exports.handler = async (event) => {
-  if (!track17.apiKey()) {
-    console.log('[shipping-sync] TRACK17_API_KEY not set — skipping');
-    return { statusCode: 200, body: 'No API key configured' };
+  if (!carriers.anyConfigured() && !track17.apiKey()) {
+    console.log('[shipping-sync] no carrier APIs configured — skipping');
+    return { statusCode: 200, body: 'No API keys configured' };
   }
   try {
     initFirebase();
@@ -74,18 +76,34 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: 'Nothing to sync' };
     }
 
-    // Register any not-yet-registered numbers
-    const toRegister = active.filter(p => !p.registered).map(p => p.trackingNumber);
-    if (toRegister.length) {
-      try {
-        const registered = await track17.register(toRegister);
-        active.forEach(p => { if (registered.has(p.trackingNumber)) p.registered = true; });
-      } catch (e) { console.warn('[shipping-sync] register failed:', e.message); }
+    // ── 1. Direct carrier APIs (free: UPS/FedEx/USPS) ─────────────
+    const infos = new Map();
+    const leftovers = [];
+    for (const p of active) {
+      let info = null;
+      if (carriers.anyConfigured()) {
+        try { info = await carriers.track(p.trackingNumber, p.carrier); }
+        catch (e) { console.warn(`[shipping-sync] ${p.trackingNumber} carrier lookup failed:`, e.message); }
+      }
+      if (info) infos.set(p.trackingNumber, info);
+      else leftovers.push(p); // unknown/unconfigured carrier
     }
 
-    // Pull status for everything registered
-    const nums = active.filter(p => p.registered).map(p => p.trackingNumber);
-    const infos = await track17.getTrackInfo(nums);
+    // ── 2. Optional 17TRACK fallback for anything the direct APIs
+    //       couldn't handle (only if TRACK17_API_KEY is set) ───────
+    if (leftovers.length && track17.apiKey()) {
+      const toRegister = leftovers.filter(p => !p.registered).map(p => p.trackingNumber);
+      if (toRegister.length) {
+        try {
+          const registered = await track17.register(toRegister);
+          leftovers.forEach(p => { if (registered.has(p.trackingNumber)) p.registered = true; });
+        } catch (e) { console.warn('[shipping-sync] register failed:', e.message); }
+      }
+      try {
+        const t17 = await track17.getTrackInfo(leftovers.filter(p => p.registered).map(p => p.trackingNumber));
+        for (const [num, info] of t17) infos.set(num, info);
+      } catch (e) { console.warn('[shipping-sync] 17track lookup failed:', e.message); }
+    }
 
     const notifications = [];
     for (const p of active) {

@@ -20,7 +20,13 @@ const ARCHIVE_AFTER_DAYS=3;
 function pkgStatusMeta(p){return STATUS_META[p.status]||STATUS_META.NotFound;}
 
 function pkgTrackUrl(p){
-  return `https://t.17track.net/en#nums=${encodeURIComponent(p.trackingNumber)}`;
+  const n=encodeURIComponent(p.trackingNumber);
+  const c=(p.carrier||'').toLowerCase();
+  const num=(p.trackingNumber||'').replace(/\s/g,'').toUpperCase();
+  if(/ups/.test(c)||/^1Z[0-9A-Z]{16}$/.test(num))return`https://www.ups.com/track?tracknum=${n}`;
+  if(/usps|postal/.test(c)||/^9[0-5][0-9]{14,24}$/.test(num))return`https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;
+  if(/fedex/.test(c)||/^[0-9]{12}$|^[0-9]{15}$|^[0-9]{20,22}$/.test(num))return`https://www.fedex.com/fedextrack/?trknbr=${n}`;
+  return`https://t.17track.net/en#nums=${n}`;
 }
 
 function fmtPkgDate(ts){
@@ -58,7 +64,7 @@ function pkgCardHTML(p){
       ${lastLine?`<div class="pkg-loc">${escHtml(lastLine)}</div>`:''}
       <div class="pkg-events" id="pkgEvents-${p.id}" style="display:none">
         ${(p.events||[]).slice(0,8).map(e=>`<div class="pkg-event"><span class="pkg-event-time">${fmtPkgDate(e.time)}</span> ${escHtml(e.desc||'')}${e.location?` — ${escHtml(e.location)}`:''}</div>`).join('')||'<div class="pkg-event" style="color:var(--muted)">No scan events yet</div>'}
-        <div class="pkg-event"><a href="${pkgTrackUrl(p)}" target="_blank" rel="noopener" style="color:var(--blue)">View on 17TRACK ↗</a></div>
+        <div class="pkg-event"><a href="${pkgTrackUrl(p)}" target="_blank" rel="noopener" style="color:var(--blue)">Track on carrier site ↗</a></div>
       </div>
     </div>
     <span class="pkg-status-pill" style="background:${meta.dim};color:${meta.color}">${meta.label}</span>
