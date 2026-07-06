@@ -2,7 +2,7 @@
 // Caches the app shell for offline use
 // NOTE: bump CACHE_NAME on every deploy so clients pick up the new shell.
 
-const CACHE_NAME = 'cc-shell-v4';
+const CACHE_NAME = 'cc-shell-v5';
 const SHELL_URLS = [
   '/',
   '/index.html',
@@ -17,6 +17,7 @@ const SHELL_URLS = [
   '/js/calendar.js',
   '/js/dashboard.js',
   '/js/shipping.js',
+  '/js/plaid.js',
 ];
 
 self.addEventListener('install', event => {

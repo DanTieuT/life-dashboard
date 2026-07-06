@@ -92,7 +92,7 @@ function renderFinanceTab(){
         const barPct=isDebt&&creditLimit>0?Math.min(a.balance/creditLimit*100,100):0;
         return`<div class="acct-card" onclick="openAccountModal('${a.id}')">
           <div class="acct-card-icon" style="background:${meta.color}22">${ACCT_ICON[a.type]||'💰'}</div>
-          <div class="acct-card-name">${a.name}</div>
+          <div class="acct-card-name">${a.name}${a.source==='plaid'?' <span class="acct-plaid-badge" title="Synced via Plaid">🔗</span>':''}</div>
           <div class="acct-card-num">•••• ${last4}</div>
           <div class="acct-card-bal${isDebt?' red':''}">${isDebt?'-':''}${fmtM(a.balance)}</div>
           ${isDebt&&creditLimit>0?`

@@ -8,3 +8,4 @@ import './finance.js';
 import './calendar.js';
 import './dashboard.js';
 import './shipping.js';
+import './plaid.js';

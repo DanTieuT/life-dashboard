@@ -36,3 +36,8 @@
 # Reminder delivery — every minute so "remind me at 3:00" lands at 3:00.
 [functions."reminder-check"]
   schedule = "* * * * *"
+
+# Plaid bank sync — balances + new transactions 4x/day. No-ops until
+# PLAID_CLIENT_ID / PLAID_SECRET are configured and a bank is linked.
+[functions."plaid-sync"]
+  schedule = "0 */6 * * *"
