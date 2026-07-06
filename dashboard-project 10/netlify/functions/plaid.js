@@ -98,7 +98,9 @@ module.exports = {
     language: 'en',
   }),
   exchangePublicToken: (publicToken) => call('/item/public_token/exchange', { public_token: publicToken }),
-  getBalances: (accessToken) => call('/accounts/balance/get', { access_token: accessToken }),
+  // /accounts/get returns balances included with the Transactions product —
+  // avoids needing the separate (and unnecessary here) real-time Balance product.
+  getBalances: (accessToken) => call('/accounts/get', { access_token: accessToken }),
   transactionsSync: (accessToken, cursor) => call('/transactions/sync', { access_token: accessToken, cursor: cursor || undefined, count: 200 }),
   mapAccountType,
   mapTxnCategory,
