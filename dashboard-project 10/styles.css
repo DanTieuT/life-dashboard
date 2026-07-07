@@ -967,6 +967,7 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
   .fin-header-row{align-items:flex-start}
   .fin-header-actions{width:100%}
   .fin-header-actions .btn-new{flex:1;min-width:0;white-space:nowrap;padding-left:12px;padding-right:12px}
+  .fin-more-menu{right:0;left:auto}
 
   /* ── Projects ── */
   .proj-table-head,.proj-row{grid-template-columns:1fr 120px 72px;font-size:12px}
@@ -1033,3 +1034,14 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .nw-range-btn{background:none;border:none;color:var(--sub);font-size:11px;font-weight:600;padding:4px 8px;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .12s}
 .nw-range-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .nw-chart-x{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
+
+/* ── FINANCE HEADER ROW ──────────────────────────────────────────── */
+.fin-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+.fin-header-actions{display:flex;gap:8px;align-items:center}
+.fin-more-wrap{position:relative}
+.fin-more-btn{width:38px;height:38px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--sub);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.fin-more-btn:hover{background:var(--card)}
+.fin-more-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px;display:none;flex-direction:column;gap:2px;min-width:150px;box-shadow:0 8px 28px rgba(0,0,0,.4);z-index:20}
+.fin-more-menu.open{display:flex}
+.fin-more-menu button{background:none;border:none;color:var(--text);font-size:14px;text-align:left;padding:9px 12px;border-radius:8px;cursor:pointer;font-family:inherit;transition:background .12s}
+.fin-more-menu button:hover{background:var(--card2)}

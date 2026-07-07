@@ -339,29 +339,33 @@
       <div id="acctCardsRow"></div>
 
       <!-- Month nav + action buttons -->
-      <div class="fin-header-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap">
+      <div class="fin-header-row">
         <div class="month-nav" style="margin:0">
           <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
           <div class="month-label-big" id="financeTabMonth" style="min-width:120px;text-align:center"></div>
           <button class="month-nav-btn" onclick="changeMonth(1)">›</button>
         </div>
-        <div class="fin-header-actions" style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-new" id="linkBankBtn" onclick="openPlaidLink()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">🔗 Link Bank</button>
-          <button class="btn-new" onclick="openAccountModal()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">+ Account</button>
-          <button class="btn-new" onclick="openBudgetModal()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">⚙ Budget</button>
+        <div class="fin-header-actions">
           <button class="btn-new" onclick="openTxnModal()">+ Transaction</button>
+          <div class="fin-more-wrap">
+            <button class="fin-more-btn" id="finMoreBtn" onclick="toggleFinMoreMenu()" title="More">⋯</button>
+            <div class="fin-more-menu" id="finMoreMenu">
+              <button onclick="closeFinMoreMenu();openPlaidLink()">Link Bank</button>
+              <button onclick="closeFinMoreMenu();openAccountModal()">Add Account</button>
+              <button onclick="closeFinMoreMenu();openBudgetModal()">Budget</button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Payday Bar -->
       <div class="payday-card" id="paydayCard">
         <div class="payday-left">
-          <div class="payday-label">NEXT PAYDAY</div>
+          <div class="payday-label">Next Payday</div>
           <div class="payday-days-line">
             <span class="payday-days-num" id="paydayDays">—</span>
             <span class="payday-days-text" id="paydayDaysText">days</span>
           </div>
-          <div class="payday-pay-date" id="paydayDate"></div>
         </div>
         <div class="payday-right">
           <div class="payday-dates-row"><span id="paydayStart"></span><span id="paydayEnd"></span></div>

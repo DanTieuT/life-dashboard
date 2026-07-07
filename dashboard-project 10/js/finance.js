@@ -117,7 +117,6 @@ function renderFinanceTab(){
   const pEl=id=>document.getElementById(id);
   if(pEl('paydayDays')) pEl('paydayDays').textContent=daysLeft;
   if(pEl('paydayDaysText')) pEl('paydayDaysText').textContent='days';
-  if(pEl('paydayDate')) pEl('paydayDate').textContent=endLabel+' '+currentYear;
   if(pEl('paydayStart')) pEl('paydayStart').textContent=startLabel+' '+currentYear;
   if(pEl('paydayEnd')) pEl('paydayEnd').textContent=endLabel+' '+currentYear;
   if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
@@ -281,6 +280,18 @@ window.deleteTxn=function(id){
 
 // Enter advances fields; Cmd/Ctrl+Enter saves (#11)
 setupModalEnterFlow('txnModal',['txnName','txnAmount','txnCategory','txnType','txnDate'],()=>saveTxn());
+
+// ── Finance header "more" menu (Link Bank / Add Account / Budget) ─
+window.toggleFinMoreMenu=function(){
+  document.getElementById('finMoreMenu')?.classList.toggle('open');
+};
+window.closeFinMoreMenu=function(){
+  document.getElementById('finMoreMenu')?.classList.remove('open');
+};
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.fin-more-wrap'))closeFinMoreMenu();
+});
+
 window.openBudgetModal=function(){
   document.getElementById('budgetIncome').value=appData.budget.income||appData.budget.monthly||'';
   const inp=document.getElementById('budgetInputs');
