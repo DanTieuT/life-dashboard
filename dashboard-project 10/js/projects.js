@@ -304,8 +304,14 @@ window.addProjTask=function(projId){
 };
 
 window.deleteUserProject=function(id){
-  appData.userProjects=(appData.userProjects||[]).filter(p=>p.id!==id);
-  saveData();renderProjects();toast('Project removed');
+  const idx=(appData.userProjects||[]).findIndex(p=>p.id===id);
+  if(idx<0)return;
+  const [removed]=appData.userProjects.splice(idx,1);
+  saveData();renderProjects();renderDashProjectsWidget();
+  toastUndo(removed.name,()=>{
+    appData.userProjects.splice(Math.min(idx,appData.userProjects.length),0,removed);
+    saveData();renderProjects();renderDashProjectsWidget();
+  });
 };
 
 // ── GLOBAL EXPORTS ──
