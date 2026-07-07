@@ -1001,14 +1001,16 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 }
 
 /* ── REMINDERS WIDGET ────────────────────────────────────────────── */
-.reminder-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.reminder-list{padding:0 20px 4px}
+.reminder-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px}
 .reminder-row:last-child{border-bottom:none}
 .reminder-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reminder-recur{font-size:11px;color:var(--muted)}
 .reminder-when{font-size:12px;font-weight:600;color:var(--green);flex-shrink:0}
-.reminder-del{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:3px 6px;border-radius:6px;opacity:0;transition:opacity .15s;flex-shrink:0}
-.reminder-row:hover .reminder-del{opacity:.6}
+.reminder-del{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:3px 6px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .15s;flex-shrink:0}
+.reminder-row:hover .reminder-del{opacity:.6;pointer-events:auto}
 .reminder-del:hover{color:var(--red);opacity:1}
+@media(max-width:768px){.reminder-del{opacity:.4;pointer-events:auto}}
 @media(max-width:768px){.reminder-del{opacity:.5}}
 
 /* ── PLAID ───────────────────────────────────────────────────────── */

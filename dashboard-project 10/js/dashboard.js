@@ -1080,14 +1080,16 @@ function renderRemindersWidget(){
   const upcoming=(appData.reminders||[]).filter(r=>!r.sent).sort((a,b)=>a.dueAt-b.dueAt);
   if(!upcoming.length){el.style.display='none';return;}
   el.style.display='';
-  el.innerHTML=`<div class="section-hdr" style="margin-bottom:6px">
-      <div><div class="section-title">⏰ Reminders</div><div class="section-sub">${upcoming.length} upcoming</div></div>
+  el.innerHTML=`<div class="dash-proj-hdr">
+      <div><div class="dash-proj-title">⏰ Reminders</div><div class="dash-proj-sub">${upcoming.length} upcoming</div></div>
     </div>
+    <div class="reminder-list">
     ${upcoming.slice(0,5).map(r=>`<div class="reminder-row">
       <span class="reminder-text">${escHtml(r.text)}${r.recurrence?` <span class="reminder-recur">↻ ${r.recurrence}</span>`:''}</span>
       <span class="reminder-when">${fmtReminderWhen(r.dueAt)}</span>
       <button class="reminder-del" onclick="deleteReminder('${r.id}')" title="Cancel">✕</button>
-    </div>`).join('')}`;
+    </div>`).join('')}
+    </div>`;
 }
 window.deleteReminder=function(id){
   const idx=(appData.reminders||[]).findIndex(r=>r.id===id);
