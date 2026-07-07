@@ -148,6 +148,7 @@ function projectCardHTML(p){
         <div style="display:flex;align-items:center;gap:4px">
           ${linkBtn}
           <span class="proj-status-badge" style="background:${s.bg};color:${s.dotColor}">${s.label}</span>
+          <button class="proj-card-del" onclick="event.stopPropagation();deleteUserProject('${p.id}')" title="Delete">✕</button>
         </div>
       </div>
       <div class="proj-card-desc" onclick="openProjectModal('${p.id}')" style="cursor:pointer">${p.category||p.nextAction||'—'}</div>
@@ -166,9 +167,6 @@ function projectCardHTML(p){
             <input id="ptinput-${p.id}" placeholder="+ Add task" onkeydown="if(event.key==='Enter')addProjTask('${p.id}')">
           </div>
         </div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:6px">
-        <button class="proj-card-del" onclick="event.stopPropagation();deleteUserProject('${p.id}')">✕</button>
       </div>
     </div>
   </div>`;

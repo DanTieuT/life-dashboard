@@ -520,27 +520,87 @@ function trackNetWorthHistory(){
   }
 }
 
-// Patch saveData to track NW history
+// ── Net worth chart (range toggle + scrub) ────────────────────────
+let _nwRange=parseInt(localStorage.getItem('nwRange')||'30',10);
+window.setNWRange=function(days){
+  _nwRange=days;
+  localStorage.setItem('nwRange',String(days));
+  renderNWSparkline();
+};
+let _nwPts=[]; // [{x,y,date,val}] for scrubbing
+function fmtNWDate(ds){
+  const d=new Date(ds+'T12:00:00');
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
 function renderNWSparkline(){
   const card=document.getElementById('nwSparklineCard');
   const svg=document.getElementById('nwSparklineSvg');
   const hist=appData.netWorthHistory||[];
   if(!card||!svg||hist.length<2){if(card)card.style.display='none';return;}
   card.style.display='';
-  const last30=hist.slice(-30);
-  const vals=last30.map(h=>h.netWorth);
+  // range buttons active state
+  document.querySelectorAll('.nw-range-btn').forEach(b=>{
+    b.classList.toggle('active',parseInt(b.dataset.range,10)===_nwRange);
+  });
+  const slice=_nwRange>0?hist.slice(-_nwRange):hist;
+  const data=slice.length>=2?slice:hist.slice(-2);
+  const vals=data.map(h=>h.netWorth);
   const min=Math.min(...vals),max=Math.max(...vals);
-  const range=max-min||1;
-  const W=svg.getBoundingClientRect().width||300,H=60;
-  const pts=vals.map((v,i)=>{
-    const x=(i/(vals.length-1))*W;
-    const y=H-((v-min)/range)*(H-8)-4;
-    return`${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
+  const range=max-min||Math.max(Math.abs(max)*0.02,1); // flat line → thin band, not full-height noise
+  const W=svg.getBoundingClientRect().width||320,H=170;
+  const PAD_T=10,PAD_B=10;
+  const plotH=H-PAD_T-PAD_B;
+  const xy=(v,i)=>({
+    x:(i/(vals.length-1))*W,
+    y:H-PAD_B-((v-min)/range)*plotH,
+  });
+  _nwPts=data.map((h,i)=>{const p=xy(h.netWorth,i);return{x:p.x,y:p.y,date:h.date,val:h.netWorth};});
+  const line=_nwPts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const lastVal=vals[vals.length-1];
-  const color=lastVal>=0?'var(--green)':'var(--red)';
-  svg.innerHTML=`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${((vals.length-1)/(vals.length-1)*W).toFixed(1)}" cy="${(H-((lastVal-min)/range)*(H-8)-4).toFixed(1)}" r="3" fill="${color}"/>`;
+  const up=lastVal>=vals[0];
+  const color=up?'var(--green)':'var(--red)';
+  // gridlines at min / mid / max with labels
+  const gy=[max,(max+min)/2,min].map(v=>({v,y:xy(v,0).y}));
+  svg.innerHTML=`
+    <defs><linearGradient id="nwFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${up?'#30d158':'#ff453a'}" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="${up?'#30d158':'#ff453a'}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${gy.map(g=>`<line x1="0" y1="${g.y.toFixed(1)}" x2="${W}" y2="${g.y.toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+      <text x="4" y="${(g.y-4).toFixed(1)}" font-size="10" fill="var(--muted)">${fmtM(g.v)}</text>`).join('')}
+    <polygon points="0,${(H-PAD_B).toFixed(1)} ${line} ${W},${(H-PAD_B).toFixed(1)}" fill="url(#nwFill)"/>
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle id="nwScrubDot" cx="${_nwPts[_nwPts.length-1].x.toFixed(1)}" cy="${_nwPts[_nwPts.length-1].y.toFixed(1)}" r="3.5" fill="${color}"/>`;
+  // default readout: latest value + change over range
+  const delta=lastVal-vals[0];
+  const readout=document.getElementById('nwChartReadout');
+  if(readout)readout.innerHTML=`<span class="nw-chart-val">${fmtM(lastVal)}</span> <span class="nw-chart-delta" style="color:${color}">${delta>=0?'+':'−'}${fmtM(Math.abs(delta))}</span>`;
+  const x0=document.getElementById('nwChartX0'),x1=document.getElementById('nwChartX1');
+  if(x0)x0.textContent=fmtNWDate(data[0].date);
+  if(x1)x1.textContent=fmtNWDate(data[data.length-1].date);
+  _attachNWScrub(svg);
+}
+function _attachNWScrub(svg){
+  if(svg._scrubAttached)return;
+  svg._scrubAttached=true;
+  const readout=()=>document.getElementById('nwChartReadout');
+  const move=e=>{
+    if(!_nwPts.length)return;
+    const rect=svg.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+    let best=_nwPts[0];
+    for(const p of _nwPts)if(Math.abs(p.x-cx)<Math.abs(best.x-cx))best=p;
+    const dot=svg.querySelector('#nwScrubDot');
+    if(dot){dot.setAttribute('cx',best.x);dot.setAttribute('cy',best.y);}
+    const r=readout();
+    if(r)r.innerHTML=`<span class="nw-chart-val">${fmtM(best.val)}</span> <span class="nw-chart-delta" style="color:var(--muted)">${fmtNWDate(best.date)}</span>`;
+  };
+  const end=()=>renderNWSparkline(); // restore latest-value readout + dot
+  svg.addEventListener('mousemove',move);
+  svg.addEventListener('mouseleave',end);
+  svg.addEventListener('touchstart',move,{passive:true});
+  svg.addEventListener('touchmove',move,{passive:true});
+  svg.addEventListener('touchend',end,{passive:true});
 }
 
 // ── #30: Savings rate ─────────────────────────────────────────────
@@ -618,12 +678,17 @@ function renderMonthlyTrend(){
     const isCurrent=mo.m===now.getMonth()&&mo.y===now.getFullYear();
     return{...mo,spent,income,isCurrent,color:DONUT_COLORS[i]};
   });
+  // Hide the whole card until there's actually spending to show —
+  // six colored stubs over $0 data just looks broken.
+  const trendCard=document.getElementById('trendCard');
+  if(!data.some(d=>d.spent>0)){if(trendCard)trendCard.style.display='none';return;}
+  if(trendCard)trendCard.style.display='';
   const maxSpent=Math.max(...data.map(d=>d.spent),1);
   chartEl.innerHTML=data.map(d=>{
-    const h=Math.max(Math.round(d.spent/maxSpent*70),4);
+    const h=d.spent>0?Math.max(Math.round(d.spent/maxSpent*70),4):1;
     return`<div class="trend-bar-wrap">
       <div class="trend-bar-val">${d.spent>0?fmtM(d.spent):''}</div>
-      <div class="trend-bar" style="height:${h}px;background:${d.isCurrent?'var(--green)':d.color+'66'}"></div>
+      <div class="trend-bar" style="height:${h}px;background:${d.spent>0?(d.isCurrent?'var(--green)':d.color+'66'):'var(--border)'}"></div>
     </div>`;
   }).join('');
   if(lblEl)lblEl.innerHTML=data.map(d=>`<div class="trend-bar-label" style="flex:1;text-align:center;color:${d.isCurrent?'var(--green)':'var(--muted)'}">${d.label}</div>`).join('');

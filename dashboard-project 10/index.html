@@ -407,7 +407,7 @@
       </div>
 
       <!-- 6-Month Trend (#22) -->
-      <div class="fin-card">
+      <div class="fin-card" id="trendCard">
         <div class="fin-section-title">6-Month Trend</div>
         <div class="trend-chart" id="trendChart"></div>
         <div style="display:flex;justify-content:space-around" id="trendLabels"></div>
@@ -422,10 +422,23 @@
         <div id="recurringTxnList"></div>
       </div>
 
-      <!-- Net Worth Sparkline (#25) -->
+      <!-- Net Worth Chart (#25) -->
       <div class="fin-card" id="nwSparklineCard" style="display:none">
-        <div class="fin-section-title">Net Worth — Last 30 Days</div>
-        <svg id="nwSparklineSvg" width="100%" height="60" style="display:block"></svg>
+        <div class="nw-chart-hdr">
+          <div>
+            <div class="fin-section-title" style="margin-bottom:2px">Net Worth</div>
+            <div class="nw-chart-readout" id="nwChartReadout">—</div>
+          </div>
+          <div class="nw-range-bar" id="nwRangeBar">
+            <button class="nw-range-btn" data-range="30" onclick="setNWRange(30)">30D</button>
+            <button class="nw-range-btn" data-range="90" onclick="setNWRange(90)">90D</button>
+            <button class="nw-range-btn" data-range="180" onclick="setNWRange(180)">6M</button>
+            <button class="nw-range-btn" data-range="365" onclick="setNWRange(365)">1Y</button>
+            <button class="nw-range-btn" data-range="0" onclick="setNWRange(0)">All</button>
+          </div>
+        </div>
+        <svg id="nwSparklineSvg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
+        <div class="nw-chart-x"><span id="nwChartX0"></span><span id="nwChartX1"></span></div>
       </div>
 
       <!-- Recent Transactions -->
@@ -484,6 +497,18 @@
       <div id="goalsGrid"></div>
     </div>
 
+    <!-- ── SHIPPING TAB ── -->
+    <div class="page" id="page-shipping">
+      <div class="section-hdr" style="margin-bottom:16px">
+        <div>
+          <div class="section-title" style="font-size:22px">Shipping</div>
+          <div class="section-sub">Packages on the way</div>
+        </div>
+        <button class="btn-new" onclick="openTrackModal()">+ Track Package</button>
+      </div>
+      <div id="shippingList"></div>
+    </div>
+
     <!-- ── CALENDAR TAB ── -->
   </main>
   </div><!-- /main-with-sidebar -->
@@ -505,18 +530,6 @@
       <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
-  </div>
-
-  <!-- ── SHIPPING TAB ── -->
-  <div class="page" id="page-shipping">
-    <div class="section-hdr" style="margin-bottom:16px">
-      <div>
-        <div class="section-title" style="font-size:22px">Shipping</div>
-        <div class="section-sub">Packages on the way</div>
-      </div>
-      <button class="btn-new" onclick="openTrackModal()">+ Track Package</button>
-    </div>
-    <div id="shippingList"></div>
   </div>
 </div>
 

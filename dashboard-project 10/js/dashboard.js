@@ -307,6 +307,8 @@ function renderStats(){
     const bb=document.getElementById('statsBudgetBadge');
     if(bd) bd.textContent=budgetAmt>0?`${fmtM(bSpent)} / ${fmtM(budgetAmt)}`:'set up budget →';
     if(bb){
+      // "on track" is meaningless with no budget configured — hide the badge
+      bb.style.display=budgetAmt>0?'':'none';
       bb.textContent=bPct>=100?'over budget':bPct>=80?'close to limit':'on track';
       bb.className='ring-stat-badge '+(bPct>=100?'red':bPct>=80?'yellow':'green');
     }

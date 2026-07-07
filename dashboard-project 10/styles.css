@@ -1023,3 +1023,13 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 @media(max-width:768px){.reminder-del{opacity:.5}}
 
 /* ── PLAID ───────────────────────────────────────────────────────── */
+
+/* ── NET WORTH CHART ─────────────────────────────────────────────── */
+.nw-chart-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.nw-chart-readout{font-size:13px}
+.nw-chart-val{font-size:20px;font-weight:700}
+.nw-chart-delta{font-size:12px;font-weight:600;margin-left:4px}
+.nw-range-bar{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:2px;flex-shrink:0}
+.nw-range-btn{background:none;border:none;color:var(--sub);font-size:11px;font-weight:600;padding:4px 8px;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .12s}
+.nw-range-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.nw-chart-x{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
