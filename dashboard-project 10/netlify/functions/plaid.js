@@ -79,15 +79,32 @@ function mapTxnCategory(primary) {
     BANK_FEES: 'Other',
     GOVERNMENT_AND_NON_PROFIT: 'Other',
   };
-  if (primary === 'TRANSFER_IN' || primary === 'TRANSFER_OUT') return null;
+  // Excluded primaries — internal money movement, not real income/spending:
+  //  TRANSFER_IN/OUT  = account transfers, Venmo/Zelle, ATM, investment moves
+  //  LOAN_DISBURSEMENTS = the credit given to a card when you pay it ("Payment
+  //                       Thank You"); the checking side is caught by the
+  //                       LOAN_PAYMENTS_CREDIT_CARD_PAYMENT detail in mapTransaction
+  if (primary === 'TRANSFER_IN' || primary === 'TRANSFER_OUT' || primary === 'LOAN_DISBURSEMENTS') return null;
   return M[primary] || 'Other';
 }
+
+// Detailed categories that are internal money movement, not real income or
+// spending — a credit-card payment (checking → your own card) shows up as an
+// inflow on the card and an outflow on checking; counting either would distort
+// income/spending. Also skip explicit account-to-account transfers.
+const INTERNAL_DETAILED = new Set([
+  'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+  'TRANSFER_OUT_ACCOUNT_TRANSFER',
+  'TRANSFER_IN_ACCOUNT_TRANSFER',
+]);
 
 // Plaid transaction → dashboard transaction (or null to skip).
 // Plaid convention: positive amount = money leaving the account.
 function mapTransaction(pt) {
   if (pt.pending) return null;
-  const category = mapTxnCategory(pt.personal_finance_category?.primary);
+  const pfc = pt.personal_finance_category || {};
+  if (INTERNAL_DETAILED.has(pfc.detailed)) return null; // credit-card payments / internal transfers
+  const category = mapTxnCategory(pfc.primary);
   if (!category) return null; // transfers between accounts — skip
   return {
     plaidTxnId: pt.transaction_id,
