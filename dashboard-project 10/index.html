@@ -335,8 +335,8 @@
         <div class="nw-hero-sub" id="nwHeroSub"></div>
       </div>
 
-      <!-- Account Cards -->
-      <div class="acct-cards-row" id="acctCardsRow"></div>
+      <!-- Accounts Table -->
+      <div id="acctCardsRow"></div>
 
       <!-- Month nav + action buttons -->
       <div class="fin-header-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap">
@@ -728,7 +728,8 @@
 <!-- Transaction Modal -->
 <div class="modal-overlay" id="txnModal">
   <div class="modal">
-    <div class="modal-title">Add Transaction</div>
+    <div class="modal-title" id="txnModalTitle">Add Transaction</div>
+    <input type="hidden" id="txnEditId">
     <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="txnName" placeholder="e.g. Groceries"></div>
     <div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" id="txnAmount" type="number" min="0" step="0.01" placeholder="0.00"></div>
     <div class="form-group"><label class="form-label">Category</label>
@@ -754,7 +755,8 @@
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('txnModal')">Cancel</button>
-      <button class="btn-save" onclick="saveTxn()">Add</button>
+      <button class="btn-cancel" id="txnDeleteBtn" style="color:var(--red);display:none" onclick="deleteTxnFromModal()">Delete</button>
+      <button class="btn-save" id="txnSaveBtn" onclick="saveTxn()">Add</button>
     </div>
   </div>
 </div>

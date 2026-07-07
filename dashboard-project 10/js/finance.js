@@ -77,32 +77,30 @@ function renderFinanceTab(){
   }
   if(nwSub) nwSub.textContent=accounts.length?`${fmtM(assets)} assets · `+(liabilities>0?`${fmtM(liabilities)} liabilities`:'no liabilities'):'Add accounts to track net worth';
 
-  // ── Account Cards ───────────────────────────────────────────────
+  // ── Account Table ───────────────────────────────────────────────
   const acctRow=document.getElementById('acctCardsRow');
   if(acctRow){
     if(!accounts.length){
-      acctRow.innerHTML=`<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:13px">No accounts yet — click <b>+ Account</b> to add one.</div>`;
+      acctRow.innerHTML=`<div class="accounts-empty">No accounts yet — click <b>+ Account</b> to add one.</div>`;
     } else {
-      const ACCT_ICON={checking:'🏦',savings:'🐷',investment:'📈',crypto:'₿',property:'🏠',debt:'💳'};
-      acctRow.innerHTML=accounts.map(a=>{
-        const meta=ACCT_TYPE_META[a.type]||{label:a.type,color:'#888'};
-        const isDebt=a.type==='debt';
-        // real card mask if synced; nothing for manual accounts (no fake digits)
-        const mask=a.mask||'';
-        const creditLimit=a.creditLimit||0;
-        const barPct=isDebt&&creditLimit>0?Math.min(a.balance/creditLimit*100,100):0;
-        return`<div class="acct-card" onclick="openAccountModal('${a.id}')">
-          ${a.source==='plaid'?'<span class="acct-plaid-badge" title="Synced via Plaid">🔗</span>':''}
-          <div class="acct-card-icon" style="background:${meta.color}22">${ACCT_ICON[a.type]||'💰'}</div>
-          <div class="acct-card-name">${a.name}</div>
-          <div class="acct-card-num">${mask?'•••• '+mask:meta.label}</div>
-          <div class="acct-card-bal${isDebt?' red':''}">${isDebt?'-':''}${fmtM(a.balance)}</div>
-          ${isDebt&&creditLimit>0?`
-            <div class="acct-card-bar"><div class="acct-card-bar-fill" style="width:${barPct}%;background:${meta.color}"></div></div>
-            <div class="acct-card-limit">${fmtM(a.balance)} of ${fmtM(creditLimit)} limit</div>
-          `:''}
-        </div>`;
-      }).join('');
+      acctRow.innerHTML=`<div class="accounts-table-head">
+          <span>Account</span><span>Type</span><span style="text-align:right">Balance</span>
+        </div>
+        ${accounts.map(a=>{
+          const meta=ACCT_TYPE_META[a.type]||{label:a.type,color:'#888'};
+          const isDebt=a.type==='debt';
+          const mask=a.mask||'';
+          const creditLimit=a.creditLimit||0;
+          const barPct=isDebt&&creditLimit>0?Math.min(a.balance/creditLimit*100,100):0;
+          return`<div class="accounts-table-row" onclick="openAccountModal('${a.id}')">
+            <div class="accounts-table-name">
+              ${a.name}${mask?` <span class="accounts-table-mask">••${mask}</span>`:''}${a.source==='plaid'?' <span class="accounts-table-synced" title="Synced via Plaid">Synced</span>':''}
+              ${isDebt&&creditLimit>0?`<div class="acct-card-bar"><div class="acct-card-bar-fill" style="width:${barPct}%;background:${meta.color}"></div></div>`:''}
+            </div>
+            <div class="accounts-table-type">${meta.label}</div>
+            <div class="accounts-table-bal${isDebt?' red':''}">${isDebt?'-':''}${fmtM(a.balance)}</div>
+          </div>`;
+        }).join('')}`;
     }
   }
 
@@ -206,11 +204,37 @@ window.updateTxnRecurVis=function(){
   if(sel)sel.style.display=cb&&cb.checked?'block':'none';
 };
 window.openTxnModal=function(){
+  document.getElementById('txnEditId').value='';
+  document.getElementById('txnModalTitle').textContent='Add Transaction';
+  document.getElementById('txnSaveBtn').textContent='Add';
+  document.getElementById('txnDeleteBtn').style.display='none';
+  document.getElementById('txnName').value='';
+  document.getElementById('txnAmount').value='';
+  document.getElementById('txnCategory').value='Housing';
+  document.getElementById('txnType').value='out';
   document.getElementById('txnDate').value=todayStr();
   const cb=document.getElementById('txnRecurring');
   const sel=document.getElementById('txnRecurFreq');
   if(cb)cb.checked=false;
   if(sel)sel.style.display='none';
+  openModal('txnModal');
+};
+window.openEditTxnModal=function(id){
+  const t=(appData.transactions||[]).find(x=>x.id===id);
+  if(!t)return;
+  document.getElementById('txnEditId').value=id;
+  document.getElementById('txnModalTitle').textContent='Edit Transaction';
+  document.getElementById('txnSaveBtn').textContent='Save changes';
+  document.getElementById('txnDeleteBtn').style.display='';
+  document.getElementById('txnName').value=t.name;
+  document.getElementById('txnAmount').value=t.amount;
+  document.getElementById('txnCategory').value=t.category||'Other';
+  document.getElementById('txnType').value=t.type;
+  document.getElementById('txnDate').value=t.date;
+  const cb=document.getElementById('txnRecurring');
+  const sel=document.getElementById('txnRecurFreq');
+  if(cb)cb.checked=!!t.recurring;
+  if(sel){sel.style.display=t.recurring?'block':'none';sel.value=t.recurrence||'monthly';}
   openModal('txnModal');
 };
 window.saveTxn=function(){
@@ -219,18 +243,29 @@ window.saveTxn=function(){
   if(!name||isNaN(amount)||amount<=0)return;
   const recurring=document.getElementById('txnRecurring')?.checked||false;
   const recurrence=recurring?(document.getElementById('txnRecurFreq')?.value||'monthly'):null;
-  appData.transactions.push({
-    id:uid(),name,amount,
+  const editId=document.getElementById('txnEditId').value;
+  const fields={
+    name,amount,
     category:document.getElementById('txnCategory').value,
     type:document.getElementById('txnType').value,
     date:document.getElementById('txnDate').value,
     recurring:recurring||false,
     recurrence:recurrence||null,
-  });
+  };
+  if(editId){
+    const t=appData.transactions.find(x=>x.id===editId);
+    if(t)Object.assign(t,fields);
+  } else {
+    appData.transactions.push({id:uid(),...fields});
+  }
   saveData();
-  document.getElementById('txnName').value='';
-  document.getElementById('txnAmount').value='';
-  closeModal('txnModal');renderFinanceTab();toast('✓ Transaction added');
+  closeModal('txnModal');renderFinanceTab();toast(editId?'✓ Transaction updated':'✓ Transaction added');
+};
+window.deleteTxnFromModal=function(){
+  const id=document.getElementById('txnEditId').value;
+  if(!id)return;
+  closeModal('txnModal');
+  deleteTxn(id);
 };
 // Immediate delete with 6s undo toast (#7)
 window.deleteTxn=function(id){
@@ -630,14 +665,14 @@ function renderTxnListFiltered(mt){
   if(countEl)countEl.textContent=q?`${shown.length} result${shown.length!==1?'s':''}`:'';
   txnEl.innerHTML=!shown.length
     ?`<div class="empty-state" style="padding:30px">${q?'No matching transactions':'No transactions this month'}</div>`
-    :shown.map(t=>`<div class="txn-item">
+    :shown.map(t=>`<div class="txn-item" onclick="openEditTxnModal('${t.id}')">
       <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>
       <div class="txn-name-col">
         <div class="txn-name">${t.name}${t.recurring?' <span style="font-size:10px;color:var(--blue)">↻</span>':''}</div>
         <div class="txn-cat">${t.category||'Other'} · ${t.date}</div>
       </div>
       <span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>
-      <button class="txn-del" onclick="deleteTxn('${t.id}')">✕</button>
+      <button class="txn-del" onclick="event.stopPropagation();deleteTxn('${t.id}')">✕</button>
     </div>`).join('');
 }
 
