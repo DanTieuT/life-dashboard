@@ -543,6 +543,26 @@ function _renderOneNWCard(card){
   const collapseBtn=card.querySelector('[data-role="collapseBtn"]');
   if(collapseBtn)collapseBtn.textContent=collapsed?'⌄':'⌃';
 
+  // Privacy mode: swap the eye icon and, if hidden, redact everything —
+  // including the chart SHAPE, not just the text (a visible trend line still
+  // leaks relative net worth even with numbers masked).
+  const hidden=typeof isNumbersHidden==='function'&&isNumbersHidden();
+  const hideIcon=card.querySelector('[data-role="hideIcon"]');
+  if(hideIcon)hideIcon.innerHTML=hidden
+    ?'<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    :'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  const readout=card.querySelector('[data-role="readout"]');
+  const subline=card.querySelector('[data-role="subline"]');
+  const x0=card.querySelector('[data-role="x0"]'),x1=card.querySelector('[data-role="x1"]');
+  if(hidden){
+    if(readout)readout.innerHTML=`<span class="nw-chart-val">••••••</span>`;
+    if(subline)subline.textContent='Amounts hidden';
+    if(x0)x0.textContent='';if(x1)x1.textContent='';
+    svg.innerHTML=`<line x1="0" y1="85" x2="100%" y2="85" stroke="var(--border)" stroke-width="2" stroke-dasharray="6 6"/>`;
+    svg._nwPts=null; // scrubbing disabled while hidden
+    return;
+  }
+
   const range=_nwRangeFor(id);
   card.querySelectorAll('.nw-range-btn').forEach(b=>{
     b.classList.toggle('active',parseInt(b.dataset.range,10)===range);
@@ -576,14 +596,11 @@ function _renderOneNWCard(card){
     <circle data-role="scrubDot" cx="${pts[pts.length-1].x.toFixed(1)}" cy="${pts[pts.length-1].y.toFixed(1)}" r="3.5" fill="${color}"/>`;
   // Readout: latest value + change over the selected range
   const delta=lastVal-vals[0];
-  const readout=card.querySelector('[data-role="readout"]');
   if(readout)readout.innerHTML=`<span class="nw-chart-val">${fmtM(lastVal)}</span> <span class="nw-chart-delta" style="color:${color}">${delta>=0?'+':'−'}${fmtM(Math.abs(delta))}</span>`;
   // Subline: assets/liabilities breakdown (was the old separate "hero" text)
   const assets=accounts.filter(a=>a.type!=='debt').reduce((s,a)=>s+a.balance,0);
   const liabilities=accounts.filter(a=>a.type==='debt').reduce((s,a)=>s+a.balance,0);
-  const subline=card.querySelector('[data-role="subline"]');
   if(subline)subline.textContent=`${fmtM(assets)} assets`+(liabilities>0?` · ${fmtM(liabilities)} liabilities`:'');
-  const x0=card.querySelector('[data-role="x0"]'),x1=card.querySelector('[data-role="x1"]');
   if(x0)x0.textContent=fmtNWDate(data[0].date);
   if(x1)x1.textContent=fmtNWDate(data[data.length-1].date);
   _attachNWScrub(svg,card);

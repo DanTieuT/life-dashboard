@@ -188,6 +188,9 @@
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <button class="dash-proj-viewall" onclick="switchTab('finance')" style="font-size:12px">View all →</button>
+            <button class="nw-collapse-btn" data-role="hideBtn" onclick="toggleHideNumbers()" title="Hide amounts">
+              <svg data-role="hideIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
             <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
           </div>
         </div>
@@ -353,7 +356,12 @@
             <div class="nw-chart-readout" data-role="readout">—</div>
             <div class="nw-chart-subline" data-role="subline"></div>
           </div>
-          <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="nw-collapse-btn" data-role="hideBtn" onclick="toggleHideNumbers()" title="Hide amounts">
+              <svg data-role="hideIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
+          </div>
         </div>
         <div class="nw-range-bar" data-role="rangebar">
           <button class="nw-range-btn" data-range="30" onclick="setNWRange(30,this)">30D</button>
