@@ -361,7 +361,7 @@ function renderAll(){
   renderProjects();
   renderDashProjectsWidget();
   renderGoals();
-  renderDashNW();
+  renderNWSparkline();
   renderBrainDump();
   renderJarvisHistory();
   renderShipping();

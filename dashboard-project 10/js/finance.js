@@ -21,34 +21,6 @@ function renderFinanceRing(){
     pm.setAttribute('cx',90+70*Math.cos(paceAngle));pm.setAttribute('cy',90+70*Math.sin(paceAngle));
   }
 }
-function renderDashNW(){
-  const el=document.getElementById('dashNWList');
-  const subEl=document.getElementById('dashNWSub');
-  if(!el)return;
-  const accounts=appData.accounts||[];
-  if(!accounts.length){
-    el.innerHTML='<div style="padding:16px 20px;color:var(--muted);font-size:13px">No accounts — <button onclick="switchTab(\'finance\')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:13px;font-family:inherit">add one →</button></div>';
-    if(subEl)subEl.textContent='—';
-    return;
-  }
-  const assets=accounts.filter(a=>a.type!=='debt').reduce((s,a)=>s+a.balance,0);
-  const liabilities=accounts.filter(a=>a.type==='debt').reduce((s,a)=>s+a.balance,0);
-  const netWorth=assets-liabilities;
-  if(subEl)subEl.textContent='Total '+fmtM(netWorth);
-  el.innerHTML=accounts.slice(0,5).map(a=>{
-    const meta=ACCT_TYPE_META[a.type]||{label:a.type,color:'#888'};
-    return`<div class="dash-proj-row" style="grid-template-columns:1fr auto">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:8px;height:8px;border-radius:50%;background:${meta.color};flex-shrink:0"></div>
-        <div>
-          <div class="dash-proj-name">${a.name}</div>
-          <div class="dash-proj-cat">${meta.label}</div>
-        </div>
-      </div>
-      <div style="font-size:14px;font-weight:600;color:${a.type==='debt'?'var(--red)':'var(--text)'}">${a.type==='debt'?'-':''}${fmtM(a.balance)}</div>
-    </div>`;
-  }).join('')+(accounts.length>5?`<div style="padding:10px 20px;font-size:12px;color:var(--muted)">${accounts.length-5} more accounts</div>`:'');
-}
 // ── FINANCE TAB ───────────────────────────────────────────────────
 window.renderFinanceTab=renderFinanceTab;
 function renderFinanceTab(){
@@ -61,21 +33,7 @@ function renderFinanceTab(){
   const mt=appData.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
   const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
   const budget=appData.budget.monthly||appData.budget.income||0;
-
-  // ── Net Worth Hero ──────────────────────────────────────────────
   const accounts=appData.accounts||[];
-  const assets=accounts.filter(a=>a.type!=='debt').reduce((s,a)=>s+a.balance,0);
-  const liabilities=accounts.filter(a=>a.type==='debt').reduce((s,a)=>s+a.balance,0);
-  const netWorth=assets-liabilities;
-  const nwAmount=document.getElementById('nwHeroAmount');
-  const nwBadge=document.getElementById('nwHeroBadge');
-  const nwSub=document.getElementById('nwHeroSub');
-  if(nwAmount) nwAmount.textContent=fmtM(netWorth);
-  if(nwBadge){
-    nwBadge.style.display=accounts.length?'inline-flex':'none';
-    nwBadge.textContent='↑ '+fmtM(spent)+' this month';
-  }
-  if(nwSub) nwSub.textContent=accounts.length?`${fmtM(assets)} assets · `+(liabilities>0?`${fmtM(liabilities)} liabilities`:'no liabilities'):'Add accounts to track net worth';
 
   // ── Account Table ───────────────────────────────────────────────
   const acctRow=document.getElementById('acctCardsRow');
@@ -371,11 +329,11 @@ window.saveAccount=function(){
   } else {
     appData.accounts.push({id:uid(),name,type,balance,updatedAt:Date.now()});
   }
-  saveData();closeModal('accountModal');renderFinanceTab();renderGoals();renderDashNW();toast('✓ Account saved');
+  saveData();closeModal('accountModal');renderFinanceTab();renderGoals();renderNWSparkline();toast('✓ Account saved');
 };
 window.deleteAccount=function(id){
   appData.accounts=(appData.accounts||[]).filter(a=>a.id!==id);
-  saveData();renderFinanceTab();renderGoals();renderDashNW();toast('Account removed');
+  saveData();renderFinanceTab();renderGoals();renderNWSparkline();toast('Account removed');
 };
 // ── GOALS ─────────────────────────────────────────────────────────
 const GOAL_COLORS=['#30d158','#0a84ff','#ff9f0a','#bf5af2','#ff453a','#64d2ff','#ff6eb4','#30d158'];
@@ -549,82 +507,103 @@ function trackNetWorthHistory(){
   }
 }
 
-// ── Net worth chart (range toggle + scrub) ────────────────────────
-let _nwRange=parseInt(localStorage.getItem('nwRange')||'30',10);
-window.setNWRange=function(days){
-  _nwRange=days;
-  localStorage.setItem('nwRange',String(days));
-  renderNWSparkline();
-};
-let _nwPts=[]; // [{x,y,date,val}] for scrubbing
+// ── Net worth chart (multi-instance: finance tab + dashboard widget) ──
+// Each .nw-chart-card carries data-nw-id ("fin"/"dash") used only as a
+// localStorage key suffix so range + collapsed state persist per instance.
+// All DOM lookups are scoped to the card via [data-role] — no shared IDs.
 function fmtNWDate(ds){
   const d=new Date(ds+'T12:00:00');
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
+function _nwRangeFor(id){return parseInt(localStorage.getItem('nwRange-'+id)||'30',10);}
+window.setNWRange=function(days,btnEl){
+  const card=btnEl.closest('.nw-chart-card');
+  localStorage.setItem('nwRange-'+card.dataset.nwId,String(days));
+  _renderOneNWCard(card);
+};
+window.toggleNWCollapse=function(btnEl){
+  const card=btnEl.closest('.nw-chart-card');
+  const collapsed=card.classList.toggle('collapsed');
+  localStorage.setItem('nwCollapsed-'+card.dataset.nwId,collapsed?'1':'0');
+  btnEl.textContent=collapsed?'⌄':'⌃';
+};
 function renderNWSparkline(){
-  const card=document.getElementById('nwSparklineCard');
-  const svg=document.getElementById('nwSparklineSvg');
+  document.querySelectorAll('.nw-chart-card').forEach(_renderOneNWCard);
+}
+function _renderOneNWCard(card){
+  const id=card.dataset.nwId;
+  const svg=card.querySelector('[data-role="svg"]');
   const hist=appData.netWorthHistory||[];
-  if(!card||!svg||hist.length<2){if(card)card.style.display='none';return;}
+  const accounts=appData.accounts||[];
+  if(!svg||!accounts.length||hist.length<2){card.style.display='none';return;}
   card.style.display='';
-  // range buttons active state
-  document.querySelectorAll('.nw-range-btn').forEach(b=>{
-    b.classList.toggle('active',parseInt(b.dataset.range,10)===_nwRange);
+  // Collapsed state (persisted per card instance)
+  const collapsed=localStorage.getItem('nwCollapsed-'+id)==='1';
+  card.classList.toggle('collapsed',collapsed);
+  const collapseBtn=card.querySelector('[data-role="collapseBtn"]');
+  if(collapseBtn)collapseBtn.textContent=collapsed?'⌄':'⌃';
+
+  const range=_nwRangeFor(id);
+  card.querySelectorAll('.nw-range-btn').forEach(b=>{
+    b.classList.toggle('active',parseInt(b.dataset.range,10)===range);
   });
-  const slice=_nwRange>0?hist.slice(-_nwRange):hist;
+  const slice=range>0?hist.slice(-range):hist;
   const data=slice.length>=2?slice:hist.slice(-2);
   const vals=data.map(h=>h.netWorth);
   const min=Math.min(...vals),max=Math.max(...vals);
-  const range=max-min||Math.max(Math.abs(max)*0.02,1); // flat line → thin band, not full-height noise
+  const span=max-min||Math.max(Math.abs(max)*0.02,1); // flat line → thin band, not full-height noise
   const W=svg.getBoundingClientRect().width||320,H=170;
   const PAD_T=10,PAD_B=10;
   const plotH=H-PAD_T-PAD_B;
-  const xy=(v,i)=>({
-    x:(i/(vals.length-1))*W,
-    y:H-PAD_B-((v-min)/range)*plotH,
-  });
-  _nwPts=data.map((h,i)=>{const p=xy(h.netWorth,i);return{x:p.x,y:p.y,date:h.date,val:h.netWorth};});
-  const line=_nwPts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const xy=(v,i)=>({x:(i/(vals.length-1))*W,y:H-PAD_B-((v-min)/span)*plotH});
+  const pts=data.map((h,i)=>{const p=xy(h.netWorth,i);return{x:p.x,y:p.y,date:h.date,val:h.netWorth};});
+  svg._nwPts=pts; // stashed per-instance for the scrub handler
+  const line=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const lastVal=vals[vals.length-1];
   const up=lastVal>=vals[0];
   const color=up?'var(--green)':'var(--red)';
-  // gridlines at min / mid / max with labels
+  const gradId='nwFill-'+id;
   const gy=[max,(max+min)/2,min].map(v=>({v,y:xy(v,0).y}));
   svg.innerHTML=`
-    <defs><linearGradient id="nwFill" x1="0" y1="0" x2="0" y2="1">
+    <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${up?'#30d158':'#ff453a'}" stop-opacity="0.22"/>
       <stop offset="100%" stop-color="${up?'#30d158':'#ff453a'}" stop-opacity="0"/>
     </linearGradient></defs>
     ${gy.map(g=>`<line x1="0" y1="${g.y.toFixed(1)}" x2="${W}" y2="${g.y.toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
       <text x="4" y="${(g.y-4).toFixed(1)}" font-size="10" fill="var(--muted)">${fmtM(g.v)}</text>`).join('')}
-    <polygon points="0,${(H-PAD_B).toFixed(1)} ${line} ${W},${(H-PAD_B).toFixed(1)}" fill="url(#nwFill)"/>
+    <polygon points="0,${(H-PAD_B).toFixed(1)} ${line} ${W},${(H-PAD_B).toFixed(1)}" fill="url(#${gradId})"/>
     <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle id="nwScrubDot" cx="${_nwPts[_nwPts.length-1].x.toFixed(1)}" cy="${_nwPts[_nwPts.length-1].y.toFixed(1)}" r="3.5" fill="${color}"/>`;
-  // default readout: latest value + change over range
+    <circle data-role="scrubDot" cx="${pts[pts.length-1].x.toFixed(1)}" cy="${pts[pts.length-1].y.toFixed(1)}" r="3.5" fill="${color}"/>`;
+  // Readout: latest value + change over the selected range
   const delta=lastVal-vals[0];
-  const readout=document.getElementById('nwChartReadout');
+  const readout=card.querySelector('[data-role="readout"]');
   if(readout)readout.innerHTML=`<span class="nw-chart-val">${fmtM(lastVal)}</span> <span class="nw-chart-delta" style="color:${color}">${delta>=0?'+':'−'}${fmtM(Math.abs(delta))}</span>`;
-  const x0=document.getElementById('nwChartX0'),x1=document.getElementById('nwChartX1');
+  // Subline: assets/liabilities breakdown (was the old separate "hero" text)
+  const assets=accounts.filter(a=>a.type!=='debt').reduce((s,a)=>s+a.balance,0);
+  const liabilities=accounts.filter(a=>a.type==='debt').reduce((s,a)=>s+a.balance,0);
+  const subline=card.querySelector('[data-role="subline"]');
+  if(subline)subline.textContent=`${fmtM(assets)} assets`+(liabilities>0?` · ${fmtM(liabilities)} liabilities`:'');
+  const x0=card.querySelector('[data-role="x0"]'),x1=card.querySelector('[data-role="x1"]');
   if(x0)x0.textContent=fmtNWDate(data[0].date);
   if(x1)x1.textContent=fmtNWDate(data[data.length-1].date);
-  _attachNWScrub(svg);
+  _attachNWScrub(svg,card);
 }
-function _attachNWScrub(svg){
+function _attachNWScrub(svg,card){
   if(svg._scrubAttached)return;
   svg._scrubAttached=true;
-  const readout=()=>document.getElementById('nwChartReadout');
   const move=e=>{
-    if(!_nwPts.length)return;
+    const pts=svg._nwPts;
+    if(!pts||!pts.length)return;
     const rect=svg.getBoundingClientRect();
     const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
-    let best=_nwPts[0];
-    for(const p of _nwPts)if(Math.abs(p.x-cx)<Math.abs(best.x-cx))best=p;
-    const dot=svg.querySelector('#nwScrubDot');
+    let best=pts[0];
+    for(const p of pts)if(Math.abs(p.x-cx)<Math.abs(best.x-cx))best=p;
+    const dot=svg.querySelector('[data-role="scrubDot"]');
     if(dot){dot.setAttribute('cx',best.x);dot.setAttribute('cy',best.y);}
-    const r=readout();
+    const r=card.querySelector('[data-role="readout"]');
     if(r)r.innerHTML=`<span class="nw-chart-val">${fmtM(best.val)}</span> <span class="nw-chart-delta" style="color:var(--muted)">${fmtNWDate(best.date)}</span>`;
   };
-  const end=()=>renderNWSparkline(); // restore latest-value readout + dot
+  const end=()=>_renderOneNWCard(card); // restore latest-value readout + dot
   svg.addEventListener('mousemove',move);
   svg.addEventListener('mouseleave',end);
   svg.addEventListener('touchstart',move,{passive:true});
@@ -772,6 +751,6 @@ function renderTxnListFiltered(mt){
 
 // ── GLOBAL EXPORTS ──
 Object.assign(window, {
-  renderFinanceRing, renderGoals, renderDashNW, logGoalBalanceHistory,
+  renderFinanceRing, renderGoals, renderNWSparkline, logGoalBalanceHistory,
   trackNetWorthHistory, goalCurrentBalance,
 });

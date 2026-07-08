@@ -178,6 +178,32 @@
         </div>
       </div>
 
+      <!-- Net Worth Chart -->
+      <div class="fin-card nw-chart-card" id="nwCard-dash" data-nw-id="dash" style="display:none;margin-bottom:20px">
+        <div class="nw-chart-hdr">
+          <div>
+            <div class="fin-section-title" style="margin-bottom:2px">Net Worth</div>
+            <div class="nw-chart-readout" data-role="readout">—</div>
+            <div class="nw-chart-subline" data-role="subline"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="dash-proj-viewall" onclick="switchTab('finance')" style="font-size:12px">View all →</button>
+            <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
+          </div>
+        </div>
+        <div class="nw-range-bar" data-role="rangebar">
+          <button class="nw-range-btn" data-range="30" onclick="setNWRange(30,this)">30D</button>
+          <button class="nw-range-btn" data-range="90" onclick="setNWRange(90,this)">90D</button>
+          <button class="nw-range-btn" data-range="180" onclick="setNWRange(180,this)">6M</button>
+          <button class="nw-range-btn" data-range="365" onclick="setNWRange(365,this)">1Y</button>
+          <button class="nw-range-btn" data-range="0" onclick="setNWRange(0,this)">All</button>
+        </div>
+        <div class="nw-chart-body" data-role="body">
+          <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
+          <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
+        </div>
+      </div>
+
       <!-- Projects Widget -->
       <div class="dash-proj-wrap">
         <div class="dash-proj-hdr">
@@ -198,19 +224,7 @@
       <div class="dash-proj-wrap" id="dashRemindersWidget" style="display:none"></div>
 
       <!-- Shipping Widget (hidden when no active packages) -->
-      <div class="dash-proj-wrap" id="dashShippingWidget" style="display:none"></div>
-
-      <!-- Net Worth Widget -->
-      <div class="dash-proj-wrap" style="margin-bottom:20px">
-        <div class="dash-proj-hdr">
-          <div>
-            <div class="dash-proj-title">Net Worth</div>
-            <div class="dash-proj-sub" id="dashNWSub">—</div>
-          </div>
-          <button class="dash-proj-viewall" onclick="switchTab('finance')">View all →</button>
-        </div>
-        <div id="dashNWList" style="padding:4px 0"></div>
-      </div>
+      <div class="dash-proj-wrap" id="dashShippingWidget" style="display:none;margin-bottom:20px"></div>
 
       <!-- Habit Tracker -->
       <div class="habits-section">
@@ -331,12 +345,27 @@
         </div>
       </div>
 
-      <!-- Net Worth Hero -->
-      <div class="nw-hero">
-        <div class="nw-hero-label">NET WORTH</div>
-        <div class="nw-hero-amount" id="nwHeroAmount">—</div>
-        <div class="nw-hero-badge" id="nwHeroBadge" style="display:none"></div>
-        <div class="nw-hero-sub" id="nwHeroSub"></div>
+      <!-- Net Worth Chart -->
+      <div class="fin-card nw-chart-card" id="nwCard-fin" data-nw-id="fin" style="display:none">
+        <div class="nw-chart-hdr">
+          <div>
+            <div class="fin-section-title" style="margin-bottom:2px">Net Worth</div>
+            <div class="nw-chart-readout" data-role="readout">—</div>
+            <div class="nw-chart-subline" data-role="subline"></div>
+          </div>
+          <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
+        </div>
+        <div class="nw-range-bar" data-role="rangebar">
+          <button class="nw-range-btn" data-range="30" onclick="setNWRange(30,this)">30D</button>
+          <button class="nw-range-btn" data-range="90" onclick="setNWRange(90,this)">90D</button>
+          <button class="nw-range-btn" data-range="180" onclick="setNWRange(180,this)">6M</button>
+          <button class="nw-range-btn" data-range="365" onclick="setNWRange(365,this)">1Y</button>
+          <button class="nw-range-btn" data-range="0" onclick="setNWRange(0,this)">All</button>
+        </div>
+        <div class="nw-chart-body" data-role="body">
+          <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
+          <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
+        </div>
       </div>
 
       <!-- Accounts Table -->
@@ -431,24 +460,6 @@
         <div id="recurringTxnList"></div>
       </div>
 
-      <!-- Net Worth Chart (#25) -->
-      <div class="fin-card" id="nwSparklineCard" style="display:none">
-        <div class="nw-chart-hdr">
-          <div>
-            <div class="fin-section-title" style="margin-bottom:2px">Net Worth</div>
-            <div class="nw-chart-readout" id="nwChartReadout">—</div>
-          </div>
-          <div class="nw-range-bar" id="nwRangeBar">
-            <button class="nw-range-btn" data-range="30" onclick="setNWRange(30)">30D</button>
-            <button class="nw-range-btn" data-range="90" onclick="setNWRange(90)">90D</button>
-            <button class="nw-range-btn" data-range="180" onclick="setNWRange(180)">6M</button>
-            <button class="nw-range-btn" data-range="365" onclick="setNWRange(365)">1Y</button>
-            <button class="nw-range-btn" data-range="0" onclick="setNWRange(0)">All</button>
-          </div>
-        </div>
-        <svg id="nwSparklineSvg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
-        <div class="nw-chart-x"><span id="nwChartX0"></span><span id="nwChartX1"></span></div>
-      </div>
 
       <!-- Recent Transactions -->
       <div style="font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:12px">

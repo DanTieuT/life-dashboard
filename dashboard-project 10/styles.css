@@ -586,12 +586,6 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .spending-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .spending-leg-name{font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .spending-leg-amt{font-size:13px;font-weight:600;flex-shrink:0}
-/* ── NW HERO ─────────────────────────────────────────────────────── */
-.nw-hero{margin-bottom:16px}
-.nw-hero-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.nw-hero-amount{font-size:42px;font-weight:700;letter-spacing:-1.5px;line-height:1.05}
-.nw-hero-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-dim);color:var(--green);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;margin:6px 0 5px}
-.nw-hero-sub{font-size:13px;color:var(--sub)}
 /* ── RING STAT CARDS ─────────────────────────────────────────────── */
 .ring-stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 20px;display:flex;flex-direction:column;align-items:center;text-align:center}
 .ring-stat-title{font-size:12px;font-weight:600;letter-spacing:.3px;color:var(--sub);margin-bottom:12px;text-transform:uppercase}
@@ -610,7 +604,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .habit-card,.stat-card,.focus-card,.today-card,.finance-card,.budget-cat,.txn-item,
 .modal,.top-nav,.bottom-nav,.chat-panel,.toast,.brain-dump-card,.goal-card,
 .tasks-section-body,.task-row,.week-cal,.month-cal,.spending-card,.payday-card,
-.nw-hero,.accounts-table-row,.ring-stat-card,.proj-card,.dash-proj-wrap,.jarvis-history-wrap,
+.nw-chart-card,.accounts-table-row,.ring-stat-card,.proj-card,.dash-proj-wrap,.jarvis-history-wrap,
 input,select,textarea,button{transition:background-color .3s ease,color .3s ease,border-color .3s ease}
 
 /* ── COMPACT MODE (#72) ───────────────────────────────────────────── */
@@ -971,7 +965,7 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   /* ── Finance ── */
   .finance-tab-grid{grid-template-columns:1fr}
   .spending-inner{flex-direction:column;align-items:flex-start}
-  .nw-hero-amount{font-size:30px}
+  .nw-chart-val{font-size:26px}
   .fin-header-row{align-items:flex-start}
   .fin-header-actions{width:100%}
   .fin-header-actions .btn-new{flex:1;min-width:0;white-space:nowrap;padding-left:12px;padding-right:12px}
@@ -1034,14 +1028,22 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 /* ── PLAID ───────────────────────────────────────────────────────── */
 
 /* ── NET WORTH CHART ─────────────────────────────────────────────── */
-.nw-chart-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.nw-chart-readout{font-size:13px}
-.nw-chart-val{font-size:20px;font-weight:700}
-.nw-chart-delta{font-size:12px;font-weight:600;margin-left:4px}
-.nw-range-bar{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:2px;flex-shrink:0}
+.nw-chart-card{margin-bottom:16px}
+.nw-chart-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.nw-chart-readout{font-size:13px;margin-top:2px}
+.nw-chart-val{font-size:32px;font-weight:700;letter-spacing:-1px}
+.nw-chart-delta{font-size:13px;font-weight:600;margin-left:6px}
+.nw-chart-subline{font-size:13px;color:var(--sub);margin-top:2px}
+.nw-collapse-btn{background:var(--card2);border:1px solid var(--border);color:var(--sub);width:30px;height:30px;border-radius:9px;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.nw-collapse-btn:hover{background:var(--card)}
+.nw-range-bar{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:2px;width:fit-content;margin-bottom:10px}
 .nw-range-btn{background:none;border:none;color:var(--sub);font-size:11px;font-weight:600;padding:4px 8px;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .12s}
 .nw-range-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .nw-chart-x{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
+/* Collapsed: keep header (amount/delta/subline) visible, hide range bar + graph */
+.nw-chart-card.collapsed .nw-range-bar,
+.nw-chart-card.collapsed .nw-chart-body{display:none}
+.nw-chart-card.collapsed .nw-chart-hdr{margin-bottom:0}
 
 /* ── FINANCE HEADER ROW ──────────────────────────────────────────── */
 .fin-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
