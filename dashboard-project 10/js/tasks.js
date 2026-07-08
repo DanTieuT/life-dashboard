@@ -1,4 +1,6 @@
 // ── TASKS ─────────────────────────────────────────────────────────
+// Touch-primary device? drives long-press reorder vs desktop HTML5 drag.
+const _isTouchDevice=window.matchMedia&&window.matchMedia('(pointer: coarse)').matches;
 function taskRowHTML(t){
   const today=todayStr();
   let duePill='';
@@ -21,7 +23,7 @@ function taskRowHTML(t){
       <span class="subtask-text${s.done?' done':''}">${escHtml(s.text)}</span>
     </div>`).join('');
   const expandRow=hasExpand?`<div class="task-notes-expand" id="tnotes-${t.id}">${t.notes?escHtml(t.notes):''}${subs.length?`<div class="task-subtasks-inline" style="margin-top:${t.notes?'6px':'0'}">${subRows}</div>`:''}</div>`:'';
-  return`<div class="task-row${rowCls?' '+rowCls:''}${hasExpand?' has-notes':''}" data-task-id="${t.id}">
+  return`<div class="task-row${rowCls?' '+rowCls:''}${hasExpand?' has-notes':''}" data-task-id="${t.id}"${_isTouchDevice?'':' draggable="true"'}>
     <span class="task-drag-handle" title="Drag to reorder">⠿</span>
     <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</button>
     ${recurBadge}
@@ -219,9 +221,15 @@ function renderTasks(){
   renderTaskSection('tasksTodaySection','Today',todayTasks,'yellow');
   renderTaskSection('tasksUpcomingSection','Upcoming',upcoming,'');
   renderDoneSection(done);
-  // Attach drag + swipe listeners after render (batch-2)
-  document.querySelectorAll('.tasks-section-body').forEach(el=>{ if(typeof attachTaskDragListeners==='function')attachTaskDragListeners(el); });
-  document.querySelectorAll('.task-row[data-task-id]').forEach(row=>{ if(typeof attachSwipeDelete==='function')attachSwipeDelete(row); });
+  // Touch devices: long-press to reorder + swipe to delete (one handler).
+  // Desktop (fine pointer): keep HTML5 drag from the hover ⠿ handle.
+  if(_isTouchDevice){
+    document.querySelectorAll('.tasks-section-body').forEach(el=>{
+      el.querySelectorAll('.task-row[data-task-id]').forEach(row=>attachTaskTouchGestures(row,el));
+    });
+  } else {
+    document.querySelectorAll('.tasks-section-body').forEach(el=>{ if(typeof attachTaskDragListeners==='function')attachTaskDragListeners(el); });
+  }
   // Nav badge
   const urgentCount=overdue.filter(t=>!t.done).length+todayTasks.filter(t=>!t.done).length;
   const badge=document.getElementById('taskNavBadge');
@@ -471,58 +479,99 @@ function attachTaskDragListeners(sectionBodyEl){
     });
   });
 }
-// ── BATCH 2: SWIPE TO DELETE (#80) ───────────────────────────────
-function attachSwipeDelete(row){
-  if(row._swipeAttached)return;
-  row._swipeAttached=true;
-  let startX=0,curX=0,swiping=false;
-  const THRESHOLD=70;
+// ── TOUCH GESTURES: long-press reorder + swipe-to-delete (#80) ────
+// One handler distinguishes intent by first movement:
+//   • quick tap        → nothing here; the child button's onclick fires (complete/edit)
+//   • hold ~380ms still → reorder drag (haptic + floating clone)
+//   • horizontal swipe  → left = delete
+//   • vertical move     → native scroll (we never preventDefault in that case)
+function attachTaskTouchGestures(row,sectionBodyEl){
+  if(row._gesturesAttached)return;
+  row._gesturesAttached=true;
+  const SWIPE_THRESHOLD=70, MOVE_SLOP=12, HOLD_MS=380;
+  let sx=0,sy=0,state='idle',lpTimer=null,clone=null,moved=false;
+  const onButton=el=>el.closest('.task-check,.task-row-edit,.task-row-del,.task-notes-indicator,.subtask-check,.subtask-row,.task-notes-expand');
+
+  function startDrag(){
+    state='drag';moved=true;
+    haptic(30);
+    row.classList.add('task-dragging');
+    const r=row.getBoundingClientRect();
+    clone=row.cloneNode(true);
+    clone.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;z-index:9999;pointer-events:none;opacity:.92;box-shadow:0 10px 34px rgba(0,0,0,.55);border-radius:10px;background:var(--card2)`;
+    document.body.appendChild(clone);
+  }
+  function rowUnder(x,y){
+    if(clone)clone.style.display='none';
+    const el=document.elementFromPoint(x,y);
+    if(clone)clone.style.display='';
+    return el&&el.closest('.task-row[data-task-id]');
+  }
+  function cleanupDrag(){
+    if(clone){clone.remove();clone=null;}
+    row.classList.remove('task-dragging');
+    document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('task-drag-over'));
+  }
+  function resetSwipe(){row.style.transform='';row.style.background='';}
+
   row.addEventListener('touchstart',e=>{
-    startX=e.touches[0].clientX;
-    curX=startX;
-    swiping=true;
+    if(onButton(e.target))return; // let the tapped button do its thing
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;
+    state='pending';moved=false;
+    lpTimer=setTimeout(()=>{ if(state==='pending')startDrag(); },HOLD_MS);
   },{passive:true});
+
   row.addEventListener('touchmove',e=>{
-    if(!swiping)return;
-    curX=e.touches[0].clientX;
-    const dx=curX-startX;
-    // Only allow left swipe
-    if(dx<0&&Math.abs(dx)<120){
-      row.style.transform=`translateX(${dx}px)`;
-      row.style.transition='none';
+    if(state==='idle')return;
+    const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;
+    if(state==='pending'){
+      if(Math.abs(dx)>MOVE_SLOP&&Math.abs(dx)>Math.abs(dy)){clearTimeout(lpTimer);state='swipe';}
+      else if(Math.abs(dy)>MOVE_SLOP){clearTimeout(lpTimer);state='scroll';} // let it scroll
     }
-  },{passive:true});
-  row.addEventListener('touchend',()=>{
-    if(!swiping)return;
-    swiping=false;
-    const dx=curX-startX;
-    row.style.transition='transform .2s ease';
-    if(dx<-THRESHOLD){
-      haptic(25); // swipe-to-delete trigger (#12) — synchronous in gesture handler
-      // Snap open to show delete
-      row.style.transform='translateX(-80px)';
-      // Show delete indicator via background
-      row.style.background=`linear-gradient(to left, var(--red) 80px, var(--card) 80px)`;
-      // Auto-reset after 2s or on any tap elsewhere
-      const reset=()=>{
-        row.style.transform='';
-        row.style.background='';
-        document.removeEventListener('touchstart',reset);
-      };
-      setTimeout(reset,2000);
-      document.addEventListener('touchstart',reset,{once:true,passive:true});
-      // If fully swiped (>100px), delete immediately (undo toast offers recovery)
-      if(dx<-100){
-        reset();
-        const id=row.dataset.taskId;
-        if(id)deleteTask(id);
+    if(state==='swipe'){
+      moved=true;e.preventDefault();
+      if(dx<0&&dx>-120){row.style.transition='none';row.style.transform=`translateX(${dx}px)`;}
+    } else if(state==='drag'){
+      e.preventDefault();
+      if(clone)clone.style.top=(e.touches[0].clientY-clone.offsetHeight/2)+'px';
+      document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('task-drag-over'));
+      const under=rowUnder(e.touches[0].clientX,e.touches[0].clientY);
+      if(under&&under!==row)under.classList.add('task-drag-over');
+    }
+  },{passive:false});
+
+  row.addEventListener('touchend',e=>{
+    clearTimeout(lpTimer);
+    const dx=e.changedTouches[0].clientX-sx;
+    if(state==='swipe'){
+      row.style.transition='transform .2s ease';
+      if(dx<-SWIPE_THRESHOLD){
+        haptic(25);
+        row.style.transform='translateX(-80px)';
+        row.style.background='linear-gradient(to left, var(--red) 80px, var(--card) 80px)';
+        const r=()=>{resetSwipe();document.removeEventListener('touchstart',r);};
+        setTimeout(r,2000);
+        document.addEventListener('touchstart',r,{once:true,passive:true});
+        if(dx<-100){resetSwipe();if(row.dataset.taskId)deleteTask(row.dataset.taskId);}
+      } else resetSwipe();
+    } else if(state==='drag'){
+      const under=rowUnder(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
+      cleanupDrag();
+      if(under&&under!==row){
+        const tasks=appData.projects;
+        const fi=tasks.findIndex(t=>t.id===row.dataset.taskId);
+        const ti=tasks.findIndex(t=>t.id===under.dataset.taskId);
+        if(fi>-1&&ti>-1){const[m]=tasks.splice(fi,1);tasks.splice(ti,0,m);tasks.forEach((t,i)=>t.order=i);saveData();renderTasks();}
       }
-    } else {
-      row.style.transform='';
-      row.style.background='';
     }
+    state='idle';
   },{passive:true});
+
+  // Swallow the click synthesized after a drag/swipe so it doesn't also complete the task
+  row.addEventListener('click',e=>{
+    if(moved){e.preventDefault();e.stopPropagation();moved=false;}
+  },true);
 }
 
 // ── GLOBAL EXPORTS ──
-Object.assign(window, { renderTasks, isRecentDone, attachTaskDragListeners, attachSwipeDelete, nextRecurrenceDate });
+Object.assign(window, { renderTasks, isRecentDone, attachTaskDragListeners, attachTaskTouchGestures, nextRecurrenceDate });

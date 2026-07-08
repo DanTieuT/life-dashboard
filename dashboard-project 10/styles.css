@@ -959,6 +959,8 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
      hide delete entirely — swipe-left already deletes on mobile */
   .task-row-edit{opacity:.45;pointer-events:auto}
   .task-row-del{display:none}
+  /* Faint handle hints rows are hold-to-reorder (long-press works anywhere) */
+  .task-drag-handle{display:flex;opacity:.22;pointer-events:none}
 
   /* ── Finance ── */
   .finance-tab-grid{grid-template-columns:1fr}
