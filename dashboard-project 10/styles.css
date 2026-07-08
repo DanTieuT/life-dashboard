@@ -816,8 +816,12 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .task-drag-handle{color:var(--muted);font-size:14px;cursor:grab;padding:0 4px;
   flex-shrink:0;opacity:0.2;user-select:none;display:none;align-items:center;
   touch-action:none}
-.tasks-section-body:hover .task-drag-handle,
-.task-row:hover .task-drag-handle{display:flex}
+/* hover-reveal is desktop-only — on touch, tapping a row triggers :hover and
+   would flash the handle while scrolling */
+@media (hover: hover){
+  .tasks-section-body:hover .task-drag-handle,
+  .task-row:hover .task-drag-handle{display:flex}
+}
 /* While a reorder is active, reveal handles (incl. the floating drag clone) */
 body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 .task-row.task-dragging{opacity:0.4}

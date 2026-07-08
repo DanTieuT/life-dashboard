@@ -490,7 +490,7 @@ function attachTaskDragListeners(sectionBodyEl){
 function attachTaskTouchGestures(row,sectionBodyEl){
   if(row._gesturesAttached)return;
   row._gesturesAttached=true;
-  const SWIPE_THRESHOLD=70, MOVE_SLOP=12, HOLD_MS=380;
+  const SWIPE_THRESHOLD=70, MOVE_SLOP=10, HOLD_MS=650;
   let sx=0,sy=0,state='idle',lpTimer=null,clone=null,moved=false;
   const onButton=el=>el.closest('.task-check,.task-row-edit,.task-row-del,.task-notes-indicator,.subtask-check,.subtask-row,.task-notes-expand');
 
