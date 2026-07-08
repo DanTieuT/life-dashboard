@@ -448,10 +448,12 @@ function attachTaskDragListeners(sectionBodyEl){
     row.setAttribute('draggable','true');
     row.addEventListener('dragstart',e=>{
       row._dragId=row.dataset.taskId;
+      document.body.classList.add('task-reordering');
       setTimeout(()=>row.classList.add('task-dragging'),0);
       e.dataTransfer.effectAllowed='move';
     });
     row.addEventListener('dragend',()=>{
+      document.body.classList.remove('task-reordering');
       row.classList.remove('task-dragging');
       sectionBodyEl.querySelectorAll('.task-row').forEach(r=>r.classList.remove('task-drag-over'));
     });
@@ -495,6 +497,7 @@ function attachTaskTouchGestures(row,sectionBodyEl){
   function startDrag(){
     state='drag';moved=true;
     haptic(30);
+    document.body.classList.add('task-reordering'); // reveals the ⠿ handles
     row.classList.add('task-dragging');
     const r=row.getBoundingClientRect();
     clone=row.cloneNode(true);
@@ -509,6 +512,7 @@ function attachTaskTouchGestures(row,sectionBodyEl){
   }
   function cleanupDrag(){
     if(clone){clone.remove();clone=null;}
+    document.body.classList.remove('task-reordering');
     row.classList.remove('task-dragging');
     document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('task-drag-over'));
   }
