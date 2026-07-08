@@ -76,7 +76,7 @@ window.appData = {
   intention:'', focusTasks:[], projects:[], userProjects:[], habits:[],
   events:[], transactions:[], budget:{...DEFAULT_BUDGET}, savings:{...DEFAULT_SAVINGS},
   accounts:[], goals:[], notes:[], profile:'', categoryBudgets:{}, netWorthHistory:[],
-  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}, packages:[], reminders:[]
+  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}, packages:[], reminders:[], cardRewards:{}
 };
 window._dataLoaded=false; // true once loadData() resolves — render skeletons until then
 window.currentFilter='all';
@@ -277,6 +277,7 @@ async function loadData(){
         rdoSchedule:d.rdoSchedule||{...DEFAULT_RDO_SCHEDULE},
         packages:d.packages||[],
         reminders:d.reminders||[],
+        cardRewards:d.cardRewards||{},
       };
     } else {
       // New user: seed default habits
@@ -379,7 +380,7 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 window.openModal=openModal;
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 window.closeModal=closeModal;
-['addEventModal','addHabitModal','newTaskModal','txnModal','budgetModal','savingsModal','signOutModal','projectModal','accountModal','goalModal','weeklyReviewModal','calEventModal'].forEach(id=>{
+['addEventModal','addHabitModal','newTaskModal','txnModal','budgetModal','savingsModal','signOutModal','projectModal','accountModal','goalModal','weeklyReviewModal','calEventModal','cardRewardsModal'].forEach(id=>{
   document.getElementById(id)?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal(id);});
 });
 // ── TAB SWITCHING ─────────────────────────────────────────────────

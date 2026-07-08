@@ -1069,3 +1069,40 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 .week-digest-stat{background:var(--card2);border-radius:12px;padding:14px 10px;text-align:center}
 .week-digest-val{font-size:22px;font-weight:700;line-height:1;margin-bottom:5px}
 .week-digest-lbl{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── CARD REWARDS ────────────────────────────────────────────────── */
+.cr-card{border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.cr-card-name{font-size:14px;font-weight:600;margin-bottom:8px}
+.cr-default-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub);margin-bottom:8px}
+.cr-default-row input{width:70px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 8px;color:var(--text);font-size:13px;outline:none}
+.cr-rule{display:grid;grid-template-columns:1fr 62px 105px 105px 26px;gap:6px;margin-bottom:6px;align-items:center}
+.cr-rule select,.cr-rule input{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 6px;color:var(--text);font-size:12px;outline:none;min-width:0}
+.cr-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px}
+.cr-del:hover{color:var(--red)}
+.cr-add-rule{background:none;border:1px dashed var(--border);border-radius:8px;color:var(--sub);font-size:12px;padding:6px 10px;cursor:pointer;font-family:inherit;width:100%;margin-top:2px}
+.cr-add-rule:hover{color:var(--text)}
+@media(max-width:768px){.cr-rule{grid-template-columns:1fr 56px 1fr 1fr 24px}}
+
+.bestcard-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.bestcard-chip{padding:5px 11px;border-radius:9px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--card2);color:var(--sub);cursor:pointer;font-family:inherit;transition:all .12s}
+.bestcard-chip.active{background:var(--green-dim);color:var(--green);border-color:rgba(48,209,88,.3)}
+.bestcard-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.bestcard-row:last-child{border-bottom:none}
+.bestcard-row.best .bestcard-name,.bestcard-row.best .bestcard-pct{color:var(--green);font-weight:700}
+.bestcard-rank{width:20px;text-align:center;color:var(--muted);flex-shrink:0}
+.bestcard-row.best .bestcard-rank{color:var(--yellow)}
+.bestcard-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bestcard-pct{font-weight:600;flex-shrink:0}
+.bestcard-boost{font-size:10px;font-weight:700;color:var(--yellow);background:rgba(255,214,10,.12);padding:1px 6px;border-radius:5px;margin-left:4px;vertical-align:middle}
+.bestcard-unset{font-size:10px;color:var(--muted);margin-left:4px}
+
+.missed-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.missed-stat{background:var(--card2);border-radius:12px;padding:12px;text-align:center}
+.missed-val{font-size:20px;font-weight:700;margin-bottom:3px}
+.missed-lbl{font-size:11px;color:var(--muted)}
+.missed-row{padding:8px 0;border-bottom:1px solid var(--border)}
+.missed-row:last-child{border-bottom:none}
+.missed-row-main{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.missed-txn{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.missed-delta{color:var(--red);font-weight:600;flex-shrink:0}
+.missed-row-sub{font-size:11px;color:var(--muted);margin-top:2px}

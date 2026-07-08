@@ -379,6 +379,22 @@
       <!-- Accounts Table -->
       <div id="acctCardsRow"></div>
 
+      <!-- Best Card lookup (hidden until rewards are configured) -->
+      <div class="fin-card" id="bestCardCard" style="display:none">
+        <div class="fin-section-title" style="display:flex;justify-content:space-between;align-items:center">
+          Best Card For
+          <button onclick="openCardRewardsModal()" style="background:none;border:none;color:var(--green);font-size:13px;cursor:pointer;font-family:inherit">Edit rewards</button>
+        </div>
+        <div class="bestcard-chips" id="bestCardChips"></div>
+        <div id="bestCardList"></div>
+      </div>
+
+      <!-- Missed rewards report (hidden until there's data) -->
+      <div class="fin-card" id="missedRewardsCard" style="display:none">
+        <div class="fin-section-title">Missed Rewards</div>
+        <div id="missedRewardsBody"></div>
+      </div>
+
       <!-- Month nav + action buttons -->
       <div class="fin-header-row">
         <div class="month-nav" style="margin:0">
@@ -394,6 +410,7 @@
               <button onclick="closeFinMoreMenu();openPlaidLink()">Link Bank</button>
               <button onclick="closeFinMoreMenu();openAccountModal()">Add Account</button>
               <button onclick="closeFinMoreMenu();openBudgetModal()">Budget</button>
+              <button onclick="closeFinMoreMenu();openCardRewardsModal()">Card Rewards</button>
               <button onclick="closeFinMoreMenu();exportTransactionsCSV()">Export CSV</button>
             </div>
           </div>
@@ -816,6 +833,19 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('budgetModal')">Cancel</button>
       <button class="btn-save" onclick="saveBudget()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Card Rewards Modal -->
+<div class="modal-overlay" id="cardRewardsModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-title">Card Rewards</div>
+    <div style="font-size:12px;color:var(--sub);margin:-10px 0 14px">Set each card's cashback rates. Add category rules for bonus rates — with dates for rotating quarterly categories.</div>
+    <div id="cardRewardsBody"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('cardRewardsModal')">Cancel</button>
+      <button class="btn-save" onclick="saveCardRewards()">Save</button>
     </div>
   </div>
 </div>

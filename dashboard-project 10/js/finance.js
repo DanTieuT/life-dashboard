@@ -147,6 +147,8 @@ function renderFinanceTab(){
   if(typeof renderMonthlyTrend==='function')renderMonthlyTrend();
   if(typeof renderRecurringTxns==='function')renderRecurringTxns();
   if(typeof renderNWSparkline==='function')renderNWSparkline();
+  if(typeof renderBestCard==='function')renderBestCard();
+  if(typeof renderMissedRewards==='function')renderMissedRewards(mt);
 }
 
 window.changeMonth=function(dir){
@@ -764,6 +766,163 @@ function renderTxnListFiltered(mt){
       <span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>
       <button class="txn-del" onclick="event.stopPropagation();deleteTxn('${t.id}')">✕</button>
     </div>`).join('');
+}
+
+// ── CARD REWARDS ──────────────────────────────────────────────────
+// appData.cardRewards = { [accountId]: { defaultPct: 1,
+//   rules: [{category, pct, from?, to?}] } }   (from/to = rotating quarters)
+const REWARD_CATS=['Housing','Food','Transport','Health & Fitness','Entertainment','Shopping','Other'];
+
+function rewardCards(){
+  return (appData.accounts||[]).filter(a=>a.type==='debt');
+}
+// Effective cashback % for a card on a category on a given date.
+// Date-scoped rules (rotating categories) beat evergreen rules beat default.
+function effectiveRewardPct(acctId,category,dateStr){
+  const cfg=(appData.cardRewards||{})[acctId];
+  if(!cfg)return null; // unconfigured card
+  let best=null;
+  for(const r of cfg.rules||[]){
+    if(r.category!==category)continue;
+    if(r.from&&dateStr<r.from)continue;
+    if(r.to&&dateStr>r.to)continue;
+    if(best===null||r.pct>best)best=r.pct;
+  }
+  return best!==null?best:(cfg.defaultPct??1);
+}
+function anyRewardsConfigured(){
+  return Object.keys(appData.cardRewards||{}).length>0;
+}
+
+// ── Setup modal ───────────────────────────────────────────────────
+window.openCardRewardsModal=function(){
+  const body=document.getElementById('cardRewardsBody');
+  const cards=rewardCards();
+  if(!cards.length){
+    body.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px 0">No credit cards found — link a bank with a credit card first.</div>';
+  } else {
+    body.innerHTML=cards.map(a=>{
+      const cfg=(appData.cardRewards||{})[a.id]||{defaultPct:1,rules:[]};
+      return`<div class="cr-card" data-acct="${a.id}">
+        <div class="cr-card-name">${a.name}${a.mask?` <span class="accounts-table-mask">••${a.mask}</span>`:''}</div>
+        <div class="cr-default-row">
+          <label>Default cashback</label>
+          <input class="cr-default" type="number" min="0" step="0.25" value="${cfg.defaultPct??1}"><span>%</span>
+        </div>
+        <div class="cr-rules">${(cfg.rules||[]).map(r=>_crRuleHTML(r)).join('')}</div>
+        <button class="cr-add-rule" onclick="addCardRewardRule(this)">+ Category rule</button>
+      </div>`;
+    }).join('');
+  }
+  openModal('cardRewardsModal');
+};
+function _crRuleHTML(r){
+  r=r||{category:'Food',pct:3,from:'',to:''};
+  return`<div class="cr-rule">
+    <select class="cr-cat">${REWARD_CATS.concat(['Savings']).map(c=>`<option${c===r.category?' selected':''}>${c}</option>`).join('')}</select>
+    <input class="cr-pct" type="number" min="0" step="0.25" value="${r.pct}" title="Cashback %">
+    <input class="cr-from" type="date" value="${r.from||''}" title="From (optional — rotating category)">
+    <input class="cr-to" type="date" value="${r.to||''}" title="To (optional)">
+    <button class="cr-del" onclick="this.parentElement.remove()">✕</button>
+  </div>`;
+}
+window.addCardRewardRule=function(btn){
+  btn.previousElementSibling.insertAdjacentHTML('beforeend',_crRuleHTML());
+};
+window.saveCardRewards=function(){
+  const out={};
+  document.querySelectorAll('#cardRewardsBody .cr-card').forEach(cardEl=>{
+    const rules=[...cardEl.querySelectorAll('.cr-rule')].map(row=>({
+      category:row.querySelector('.cr-cat').value,
+      pct:parseFloat(row.querySelector('.cr-pct').value)||0,
+      from:row.querySelector('.cr-from').value||null,
+      to:row.querySelector('.cr-to').value||null,
+    })).filter(r=>r.pct>0);
+    out[cardEl.dataset.acct]={
+      defaultPct:parseFloat(cardEl.querySelector('.cr-default').value)||0,
+      rules,
+    };
+  });
+  appData.cardRewards=out;
+  saveData();
+  closeModal('cardRewardsModal');
+  renderFinanceTab();
+  toast('✓ Card rewards saved');
+};
+
+// ── Best Card lookup ──────────────────────────────────────────────
+let _bestCardCat=localStorage.getItem('bestCardCat')||'Food';
+window.setBestCardCat=function(cat){
+  _bestCardCat=cat;
+  localStorage.setItem('bestCardCat',cat);
+  renderBestCard();
+};
+function renderBestCard(){
+  const card=document.getElementById('bestCardCard');
+  if(!card)return;
+  if(!anyRewardsConfigured()||!rewardCards().length){card.style.display='none';return;}
+  card.style.display='';
+  const chips=document.getElementById('bestCardChips');
+  chips.innerHTML=REWARD_CATS.map(c=>`<button class="bestcard-chip${c===_bestCardCat?' active':''}" onclick="setBestCardCat('${c.replace(/'/g,"\\'")}')">${CATS_EMOJI[c]||''} ${c}</button>`).join('');
+  const today=todayStr();
+  const ranked=rewardCards().map(a=>{
+    const pct=effectiveRewardPct(a.id,_bestCardCat,today);
+    const cfg=(appData.cardRewards||{})[a.id];
+    const boosted=cfg&&(cfg.rules||[]).some(r=>r.category===_bestCardCat&&(!r.from||today>=r.from)&&(!r.to||today<=r.to)&&r.pct>(cfg.defaultPct??1));
+    return{a,pct:pct??0,configured:pct!==null,boosted};
+  }).sort((x,y)=>y.pct-x.pct);
+  document.getElementById('bestCardList').innerHTML=ranked.map((r,i)=>`
+    <div class="bestcard-row${i===0?' best':''}">
+      <span class="bestcard-rank">${i===0?'★':i+1}</span>
+      <span class="bestcard-name">${r.a.name}${r.a.mask?` <span class="accounts-table-mask">••${r.a.mask}</span>`:''}${r.boosted?' <span class="bestcard-boost">bonus</span>':''}${!r.configured?' <span class="bestcard-unset">not set up</span>':''}</span>
+      <span class="bestcard-pct">${r.pct}%</span>
+    </div>`).join('');
+}
+
+// ── Missed rewards report ─────────────────────────────────────────
+function renderMissedRewards(mt){
+  const card=document.getElementById('missedRewardsCard');
+  if(!card)return;
+  if(!anyRewardsConfigured()){card.style.display='none';return;}
+  const cards=rewardCards();
+  const byPlaidId={};
+  (appData.accounts||[]).forEach(a=>{if(a.plaidAccountId)byPlaidId[a.plaidAccountId]=a;});
+  let earned=0,missed=0;
+  const offenders=[];
+  (mt||[]).forEach(t=>{
+    if(t.type!=='out'||!t.plaidAccountId)return;
+    const usedAcct=byPlaidId[t.plaidAccountId];
+    const cat=REWARD_CATS.includes(t.category)?t.category:'Other';
+    const usedPct=(usedAcct&&usedAcct.type==='debt')?(effectiveRewardPct(usedAcct.id,cat,t.date)??0):0;
+    let bestPct=0,bestCard=null;
+    cards.forEach(c=>{
+      const p=effectiveRewardPct(c.id,cat,t.date);
+      if(p!==null&&p>bestPct){bestPct=p;bestCard=c;}
+    });
+    earned+=t.amount*usedPct/100;
+    const delta=t.amount*(bestPct-usedPct)/100;
+    if(delta>0.005){
+      missed+=delta;
+      offenders.push({t,delta,bestCard,usedName:usedAcct?usedAcct.name:'unknown',usedPct,bestPct});
+    }
+  });
+  if(earned===0&&missed===0){card.style.display='none';return;}
+  card.style.display='';
+  offenders.sort((a,b)=>b.delta-a.delta);
+  const money=n=>typeof isNumbersHidden==='function'&&isNumbersHidden()?'••••':'$'+n.toFixed(2);
+  document.getElementById('missedRewardsBody').innerHTML=`
+    <div class="missed-summary">
+      <div class="missed-stat"><div class="missed-val" style="color:var(--green)">${money(earned)}</div><div class="missed-lbl">earned this month</div></div>
+      <div class="missed-stat"><div class="missed-val" style="color:${missed>1?'var(--red)':'var(--sub)'}">${money(missed)}</div><div class="missed-lbl">left on the table</div></div>
+    </div>
+    ${offenders.slice(0,4).map(o=>`<div class="missed-row">
+      <div class="missed-row-main">
+        <span class="missed-txn">${o.t.name}</span>
+        <span class="missed-delta">−${money(o.delta)}</span>
+      </div>
+      <div class="missed-row-sub">${fmtM(o.t.amount)} ${o.t.category} on ${o.usedName} (${o.usedPct}%) — ${o.bestCard?o.bestCard.name+' pays '+o.bestPct+'%':''}</div>
+    </div>`).join('')}
+    ${offenders.length>4?`<div style="font-size:12px;color:var(--muted);padding-top:6px">+ ${offenders.length-4} more this month</div>`:''}`;
 }
 
 // ── GLOBAL EXPORTS ──
