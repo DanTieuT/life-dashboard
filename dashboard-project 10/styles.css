@@ -1045,3 +1045,17 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .fin-more-menu.open{display:flex}
 .fin-more-menu button{background:none;border:none;color:var(--text);font-size:14px;text-align:left;padding:9px 12px;border-radius:8px;cursor:pointer;font-family:inherit;transition:background .12s}
 .fin-more-menu button:hover{background:var(--card2)}
+
+/* ── HABIT STREAKS ───────────────────────────────────────────────── */
+.habit-streak{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:700;margin-left:6px;color:var(--yellow);vertical-align:middle}
+
+/* ── LIST SEARCH (tasks / projects) ──────────────────────────────── */
+.list-search{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px}
+.list-search:focus{border-color:var(--green)}
+.list-search::placeholder{color:var(--muted)}
+
+/* ── THIS WEEK DIGEST ────────────────────────────────────────────── */
+.week-digest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 20px 18px}
+.week-digest-stat{background:var(--card2);border-radius:12px;padding:14px 10px;text-align:center}
+.week-digest-val{font-size:22px;font-weight:700;line-height:1;margin-bottom:5px}
+.week-digest-lbl{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

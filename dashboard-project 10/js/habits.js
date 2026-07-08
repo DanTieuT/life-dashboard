@@ -98,12 +98,16 @@ function habitCardHTML(h,idx){
   const ringTarget=isWeekly?1:dailyTarget;
   const btnContent=habitRingBtn(count,ringTarget,c);
 
+  const streak=calcStreak(h);
+  const best=bestStreakEver(h);
+  const streakBadge=streak>=2?`<span class="habit-streak" title="Best: ${best} days">🔥 ${streak}</span>`:'';
+
   return `<div class="habit-card" data-habit-id="${h.id}" style="background:${c.bg}" draggable="true">
     <div class="habit-card-top">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
       <div class="habit-icon" style="background:${c.dim}">${h.emoji||'⭐'}</div>
       <div class="habit-info">
-        <div class="habit-name">${h.name}</div>
+        <div class="habit-name">${h.name}${streakBadge}</div>
         <div class="habit-sub">${h.sub||h.name}</div>
       </div>
       <div class="habit-card-actions">
@@ -146,6 +150,20 @@ function habitCount(h,dateStr){
 function habitDone(h,dateStr){
   const cnt=habitCount(h,dateStr);
   return h.type==='weekly'||h.type==='monthly'?cnt>0:cnt>=(h.dailyTarget||1);
+}
+
+// Longest streak ever, scanned from full log history (no separate stored
+// field to keep in sync — cheap enough to recompute on render).
+function bestStreakEver(h){
+  const dates=Object.keys(h.log||{}).filter(d=>habitDone(h,d)).sort();
+  if(!dates.length)return 0;
+  let best=1,cur=1;
+  for(let i=1;i<dates.length;i++){
+    const diff=Math.round((new Date(dates[i]+'T12:00:00')-new Date(dates[i-1]+'T12:00:00'))/86400000);
+    cur=diff===1?cur+1:1;
+    if(cur>best)best=cur;
+  }
+  return best;
 }
 
 function updateHabitsSummary(){
@@ -451,4 +469,4 @@ window.unarchiveHabit=function(id){
 };
 
 // ── GLOBAL EXPORTS ──
-Object.assign(window, { renderHabitsGrid, updateHabitsSummary, habitCount, habitDone });
+Object.assign(window, { renderHabitsGrid, updateHabitsSummary, habitCount, habitDone, bestStreakEver });

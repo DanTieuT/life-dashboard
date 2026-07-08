@@ -529,6 +529,51 @@ window.sendWeeklyReviewToTelegram=async function(){
   }catch(e){toast('Error sending');}
   btn.textContent='Send to JARVIS';btn.disabled=false;
 };
+
+// ── THIS WEEK DIGEST (dashboard at-a-glance) ──────────────────────
+function renderWeekDigest(){
+  const el=document.getElementById('dashWeekDigest');
+  if(!el)return;
+  const today=new Date();
+  const weekStart=new Date(today);weekStart.setDate(today.getDate()-today.getDay()); // Sunday
+  const weekDays=[];
+  for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(weekStart.getDate()+i);weekDays.push(d.toLocaleDateString('en-CA'));}
+  const past=weekDays.filter(d=>d<=todayStr());
+  // Habits: total daily completions vs possible so far this week
+  const dailyHabits=(appData.habits||[]).filter(h=>h.type==='daily'&&!h.archived);
+  let habitDoneCount=0,habitPossible=0;
+  dailyHabits.forEach(h=>{past.forEach(d=>{habitPossible++;if(habitDone(h,d))habitDoneCount++;});});
+  const habitPct=habitPossible?Math.round(habitDoneCount/habitPossible*100):0;
+  // Tasks completed this week (from real task store)
+  const tasksDone=(appData.projects||[]).filter(t=>{
+    if(!t.done)return false;
+    const cd=t.completedDate||(t.doneAt?new Date(t.doneAt).toLocaleDateString('en-CA'):'');
+    return weekDays.includes(cd);
+  }).length;
+  // Spending / income this week
+  const spent=(appData.transactions||[]).filter(t=>t.type==='out'&&weekDays.includes(t.date)).reduce((s,t)=>s+t.amount,0);
+  const income=(appData.transactions||[]).filter(t=>t.type==='in'&&weekDays.includes(t.date)).reduce((s,t)=>s+t.amount,0);
+  const label=weekStart.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+today.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  el.innerHTML=`<div class="dash-proj-hdr">
+      <div><div class="dash-proj-title">This Week</div><div class="dash-proj-sub">${label}</div></div>
+      <button class="dash-proj-viewall" onclick="openWeeklyReview()">Full review →</button>
+    </div>
+    <div class="week-digest-grid">
+      <div class="week-digest-stat">
+        <div class="week-digest-val" style="color:${habitPct>=70?'var(--green)':habitPct>=40?'var(--yellow)':'var(--sub)'}">${habitPct}%</div>
+        <div class="week-digest-lbl">Habits ${habitDoneCount}/${habitPossible}</div>
+      </div>
+      <div class="week-digest-stat">
+        <div class="week-digest-val">${tasksDone}</div>
+        <div class="week-digest-lbl">Tasks done</div>
+      </div>
+      <div class="week-digest-stat">
+        <div class="week-digest-val">${fmtM(spent)}</div>
+        <div class="week-digest-lbl">Spent${income>0?` · ${fmtM(income)} in`:''}</div>
+      </div>
+    </div>`;
+}
+window.renderWeekDigest=renderWeekDigest;
 // ── EVENTS ────────────────────────────────────────────────────────
 window.openAddEventModal=function(date){
   document.getElementById('newEvtDate').value=date||todayStr();

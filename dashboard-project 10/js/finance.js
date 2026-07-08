@@ -285,6 +285,24 @@ setupModalEnterFlow('txnModal',['txnName','txnAmount','txnCategory','txnType','t
 window.toggleFinMoreMenu=function(){
   document.getElementById('finMoreMenu')?.classList.toggle('open');
 };
+
+// Export ALL transactions (not just the selected month) as a CSV download.
+window.exportTransactionsCSV=function(){
+  const txns=[...(appData.transactions||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!txns.length){toast('No transactions to export','error');return;}
+  const esc=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const rows=[['Date','Description','Category','Type','Amount','Recurring']];
+  txns.forEach(t=>rows.push([t.date,t.name||'',t.category||'',t.type==='in'?'Income':'Expense',(t.amount||0).toFixed(2),t.recurring?'Yes':'No']));
+  const csv=rows.map(r=>r.map(esc).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`transactions-${todayStr()}.csv`;
+  document.body.appendChild(a);a.click();a.remove();
+  URL.revokeObjectURL(url);
+  toast(`✓ Exported ${txns.length} transactions`);
+};
 window.closeFinMoreMenu=function(){
   document.getElementById('finMoreMenu')?.classList.remove('open');
 };

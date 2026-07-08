@@ -367,6 +367,7 @@ function renderAll(){
   renderShipping();
   renderDashShippingWidget();
   renderRemindersWidget();
+  renderWeekDigest();
   updateLastBackupLabel();
 }
 

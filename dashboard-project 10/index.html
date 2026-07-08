@@ -191,6 +191,9 @@
         <div id="dashProjectsWidget"></div>
       </div>
 
+      <!-- This Week digest -->
+      <div class="dash-proj-wrap" id="dashWeekDigest"></div>
+
       <!-- Reminders Widget (hidden when none upcoming) -->
       <div class="dash-proj-wrap" id="dashRemindersWidget" style="display:none"></div>
 
@@ -271,6 +274,7 @@
         </div>
         <button class="btn-new" onclick="openNewTaskModal()">+ New task</button>
       </div>
+      <input class="list-search" id="taskSearch" placeholder="Search tasks..." oninput="renderTasks()">
       <div class="week-cal-wrap">
         <div class="week-cal-hdr">
           <span class="week-cal-month" id="weekCalMonth"></span>
@@ -353,6 +357,7 @@
               <button onclick="closeFinMoreMenu();openPlaidLink()">Link Bank</button>
               <button onclick="closeFinMoreMenu();openAccountModal()">Add Account</button>
               <button onclick="closeFinMoreMenu();openBudgetModal()">Budget</button>
+              <button onclick="closeFinMoreMenu();exportTransactionsCSV()">Export CSV</button>
             </div>
           </div>
         </div>
@@ -472,6 +477,7 @@
         </div>
         <button class="btn-new" onclick="openProjectModal()">+ New project</button>
       </div>
+      <input class="list-search" id="projSearch" placeholder="Search projects..." oninput="renderProjects()">
       <div class="proj-filter-bar" id="projFilterBar">
         <button class="proj-filter-btn active" onclick="setProjFilter('all')" data-filter="all">All</button>
         <button class="proj-filter-btn" onclick="setProjFilter('on_track')" data-filter="on_track">On Track</button>

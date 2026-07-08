@@ -192,7 +192,10 @@ window.weekCalNav=function(dir){
 function renderTasks(){
   if(_calView==='month')renderMonthCalendar();else renderWeekCalendar();
   const today=todayStr();
-  const all=appData.projects||[];
+  const q=(document.getElementById('taskSearch')?.value||'').trim().toLowerCase();
+  const all=q
+    ? (appData.projects||[]).filter(t=>(t.name||'').toLowerCase().includes(q)||(t.notes||'').toLowerCase().includes(q))
+    : (appData.projects||[]);
   const active=t=>!t.done||isRecentDone(t);
   const doneSort=(a,b)=>{
     if(a.done&&!b.done)return 1;

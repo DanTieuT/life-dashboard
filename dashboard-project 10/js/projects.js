@@ -63,6 +63,8 @@ function renderProjects(){
   else if(currentProjFilter==='at_risk') filtered=all.filter(p=>STAGE_STATUS[p.stage]?.filterKey==='at_risk');
   else if(currentProjFilter==='blocked') filtered=all.filter(p=>p.stage==='blocked');
   else if(currentProjFilter==='done') filtered=all.filter(p=>p.stage==='done');
+  const q=(document.getElementById('projSearch')?.value||'').trim().toLowerCase();
+  if(q)filtered=filtered.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q)||(p.nextAction||'').toLowerCase().includes(q)||(p.notes||'').toLowerCase().includes(q));
   if(!filtered.length){
     gridEl.innerHTML=`<div class="projects-empty-row" style="grid-column:1/-1;padding:48px 20px;text-align:center;color:var(--muted);font-size:14px">No projects${currentProjFilter!=='all'?' in this category':''} yet — hit <strong>+ New project</strong> to get started</div>`;
   } else {
