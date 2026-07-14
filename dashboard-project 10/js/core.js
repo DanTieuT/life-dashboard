@@ -688,6 +688,7 @@ function haptic(ms=40){
         txt().textContent='Refreshing…';
       }
       try{
+        await loadData(); // actually re-fetch from Firestore — was missing, so "refresh" only re-rendered stale in-memory data
         await syncTimetreeEvents(true);
         renderAll();
       }catch(err){}
