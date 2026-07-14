@@ -771,7 +771,14 @@ function renderTxnListFiltered(mt){
 // ── CARD REWARDS ──────────────────────────────────────────────────
 // appData.cardRewards = { [accountId]: { defaultPct: 1,
 //   rules: [{category, pct, from?, to?}] } }   (from/to = rotating quarters)
-const REWARD_CATS=['Housing','Food','Transport','Health & Fitness','Entertainment','Shopping','Other'];
+// "pct" is a generic rate — cashback % or points-per-dollar multiplier,
+// whichever your card actually earns. Ranking is relative, within your own
+// cards, so mixing cashback cards and points cards is fine for comparison.
+const REWARD_CATS=[
+  'Dining','Groceries','Gas & EV Charging','Drug Store','Streaming',
+  'Hotels/Rental Cars (Portal)','Flights/Vacation Rentals (Portal)','Other Travel',
+  'Housing','Shopping','Entertainment','Health & Fitness','Other',
+];
 
 function rewardCards(){
   return (appData.accounts||[]).filter(a=>a.type==='debt');
@@ -792,6 +799,35 @@ function effectiveRewardPct(acctId,category,dateStr){
 }
 function anyRewardsConfigured(){
   return Object.keys(appData.cardRewards||{}).length>0;
+}
+
+// Best-effort mapping from a real (broad) transaction category + merchant
+// name to a specific reward category. Plaid's stored transactions only carry
+// the app's broad budget category (Food/Transport/etc), not fine-grained
+// sub-categories, so this uses merchant-name keywords to split them out.
+// Falls through to the broad category when no keyword matches — imperfect,
+// but covers the common everyday cases (dining vs groceries, gas vs transit).
+function classifyRewardCategory(t){
+  const name=(t.name||'').toLowerCase();
+  const has=(...kws)=>kws.some(k=>name.includes(k));
+  switch(t.category){
+    case'Food':
+      if(has('grocery','groceries','market','safeway','whole foods','trader joe','kroger','costco','ralphs','vons','albertsons','wegmans','publix','aldi','sprouts','food 4 less','winco'))return'Groceries';
+      return'Dining';
+    case'Transport':
+      if(has('chevron','shell','exxon','arco','mobil','76 ','valero','circle k','gas station','chargepoint','tesla supercharger','electrify america','ev charg','evgo'))return'Gas & EV Charging';
+      if(has('marriott','hilton','hyatt','airbnb','vrbo','holiday inn','best western','resort',' inn ','hertz','avis','enterprise rent','budget rent','national car','rental car'))return'Hotels/Rental Cars (Portal)';
+      if(has('airlines','air lines','delta ','united ','southwest','jetblue','alaska air','american air','spirit air','frontier air',' flight'))return'Flights/Vacation Rentals (Portal)';
+      return'Other Travel';
+    case'Shopping':
+      if(has('walgreens','cvs','rite aid','duane reade',' drug'))return'Drug Store';
+      return'Shopping';
+    case'Entertainment':
+      if(has('netflix','hulu','spotify','disney+','disney plus','hbo','max.com','paramount+','peacock','youtube premium','apple tv','audible'))return'Streaming';
+      return'Entertainment';
+    default:
+      return t.category; // Housing, Health & Fitness, Other pass through
+  }
 }
 
 // ── Setup modal ───────────────────────────────────────────────────
@@ -817,10 +853,10 @@ window.openCardRewardsModal=function(){
   openModal('cardRewardsModal');
 };
 function _crRuleHTML(r){
-  r=r||{category:'Food',pct:3,from:'',to:''};
+  r=r||{category:'Dining',pct:3,from:'',to:''};
   return`<div class="cr-rule">
-    <select class="cr-cat">${REWARD_CATS.concat(['Savings']).map(c=>`<option${c===r.category?' selected':''}>${c}</option>`).join('')}</select>
-    <input class="cr-pct" type="number" min="0" step="0.25" value="${r.pct}" title="Cashback %">
+    <select class="cr-cat">${REWARD_CATS.map(c=>`<option${c===r.category?' selected':''}>${c}</option>`).join('')}</select>
+    <input class="cr-pct" type="number" min="0" step="0.25" value="${r.pct}" title="Cashback % or points multiplier">
     <input class="cr-from" type="date" value="${r.from||''}" title="From (optional — rotating category)">
     <input class="cr-to" type="date" value="${r.to||''}" title="To (optional)">
     <button class="cr-del" onclick="this.parentElement.remove()">✕</button>
@@ -851,7 +887,8 @@ window.saveCardRewards=function(){
 };
 
 // ── Best Card lookup ──────────────────────────────────────────────
-let _bestCardCat=localStorage.getItem('bestCardCat')||'Food';
+let _bestCardCat=localStorage.getItem('bestCardCat')||'Dining';
+if(!REWARD_CATS.includes(_bestCardCat))_bestCardCat='Dining'; // stale value from old category list
 window.setBestCardCat=function(cat){
   _bestCardCat=cat;
   localStorage.setItem('bestCardCat',cat);
@@ -892,7 +929,7 @@ function renderMissedRewards(mt){
   (mt||[]).forEach(t=>{
     if(t.type!=='out'||!t.plaidAccountId)return;
     const usedAcct=byPlaidId[t.plaidAccountId];
-    const cat=REWARD_CATS.includes(t.category)?t.category:'Other';
+    const cat=classifyRewardCategory(t);
     const usedPct=(usedAcct&&usedAcct.type==='debt')?(effectiveRewardPct(usedAcct.id,cat,t.date)??0):0;
     let bestPct=0,bestCard=null;
     cards.forEach(c=>{
@@ -903,7 +940,7 @@ function renderMissedRewards(mt){
     const delta=t.amount*(bestPct-usedPct)/100;
     if(delta>0.005){
       missed+=delta;
-      offenders.push({t,delta,bestCard,usedName:usedAcct?usedAcct.name:'unknown',usedPct,bestPct});
+      offenders.push({t,delta,bestCard,cat,usedName:usedAcct?usedAcct.name:'unknown',usedPct,bestPct});
     }
   });
   if(earned===0&&missed===0){card.style.display='none';return;}
@@ -920,7 +957,7 @@ function renderMissedRewards(mt){
         <span class="missed-txn">${o.t.name}</span>
         <span class="missed-delta">−${money(o.delta)}</span>
       </div>
-      <div class="missed-row-sub">${fmtM(o.t.amount)} ${o.t.category} on ${o.usedName} (${o.usedPct}%) — ${o.bestCard?o.bestCard.name+' pays '+o.bestPct+'%':''}</div>
+      <div class="missed-row-sub">${fmtM(o.t.amount)} ${o.cat} on ${o.usedName} (${o.usedPct}%) — ${o.bestCard?o.bestCard.name+' pays '+o.bestPct+'%':''}</div>
     </div>`).join('')}
     ${offenders.length>4?`<div style="font-size:12px;color:var(--muted);padding-top:6px">+ ${offenders.length-4} more this month</div>`:''}`;
 }
