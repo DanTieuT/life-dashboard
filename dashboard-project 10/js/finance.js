@@ -721,25 +721,97 @@ function renderMonthlyTrend(){
   if(lblEl)lblEl.innerHTML=data.map(d=>`<div class="trend-bar-label" style="flex:1;text-align:center;color:${d.isCurrent?'var(--green)':'var(--muted)'}">${d.label}</div>`).join('');
 }
 
-// ── #23: Recurring transactions list ─────────────────────────────
+// ── Subscription detection ──────────────────────────────────────
+// Strips trailing merchant codes Plaid/banks append ("NETFLIX.COM *A1B2C3",
+// "SPOTIFY   #4821", "AMAZON PRIME*7X3K9") so repeat charges from the same
+// merchant group together even when the suffix changes each cycle.
+function _normMerchant(name){
+  return(name||'').toLowerCase()
+    .replace(/[*#][a-z0-9]+$/i,'')
+    .replace(/\s+\d{3,}$/,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+const SUB_FREQS=[
+  {label:'weekly',days:7,tolerance:2,monthly:x=>x*4.33},
+  {label:'monthly',days:30,tolerance:5,monthly:x=>x},
+  {label:'yearly',days:365,tolerance:20,monthly:x=>x/12},
+];
+// Scans real transaction history for merchant+amount+interval patterns that
+// look like subscriptions (2+ charges, consistent amount, regular gap).
+// Unlike the old version, this doesn't depend on the manual "Recurring"
+// checkbox — it works on ordinary Plaid-synced transactions too.
+function detectSubscriptions(){
+  const out=(appData.transactions||[]).filter(t=>t.type==='out');
+  const groups={};
+  out.forEach(t=>{
+    const key=_normMerchant(t.name);
+    if(!key)return;
+    (groups[key]=groups[key]||[]).push(t);
+  });
+  const byPlaidId={};
+  (appData.accounts||[]).forEach(a=>{if(a.plaidAccountId)byPlaidId[a.plaidAccountId]=a;});
+  const results=[];
+  Object.values(groups).forEach(txns=>{
+    if(txns.length<2)return; // need at least 2 charges to see a pattern
+    txns.sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const gaps=[];
+    for(let i=1;i<txns.length;i++)gaps.push((new Date(txns[i].date)-new Date(txns[i-1].date))/86400000);
+    const avgGap=gaps.reduce((s,g)=>s+g,0)/gaps.length;
+    const freq=SUB_FREQS.find(f=>Math.abs(avgGap-f.days)<=f.tolerance);
+    if(!freq)return; // irregular spacing — not a subscription pattern
+    const amounts=txns.map(t=>t.amount);
+    const avgAmt=amounts.reduce((s,a)=>s+a,0)/amounts.length;
+    const maxDrift=Math.max(...amounts.map(a=>Math.abs(a-avgAmt)))/avgAmt;
+    if(maxDrift>0.15)return; // amount varies too much to be a subscription
+    const last=txns[txns.length-1];
+    const acct=byPlaidId[last.plaidAccountId];
+    results.push({
+      name:last.name,category:last.category,amount:last.amount,
+      freq:freq.label,monthlyEquivalent:freq.monthly(last.amount),
+      lastDate:last.date,
+      nextDate:new Date(new Date(last.date+'T12:00:00').getTime()+freq.days*86400000).toLocaleDateString('en-CA'),
+      accountName:acct?acct.name+(acct.mask?' ••'+acct.mask:''):null,
+      occurrences:txns.length,
+    });
+  });
+  // Fold in anything manually flagged "Recurring" in the txn modal that the
+  // pattern detector didn't catch yet (e.g. only 1 charge in history so far).
+  const seen=new Set(results.map(r=>_normMerchant(r.name)));
+  (appData.transactions||[]).filter(t=>t.recurring&&t.type==='out').forEach(t=>{
+    const key=_normMerchant(t.name);
+    if(seen.has(key))return;
+    seen.add(key);
+    const acct=byPlaidId[t.plaidAccountId];
+    const freq=SUB_FREQS.find(f=>f.label===(t.recurrence||'monthly'))||SUB_FREQS[1];
+    results.push({
+      name:t.name,category:t.category,amount:t.amount,
+      freq:freq.label,monthlyEquivalent:freq.monthly(t.amount),
+      lastDate:t.date,nextDate:null,
+      accountName:acct?acct.name+(acct.mask?' ••'+acct.mask:''):null,
+      occurrences:1,
+    });
+  });
+  return results.sort((a,b)=>b.monthlyEquivalent-a.monthlyEquivalent);
+}
 function renderRecurringTxns(){
   const card=document.getElementById('recurringTxnCard');
   const list=document.getElementById('recurringTxnList');
   if(!card||!list)return;
-  const recurring=(appData.transactions||[]).filter(t=>t.recurring);
-  // Deduplicate by name+category
-  const seen=new Set();
-  const unique=recurring.filter(t=>{const k=t.name+'|'+t.category;if(seen.has(k))return false;seen.add(k);return true;});
-  if(!unique.length){card.style.display='none';return;}
+  const subs=detectSubscriptions();
+  if(!subs.length){card.style.display='none';return;}
   card.style.display='';
-  list.innerHTML=unique.map(t=>`<div class="recur-txn-row">
-    <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>
+  const totalMonthly=subs.reduce((s,x)=>s+x.monthlyEquivalent,0);
+  const totalEl=document.getElementById('subTotalLine');
+  if(totalEl)totalEl.textContent=`~${fmtM(totalMonthly)}/mo across ${subs.length} subscription${subs.length!==1?'s':''}`;
+  list.innerHTML=subs.map(s=>`<div class="recur-txn-row">
+    <div class="txn-icon">${CATS_EMOJI[s.category]||'📦'}</div>
     <div style="flex:1;min-width:0">
-      <div class="txn-name">${t.name}</div>
-      <div class="txn-cat">${t.category}</div>
+      <div class="txn-name">${s.name}</div>
+      <div class="txn-cat">${s.accountName?s.accountName+' · ':''}${s.nextDate?'next '+fmtNWDate(s.nextDate):'seen once'}</div>
     </div>
-    <span class="recur-freq-badge">${t.recurrence||'monthly'}</span>
-    <span class="txn-amount ${t.type}" style="margin-left:8px">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>
+    <span class="recur-freq-badge">${s.freq}</span>
+    <span class="txn-amount out" style="margin-left:8px">-${fmtM(s.amount)}</span>
   </div>`).join('');
 }
 
@@ -750,6 +822,8 @@ function renderTxnListFiltered(mt){
   const txnEl=document.getElementById('txnList');
   if(!txnEl)return;
   if(!window._dataLoaded){txnEl.innerHTML=window.skeletonHTML;return;}
+  const byPlaidId={};
+  (appData.accounts||[]).forEach(a=>{if(a.plaidAccountId)byPlaidId[a.plaidAccountId]=a;});
   const q=(searchEl?.value||'').trim().toLowerCase();
   let sorted=[...mt].sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(q)sorted=sorted.filter(t=>(t.name||'').toLowerCase().includes(q)||(t.category||'').toLowerCase().includes(q));
@@ -757,15 +831,19 @@ function renderTxnListFiltered(mt){
   if(countEl)countEl.textContent=q?`${shown.length} result${shown.length!==1?'s':''}`:'';
   txnEl.innerHTML=!shown.length
     ?`<div class="empty-state" style="padding:30px">${q?'No matching transactions':'No transactions this month'}</div>`
-    :shown.map(t=>`<div class="txn-item" onclick="openEditTxnModal('${t.id}')">
+    :shown.map(t=>{
+      const acct=byPlaidId[t.plaidAccountId];
+      const acctLabel=acct?acct.name+(acct.mask?' ••'+acct.mask:''):'';
+      return`<div class="txn-item" onclick="openEditTxnModal('${t.id}')">
       <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>
       <div class="txn-name-col">
         <div class="txn-name">${t.name}${t.recurring?' <span style="font-size:10px;color:var(--blue)">↻</span>':''}</div>
-        <div class="txn-cat">${t.category||'Other'} · ${t.date}</div>
+        <div class="txn-cat">${t.category||'Other'} · ${t.date}${acctLabel?' · '+acctLabel:''}</div>
       </div>
       <span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>
       <button class="txn-del" onclick="event.stopPropagation();deleteTxn('${t.id}')">✕</button>
-    </div>`).join('');
+    </div>`;
+    }).join('');
 }
 
 // ── CARD REWARDS ──────────────────────────────────────────────────

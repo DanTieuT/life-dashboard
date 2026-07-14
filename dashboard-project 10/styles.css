@@ -1106,3 +1106,6 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 .missed-txn{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .missed-delta{color:var(--red);font-weight:600;flex-shrink:0}
 .missed-row-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── SUBSCRIPTIONS ───────────────────────────────────────────────── */
+.sub-total{font-size:13px;color:var(--sub);margin-bottom:10px}

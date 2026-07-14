@@ -476,12 +476,10 @@
         <div style="display:flex;justify-content:space-around" id="trendLabels"></div>
       </div>
 
-      <!-- Recurring Transactions (#23) -->
+      <!-- Subscriptions — auto-detected from recurring merchant/amount/interval patterns -->
       <div class="fin-card" id="recurringTxnCard" style="display:none">
-        <div class="fin-section-title">
-          Recurring
-          <button onclick="openTxnModal()" style="background:none;border:none;color:var(--green);font-size:13px;cursor:pointer;font-family:inherit">+ Add</button>
-        </div>
+        <div class="fin-section-title" style="margin-bottom:2px">Subscriptions</div>
+        <div class="sub-total" id="subTotalLine"></div>
         <div id="recurringTxnList"></div>
       </div>
 
