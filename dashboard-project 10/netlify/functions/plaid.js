@@ -128,6 +128,10 @@ module.exports = {
     language: 'en',
   }),
   exchangePublicToken: (publicToken) => call('/item/public_token/exchange', { public_token: publicToken }),
+  // Fully revokes the bank connection on Plaid's side. Call this once no
+  // local accounts reference the item anymore — otherwise the connection
+  // (and Plaid's per-item billing) lingers even after removing accounts locally.
+  removeItem: (accessToken) => call('/item/remove', { access_token: accessToken }),
   // /accounts/get returns balances included with the Transactions product —
   // avoids needing the separate (and unnecessary here) real-time Balance product.
   getBalances: (accessToken) => call('/accounts/get', { access_token: accessToken }),

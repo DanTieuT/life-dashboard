@@ -874,6 +874,7 @@
       <input class="form-input" id="accountBalance" type="number" placeholder="0">
     </div>
     <div class="modal-actions">
+      <button class="btn-cancel" id="accountDeleteBtn" style="display:none;margin-right:auto;color:#ff453a" onclick="deleteAccount(document.getElementById('accountEditId').value)">Remove</button>
       <button class="btn-cancel" onclick="closeModal('accountModal')">Cancel</button>
       <button class="btn-save" onclick="saveAccount()">Save</button>
     </div>

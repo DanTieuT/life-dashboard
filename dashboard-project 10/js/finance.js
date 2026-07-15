@@ -316,6 +316,7 @@ window.openAccountModal=function(id){
   document.getElementById('accountName').value=a?a.name:'';
   document.getElementById('accountType').value=a?a.type:'savings';
   document.getElementById('accountBalance').value=a?a.balance:'';
+  document.getElementById('accountDeleteBtn').style.display=a?'':'none';
   openModal('accountModal');
 };
 window.saveAccount=function(){
@@ -333,9 +334,29 @@ window.saveAccount=function(){
   }
   saveData();closeModal('accountModal');renderFinanceTab();renderGoals();renderNWSparkline();toast('✓ Account saved');
 };
-window.deleteAccount=function(id){
-  appData.accounts=(appData.accounts||[]).filter(a=>a.id!==id);
-  saveData();renderFinanceTab();renderGoals();renderNWSparkline();toast('Account removed');
+window.deleteAccount=async function(id){
+  const a=(appData.accounts||[]).find(x=>x.id===id);
+  if(!a)return;
+  if(!confirm(`Remove "${a.name}"?${a.source==='plaid'?' This will disconnect it from the bank if no other linked accounts share the connection.':''}`))return;
+
+  if(a.source==='plaid'){
+    try{
+      const res=await fetch('/.netlify/functions/plaid-link?action=unlink',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({accountId:id}),
+      });
+      const out=await res.json();
+      if(!res.ok||out.error)throw new Error(out.error||'Unlink failed');
+      appData.accounts=(appData.accounts||[]).filter(x=>x.id!==id);
+    }catch(e){
+      toast('✗ Failed to remove account: '+e.message);
+      return;
+    }
+  } else {
+    appData.accounts=(appData.accounts||[]).filter(x=>x.id!==id);
+  }
+  saveData();closeModal('accountModal');renderFinanceTab();renderGoals();renderNWSparkline();toast('Account removed');
 };
 // ── GOALS ─────────────────────────────────────────────────────────
 const GOAL_COLORS=['#30d158','#0a84ff','#ff9f0a','#bf5af2','#ff453a','#64d2ff','#ff6eb4','#30d158'];
@@ -503,7 +524,9 @@ function trackNetWorthHistory(){
   const liabilities=accounts.filter(a=>a.type==='debt').reduce((s,a)=>s+a.balance,0);
   const nw=assets-liabilities;
   const last=appData.netWorthHistory[appData.netWorthHistory.length-1];
-  if(!last||last.date!==today){
+  if(last&&last.date===today){
+    last.netWorth=nw; // keep today's entry live as balances/accounts change
+  } else {
     appData.netWorthHistory.push({date:today,netWorth:nw});
     if(appData.netWorthHistory.length>365)appData.netWorthHistory=appData.netWorthHistory.slice(-365);
   }

@@ -3,6 +3,10 @@
 //   POST /plaid-link?action=exchange    → body {public_token, institution}
 //     exchanges for an access_token (stored server-side in Firestore),
 //     pulls the item's accounts, and upserts them into appData.accounts.
+//   POST /plaid-link?action=unlink      → body {accountId}
+//     removes that one account. If it was the last account on its Plaid
+//     item, also revokes the item on Plaid's side and deletes the stored
+//     access token, so a dead connection doesn't linger or keep billing.
 // No-ops with a clear error until PLAID_CLIENT_ID / PLAID_SECRET are set.
 const admin = require('firebase-admin');
 const plaid = require('./plaid.js');
@@ -87,6 +91,41 @@ exports.handler = async (event) => {
       }
       await ref.update({ accounts });
       return json(200, { ok: true, added, total: bal.accounts.length });
+    }
+
+    if (action === 'unlink' && event.httpMethod === 'POST') {
+      let body;
+      try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
+      if (!body.accountId) return json(400, { error: 'accountId required' });
+
+      initFirebase();
+      const db = admin.firestore();
+      const ref = db.doc(`users/${USER_UID}/data/main`);
+      const snap = await ref.get();
+      const data = snap.exists ? snap.data() : {};
+      const accounts = data.accounts || [];
+
+      const target = accounts.find(a => a.id === body.accountId);
+      if (!target) return json(404, { error: 'Account not found' });
+
+      const remaining = accounts.filter(a => a.id !== body.accountId);
+      await ref.update({ accounts: remaining });
+
+      let itemRemoved = false;
+      if (target.plaidItemId) {
+        const stillUsed = remaining.some(a => a.plaidItemId === target.plaidItemId);
+        if (!stillUsed) {
+          const itemRef = db.doc(`users/${USER_UID}/plaidItems/${target.plaidItemId}`);
+          const itemSnap = await itemRef.get();
+          if (itemSnap.exists) {
+            try { await plaid.removeItem(itemSnap.data().accessToken); }
+            catch (e) { console.error('Plaid item/remove failed (continuing to delete local record):', e.message); }
+            await itemRef.delete();
+            itemRemoved = true;
+          }
+        }
+      }
+      return json(200, { ok: true, itemRemoved });
     }
 
     return json(400, { error: 'Unknown action' });
