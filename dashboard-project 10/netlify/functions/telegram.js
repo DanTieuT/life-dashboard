@@ -47,6 +47,70 @@ function sendMessage(chatId, text) {
   return post('api.telegram.org', `/bot${token}/sendMessage`, { chat_id: chatId, text });
 }
 
+// Non-anonymous so poll_answer webhooks tell us which option was picked —
+// fine in a 1:1 chat since there's only ever one voter.
+function sendPoll(chatId, question, options) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  return post('api.telegram.org', `/bot${token}/sendPoll`, {
+    chat_id: chatId, question, options, is_anonymous: false, allows_multiple_answers: false,
+  });
+}
+
+// Detects the lettered-clarifying-question format the system prompt asks Claude
+// to use ("Which one?\nA) ...\nB) ...") and pulls out poll-ready pieces.
+// Returns null if the reply isn't shaped like a lettered list, or doesn't fit
+// Telegram's poll constraints (2-10 options, question <=300 chars, option <=100 chars).
+function extractPollFromReply(text) {
+  const lines = text.split('\n');
+  const optionRe = /^([A-Z])\)\s*(.+)$/;
+  const firstOptIdx = lines.findIndex(l => optionRe.test(l.trim()));
+  if (firstOptIdx < 1) return null; // need a question line before the first option
+
+  const letters = [], options = [];
+  let i = firstOptIdx;
+  for (; i < lines.length; i++) {
+    const m = lines[i].trim().match(optionRe);
+    if (!m) break;
+    letters.push(m[1]);
+    options.push(m[2].trim());
+  }
+  if (options.length < 2 || options.length > 10) return null;
+  if (options.some(o => !o || o.length > 100)) return null;
+
+  const preLines = lines.slice(0, firstOptIdx).map(l => l.trim()).filter(Boolean);
+  if (!preLines.length) return null;
+  const question = preLines[preLines.length - 1];
+  if (question.length > 300) return null;
+
+  return {
+    introText: preLines.slice(0, -1).join('\n'),
+    question, options, letters,
+    trailing: lines.slice(i).map(l => l.trim()).filter(Boolean).join('\n'),
+  };
+}
+
+// Poll answers arrive as a separate webhook event, not a text message — look
+// up what we stashed when the poll was sent and resolve it back into the text
+// Dan effectively "typed" (e.g. "B) Weekly"), so it can flow through the exact
+// same message-handling path below.
+async function resolvePollAnswer(db, pollAnswer) {
+  const optionIds = pollAnswer.option_ids || [];
+  if (!optionIds.length) return null; // vote retracted, nothing to do
+  try {
+    const pollRef = db.doc(`telegramPolls/${pollAnswer.poll_id}`);
+    const snap = await pollRef.get();
+    if (!snap.exists) return null;
+    const { chatId, options, letters } = snap.data();
+    const idx = optionIds[0];
+    if (idx == null || !options[idx]) return null;
+    await pollRef.delete(); // one-shot
+    return { chat: { id: Number(chatId) }, text: `${letters[idx]}) ${options[idx]}` };
+  } catch (e) {
+    console.error('resolvePollAnswer error:', e.message);
+    return null;
+  }
+}
+
 function downloadTelegramFile(fileId) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   return new Promise((resolve) => {
@@ -848,7 +912,13 @@ exports.handler = async (event) => {
   let update;
   try { update = JSON.parse(event.body); } catch { return { statusCode: 200, body: 'OK' }; }
 
-  const message = update.message;
+  initFirebase();
+  const db = admin.firestore();
+
+  let message = update.message;
+  if (!message && update.poll_answer) {
+    message = await resolvePollAnswer(db, update.poll_answer);
+  }
   const isVoice = !!(message?.voice || message?.audio);
   if (!message || (!message.text && !message.photo && !message.document && !isVoice)) return { statusCode: 200, body: 'OK' };
 
@@ -883,10 +953,6 @@ exports.handler = async (event) => {
   }
 
   if (chatId !== allowedChatId) return { statusCode: 200, body: 'OK' };
-
-  // Load Firebase data
-  initFirebase();
-  const db = admin.firestore();
 
   const userUid = 'aqzJe5gq4IVYdKmUIW0pNJGL2ML2';
 
@@ -1034,8 +1100,25 @@ exports.handler = async (event) => {
   if (history.length > 40) history = history.slice(-40);
   try { await historyRef.set({ messages: history }); } catch {}
 
-  // Send reply to Telegram
-  if (reply && reply.trim()) await sendMessage(chatId, reply);
+  // Send reply to Telegram — lettered clarifying questions go out as a real
+  // Telegram poll instead of plain text, so Dan can tap an answer.
+  if (reply && reply.trim()) {
+    const poll = extractPollFromReply(reply);
+    let sentAsPoll = false;
+    if (poll) {
+      if (poll.introText) await sendMessage(chatId, poll.introText);
+      const res = await sendPoll(chatId, poll.question, poll.options);
+      const pollId = res?.result?.poll?.id;
+      if (pollId) {
+        sentAsPoll = true;
+        try {
+          await db.doc(`telegramPolls/${pollId}`).set({ chatId, options: poll.options, letters: poll.letters, createdAt: Date.now() });
+        } catch (e) { console.error('save pending poll error:', e.message); }
+        if (poll.trailing) await sendMessage(chatId, poll.trailing);
+      }
+    }
+    if (!sentAsPoll) await sendMessage(chatId, reply);
+  }
   if (spendingAlert) await sendMessage(chatId, spendingAlert);
 
   // Voice replies (#25): if the incoming message was a voice note, also send the
