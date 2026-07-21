@@ -557,7 +557,7 @@ AVAILABLE ACTIONS:
 {"type":"delete_task","id":"<task id>","name":"<exact task name from list>"}
 {"type":"log_habit","id":"<habit id>","name":"<habit name>"}
 {"type":"add_event","name":"...","time":"HH:MM","date":"YYYY-MM-DD"}
-{"type":"add_calendar_event","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","all_day":false,"location":"...","note":"...","recurrence":"RRULE:FREQ=WEEKLY"}
+{"type":"add_calendar_event","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","all_day":false,"location":"...","note":"...","recurrence":"RRULE:FREQ=WEEKLY","calendar":"<one of: Shared D+J, Dan's Calendar, Dan's Work Calendar, Julia's Calendar, Home, Work, Personal Private>"}
 {"type":"update_calendar_event","event_id":"<id from calendar>","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","location":"...","note":"..."}
 {"type":"delete_calendar_event","event_id":"<id from calendar>","title":"<event title for confirmation>"}
 {"type":"add_transaction","name":"...","amount":50,"category":"Food","transactionType":"out"}
@@ -592,7 +592,7 @@ RULES:
   - DON'T save: one-off tasks, things already in the calendar, things already in memory, generic small talk
   - Keep each save_memory entry concise — one clear fact per entry
 - Use save_note for structured reference info like routines, shopping lists, schedules, or multi-line notes
-- When given an image of a WORK SCHEDULE or ROSTER: extract every shift and create one add_calendar_event action per shift (title="Work", date=YYYY-MM-DD, time=HH:MM, end_time=HH:MM). ALSO save_note with filename "work-schedule". The shifts MUST go into the calendar.
+- When given an image of a WORK SCHEDULE or ROSTER: extract every shift and create one add_calendar_event action per shift (title="Work", date=YYYY-MM-DD, time=HH:MM, end_time=HH:MM, calendar="Dan's Work Calendar"). ALSO save_note with filename "work-schedule". The shifts MUST go into the calendar.
 - CALENDAR EVENT RULES:
   - When Dan mentions an event he wants to add, ask: "Want me to add that to your calendar?"
   - If yes, or if he explicitly says "add to calendar" / "put it on my calendar", use add_calendar_event
@@ -601,6 +601,9 @@ RULES:
   - Leave recurrence out (or null) for one-time events
   - time and end_time use 24h HH:MM format; omit both for all_day events
   - location and note are optional — include if Dan provides them
+  - WHICH CALENDAR: if Dan already said which calendar (e.g. "add to my work calendar", "put it on Julia's calendar", "on the shared calendar") or it's a per-shift entry from a WORK SCHEDULE/ROSTER image (always "Dan's Work Calendar"), use that — don't ask. Otherwise ask as a lettered list before creating:
+    "Which calendar?\nA) Shared D+J\nB) Dan's Calendar\nC) Dan's Work Calendar\nD) Julia's Calendar\nE) Home\nF) Work\nG) Personal Private"
+    Omit the calendar field entirely if Dan doesn't answer / skips — it defaults to Shared D+J.
   - To RESCHEDULE or EDIT an event, use update_calendar_event with the event_id from the calendar list. Only include fields that are changing.
   - To DELETE an event, use delete_calendar_event with the event_id. Always confirm "Want me to delete [event]?" before deleting.
 - ALWAYS ask for missing required info before creating anything — do not guess:
@@ -987,8 +990,9 @@ exports.handler = async (event) => {
             location: action.location || null,
             note: action.note || null,
             recurrence: action.recurrence || null,
+            calendar: action.calendar || null,
           });
-          console.log('Calendar event created:', action.title);
+          console.log('Calendar event created:', action.title, '->', action.calendar || 'Shared D+J (default)');
         } catch (e) {
           console.error('Calendar createEvent error:', e.message);
         }

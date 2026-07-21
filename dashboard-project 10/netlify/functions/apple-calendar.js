@@ -253,7 +253,7 @@ async function getUpcomingEvents(days = 14) {
   return getEventsForRange(windowStart, windowStart + days * 86400000);
 }
 
-async function createEvent({ title, date, time, endDate, endTime, allDay = false, location, note, recurrence }) {
+async function createEvent({ title, date, time, endDate, endTime, allDay = false, location, note, recurrence, calendar }) {
   await ensureAuth();
   const uid = `${randomUUID()}@dashboard`;
   const startMs = allDay
@@ -261,8 +261,11 @@ async function createEvent({ title, date, time, endDate, endTime, allDay = false
     : localToUtcMs(date, time || '09:00', TZ);
   const endMs = allDay ? startMs : localToUtcMs(endDate || date, endTime || time || '10:00', TZ);
 
+  const target = (calendar && _readCalendars.find(c => (typeof c.displayName === 'string' ? c.displayName : '') === calendar))
+    || _writeCalendar;
+
   const ics = buildICS({ uid, title, startMs, endMs, allDay, location, note, recurrence });
-  const res = await _client.createCalendarObject({ calendar: _writeCalendar, iCalString: ics, filename: `${uid}.ics` });
+  const res = await _client.createCalendarObject({ calendar: target, iCalString: ics, filename: `${uid}.ics` });
   if (!res.ok) throw new Error(`Apple Calendar create failed: HTTP ${res.status}`);
   return { uuid: uid, title, all_day: allDay, start_at: startMs, end_at: endMs, location: location || null, note: note || null };
 }
