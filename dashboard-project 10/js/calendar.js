@@ -1,4 +1,6 @@
 // ── CALENDAR ─────────────────────────────────────────────────────
+// Indices 0-7: local-event color picker swatches (see openCalEventModal).
+// Indices 8+: fixed per-Apple-calendar colors (see CALENDAR_COLOR_IDX below).
 const CAL_COLORS=[
   {bg:'#3d7eff',text:'#fff'},
   {bg:'#30d158',text:'#000'},
@@ -8,7 +10,18 @@ const CAL_COLORS=[
   {bg:'#ff9a3c',text:'#000'},
   {bg:'#4ecdc4',text:'#000'},
   {bg:'#ff6eb4',text:'#fff'},
+  {bg:'#64d2ff',text:'#000'}, // 8  Home — light blue
+  {bg:'#32d74b',text:'#000'}, // 9  Work — green
+  {bg:'#ff9500',text:'#000'}, // 10 Shared D+J — orange
+  {bg:'#ffb6d9',text:'#000'}, // 11 Personal Private — light pink
+  {bg:'#0a84ff',text:'#fff'}, // 12 Dan's Calendar — blue
+  {bg:'#ff375f',text:'#fff'}, // 13 Julia's Calendar — pink
+  {bg:'#8e8e93',text:'#fff'}, // 14 Dan's Work Calendar — grey
 ];
+const CALENDAR_COLOR_IDX={
+  'Home':8, 'Work':9, 'Shared D+J':10, 'Personal Private':11,
+  'Dan’s Calendar':12, 'Julia’s Calendar':13, 'Dan’s Work Calendar':14,
+};
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let calEditId=null;
 let calSyncing=false;
@@ -173,8 +186,10 @@ function renderCalendarGrid(){
   });
 }
 
-// Assign a consistent color to synced calendar events based on title keywords
+// Color synced calendar events by their source Apple calendar; falls back to the
+// old title-keyword heuristic if the event's calendar isn't in the fixed color map.
 function calColorIdx(e){
+  if(e.calendarName&&CALENDAR_COLOR_IDX[e.calendarName]!=null) return CALENDAR_COLOR_IDX[e.calendarName];
   const t=(e.title||'').toLowerCase();
   if(t.includes('work')||t.includes('office')||t.includes('rdo')||t.includes('timesheet')) return 0; // blue
   if(t.includes('gym')||t.includes('tennis')||t.includes('barre')||t.includes('workout')) return 1; // green
