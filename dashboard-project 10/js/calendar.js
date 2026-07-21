@@ -168,9 +168,10 @@ function renderCalendarGrid(){
     singles.slice(0,maxVis).forEach(e=>{
       const c=CAL_COLORS[e.colorIdx||0];
       const pill=document.createElement('div');
-      pill.className='cal-pill';
-      pill.style.cssText=`background:${c.bg};color:${c.text};`;
-      pill.textContent=(e.time?e.time+' ':'')+e.name;
+      pill.className='cal-pill single';
+      pill.innerHTML=`<span class="cal-dot" style="background:${c.bg}"></span><span class="cal-pill-name"></span>${e.time?`<span class="cal-pill-time"></span>`:''}`;
+      pill.querySelector('.cal-pill-name').textContent=e.name;
+      if(e.time)pill.querySelector('.cal-pill-time').textContent=e.time;
       pill.onclick=ev=>{ev.stopPropagation();if(e.source==='local')openCalEventModal(ds,e.id);};
       evtWrap.appendChild(pill);
     });
