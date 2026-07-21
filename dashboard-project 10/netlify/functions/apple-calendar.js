@@ -3,8 +3,7 @@
 // Security → App-Specific Passwords), NOT the real Apple ID password:
 //   APPLE_ID=you@icloud.com
 //   APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
-//   APPLE_CALENDAR_NAME=Home   (optional — display name of the calendar to use;
-//                                defaults to the first writable calendar found)
+//   APPLE_CALENDAR_NAME=Shared D+J   (optional override for the write-target calendar below)
 const { DAVClient } = require('tsdav');
 const ICAL = require('ical.js');
 const { randomUUID } = require('crypto');
@@ -12,9 +11,18 @@ const { randomUUID } = require('crypto');
 const SERVER_URL = 'https://caldav.icloud.com';
 const TZ = 'America/Los_Angeles';
 
+// Calendars pulled into the dashboard (today's schedule, JARVIS context, calendar tab).
+// Julia's Calendar events are attributed to her by source calendar, not title guessing —
+// the other three can hold either person's events, so those still fall back to keywords.
+const READ_CALENDAR_NAMES = ['Shared D+J', 'Dan’s Calendar', 'Dan’s Work Calendar', 'Julia’s Calendar'];
+const JULIA_CALENDAR_NAME = 'Julia’s Calendar';
+// Where JARVIS writes new events (add_calendar_event) — override with APPLE_CALENDAR_NAME.
+const WRITE_CALENDAR_NAME = process.env.APPLE_CALENDAR_NAME || 'Shared D+J';
+
 // Module-level session cache (survives warm invocations)
 let _client = null;
-let _calendar = null;
+let _writeCalendar = null;
+let _readCalendars = null;
 
 async function authenticate() {
   const username = process.env.APPLE_ID;
@@ -31,24 +39,37 @@ async function authenticate() {
 
   const calendars = await client.fetchCalendars();
   const writable = calendars.filter(c => (c.components || []).includes('VEVENT'));
-  const wantName = process.env.APPLE_CALENDAR_NAME;
-  const calendar = (wantName && writable.find(c => (typeof c.displayName === 'string' ? c.displayName : '') === wantName))
-    || writable[0];
-  if (!calendar) throw new Error('No writable Apple Calendar found on this account');
+  const nameOf = c => (typeof c.displayName === 'string' ? c.displayName : '');
+
+  const writeCalendar = writable.find(c => nameOf(c) === WRITE_CALENDAR_NAME) || writable[0];
+  if (!writeCalendar) throw new Error('No writable Apple Calendar found on this account');
+
+  const readCalendars = READ_CALENDAR_NAMES
+    .map(name => writable.find(c => nameOf(c) === name))
+    .filter(Boolean);
+  if (!readCalendars.length) readCalendars.push(writeCalendar);
+  if (!readCalendars.some(c => c.url === writeCalendar.url)) readCalendars.push(writeCalendar);
 
   _client = client;
-  _calendar = calendar;
+  _writeCalendar = writeCalendar;
+  _readCalendars = readCalendars;
 }
 
 async function ensureAuth() {
-  if (_client && _calendar) return;
+  if (_client && _writeCalendar) return;
   await authenticate();
 }
 
 async function getCalendars() {
   await ensureAuth();
   const calendars = await _client.fetchCalendars();
-  return calendars.map(c => ({ id: c.url, name: c.displayName }));
+  return calendars.map(c => ({
+    id: c.url,
+    name: typeof c.displayName === 'string' ? c.displayName : '',
+    components: c.components || [],
+    write: c.url === _writeCalendar.url,
+    read: _readCalendars.some(rc => rc.url === c.url),
+  }));
 }
 
 // ── ICS parsing/building ────────────────────────────────────────────
@@ -65,7 +86,7 @@ function parseICS(icsText) {
 // Expand a (possibly recurring) VEVENT into concrete occurrences inside [windowStart, windowEnd].
 // Does not special-case modified/cancelled recurrence instances (EXDATE/RECURRENCE-ID) —
 // same limitation the old TimeTree rrule-based expansion had.
-function expandICALEvent(icalEvent, windowStart, windowEnd) {
+function expandICALEvent(icalEvent, windowStart, windowEnd, calendarName) {
   const results = [];
   try {
     const allDay = icalEvent.startDate.isDate;
@@ -77,6 +98,7 @@ function expandICALEvent(icalEvent, windowStart, windowEnd) {
       all_day: allDay,
       location: icalEvent.location || null,
       note: icalEvent.description || null,
+      calendarName: calendarName || null,
     };
 
     const withLabels = (startMs, endMs) => ({
@@ -160,13 +182,13 @@ function buildICS({ uid, title, startMs, endMs, allDay, location, note, recurren
 }
 
 function calendarObjectUrl(uid) {
-  const base = _calendar.url.endsWith('/') ? _calendar.url : _calendar.url + '/';
+  const base = _writeCalendar.url.endsWith('/') ? _writeCalendar.url : _writeCalendar.url + '/';
   return `${base}${uid}.ics`;
 }
 
 async function fetchObjectByUrl(url) {
   try {
-    const objs = await _client.fetchCalendarObjects({ calendar: _calendar, objectUrls: [url] });
+    const objs = await _client.fetchCalendarObjects({ calendar: _writeCalendar, objectUrls: [url] });
     return objs.find(o => o.data) || null;
   } catch {
     return null;
@@ -174,16 +196,19 @@ async function fetchObjectByUrl(url) {
 }
 
 // Wide-window fallback for events we didn't create ourselves (so the UID-as-filename
-// shortcut in calendarObjectUrl() doesn't apply) — e.g. events added directly on the phone.
+// shortcut in calendarObjectUrl() doesn't apply) — e.g. events added directly on the phone,
+// or ones living on a read calendar other than the write target (Julia's, Dan's Work, etc).
 async function findObjectByUid(uid) {
   const now = Date.now();
-  const objects = await _client.fetchCalendarObjects({
-    calendar: _calendar,
-    timeRange: { start: new Date(now - 400 * 86400000).toISOString(), end: new Date(now + 400 * 86400000).toISOString() },
-  });
-  for (const obj of objects) {
-    if (!obj.data) continue;
-    if (parseICS(obj.data).some(v => v.uid === uid)) return obj;
+  for (const calendar of _readCalendars) {
+    const objects = await _client.fetchCalendarObjects({
+      calendar,
+      timeRange: { start: new Date(now - 400 * 86400000).toISOString(), end: new Date(now + 400 * 86400000).toISOString() },
+    });
+    for (const obj of objects) {
+      if (!obj.data) continue;
+      if (parseICS(obj.data).some(v => v.uid === uid)) return obj;
+    }
   }
   return null;
 }
@@ -197,21 +222,23 @@ async function resolveObjectForUid(uid) {
 // ── Public API (mirrors the old timetree.js surface) ────────────────
 async function getEventsForRange(startMs, endMs) {
   await ensureAuth();
-  try {
-    const objects = await _client.fetchCalendarObjects({
-      calendar: _calendar,
-      timeRange: { start: new Date(startMs).toISOString(), end: new Date(endMs).toISOString() },
-    });
-    const result = [];
-    for (const obj of objects) {
-      if (!obj.data) continue;
-      for (const ve of parseICS(obj.data)) result.push(...expandICALEvent(ve, startMs, endMs));
+  const result = [];
+  for (const calendar of _readCalendars) {
+    const calendarName = typeof calendar.displayName === 'string' ? calendar.displayName : '';
+    try {
+      const objects = await _client.fetchCalendarObjects({
+        calendar,
+        timeRange: { start: new Date(startMs).toISOString(), end: new Date(endMs).toISOString() },
+      });
+      for (const obj of objects) {
+        if (!obj.data) continue;
+        for (const ve of parseICS(obj.data)) result.push(...expandICALEvent(ve, startMs, endMs, calendarName));
+      }
+    } catch (e) {
+      console.error(`Apple Calendar getEventsForRange error (${calendarName}):`, e.message);
     }
-    return result.sort((a, b) => a.start_at - b.start_at);
-  } catch (e) {
-    console.error('Apple Calendar getEventsForRange error:', e.message);
-    return [];
   }
+  return result.sort((a, b) => a.start_at - b.start_at);
 }
 
 async function getUpcomingEvents(days = 14) {
@@ -229,7 +256,7 @@ async function createEvent({ title, date, time, endDate, endTime, allDay = false
   const endMs = allDay ? startMs : localToUtcMs(endDate || date, endTime || time || '10:00', TZ);
 
   const ics = buildICS({ uid, title, startMs, endMs, allDay, location, note, recurrence });
-  const res = await _client.createCalendarObject({ calendar: _calendar, iCalString: ics, filename: `${uid}.ics` });
+  const res = await _client.createCalendarObject({ calendar: _writeCalendar, iCalString: ics, filename: `${uid}.ics` });
   if (!res.ok) throw new Error(`Apple Calendar create failed: HTTP ${res.status}`);
   return { uuid: uid, title, all_day: allDay, start_at: startMs, end_at: endMs, location: location || null, note: note || null };
 }
@@ -277,11 +304,14 @@ async function deleteEvent(eventUuid) {
   if (!res.ok && res.status !== 404) throw new Error(`Apple Calendar delete failed: HTTP ${res.status}`);
 }
 
-// ── Dan vs. Julia split (same title-keyword heuristic as the old TimeTree module) ──
+// ── Dan vs. Julia split — trust the source calendar first, fall back to
+// title keywords for the shared/ambiguous calendars (same heuristic the old
+// TimeTree module used, since Shared D+J and Dan's calendars can hold either person's events) ──
 const DAN_TITLE_KEYWORDS = ['dan', 'office', 'timesheet', 'rdo'];
 const JULIA_TITLE_KEYWORDS = ['julia', 'nails', 'orthodontist', 'clinic', 'earrings', 'suki'];
 
 function isDanEvent(e) {
+  if (e.calendarName === JULIA_CALENDAR_NAME) return false;
   const title = (e.title || '').toLowerCase();
   if (DAN_TITLE_KEYWORDS.some(k => title.includes(k))) return true;
   if (JULIA_TITLE_KEYWORDS.some(k => title.includes(k))) return false;

@@ -15,6 +15,7 @@ let calSyncing=false;
 window.showJuliaEvents=localStorage.getItem('showJuliaEvents')==='1'; // read by renderTodaySchedule (dashboard.js)
 
 function isJuliaEvent(e){
+  if(e.calendarName==='Julia’s Calendar')return true;
   const t=(e.title||'').toLowerCase();
   if(['julia','nails','orthodontist','clinic','earrings','suki'].some(k=>t.includes(k)))return true;
   if(['dan','office','timesheet','rdo'].some(k=>t.includes(k)))return false;

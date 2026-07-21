@@ -47,6 +47,7 @@ exports.handler = async () => {
         time: e.all_day ? '' : fmtTime(e.start_at),
         endTime: e.all_day ? '' : fmtTime(e.end_at),
         location: e.location || null,
+        calendarName: e.calendarName || null,
         startMs: e.start_at,
       };
     });
