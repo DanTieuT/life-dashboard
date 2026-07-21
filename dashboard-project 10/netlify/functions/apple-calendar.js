@@ -157,9 +157,21 @@ function localToUtcMs(dateStr, timeStr, tz) {
   return utcMs;
 }
 
+// UTC "Z" timestamp — only for DTSTAMP (creation metadata), never for the
+// event's own start/end, or Apple Calendar tags the event "GMT" underneath
+// the time since it's not tied to a named timezone.
 function toICALDateTime(ms) {
   const d = new Date(ms);
   return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+}
+// Local wall-clock time in `tz`, no Z/offset — paired with DTSTART/DTEND;TZID=...
+function toICALLocalDateTime(ms, tz) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).formatToParts(new Date(ms));
+  const get = (type) => parts.find(p => p.type === type).value;
+  return `${get('year')}${get('month')}${get('day')}T${get('hour') === '24' ? '00' : get('hour')}${get('minute')}${get('second')}`;
 }
 function toICALDateOnly(ms) {
   const d = new Date(ms);
@@ -169,6 +181,19 @@ function icsEscape(s) {
   return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 }
 
+// Minimal current-era VTIMEZONE for America/Los_Angeles (post-2007 US DST rules —
+// matches the tail of what Apple's own client embeds). Required alongside any
+// DTSTART/DTEND;TZID=America/Los_Angeles so the event isn't shown as a bare
+// UTC/GMT time.
+const VTIMEZONE_PT = [
+  'BEGIN:VTIMEZONE', 'TZID:America/Los_Angeles',
+  'BEGIN:DAYLIGHT', 'DTSTART:20070311T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+  'TZNAME:PDT', 'TZOFFSETFROM:-0800', 'TZOFFSETTO:-0700', 'END:DAYLIGHT',
+  'BEGIN:STANDARD', 'DTSTART:20071104T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+  'TZNAME:PST', 'TZOFFSETFROM:-0700', 'TZOFFSETTO:-0800', 'END:STANDARD',
+  'END:VTIMEZONE',
+].join('\r\n');
+
 function buildICS({ uid, title, startMs, endMs, allDay, location, note, recurrence }) {
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//dashboard//calendar//EN', 'BEGIN:VEVENT',
     `UID:${uid}`, `DTSTAMP:${toICALDateTime(Date.now())}`];
@@ -176,14 +201,16 @@ function buildICS({ uid, title, startMs, endMs, allDay, location, note, recurren
     lines.push(`DTSTART;VALUE=DATE:${toICALDateOnly(startMs)}`);
     lines.push(`DTEND;VALUE=DATE:${toICALDateOnly(endMs + 86400000)}`); // DTEND is exclusive
   } else {
-    lines.push(`DTSTART:${toICALDateTime(startMs)}`);
-    lines.push(`DTEND:${toICALDateTime(endMs)}`);
+    lines.push(`DTSTART;TZID=${TZ}:${toICALLocalDateTime(startMs, TZ)}`);
+    lines.push(`DTEND;TZID=${TZ}:${toICALLocalDateTime(endMs, TZ)}`);
   }
   lines.push(`SUMMARY:${icsEscape(title)}`);
   if (location) lines.push(`LOCATION:${icsEscape(location)}`);
   if (note) lines.push(`DESCRIPTION:${icsEscape(note)}`);
   if (recurrence) lines.push(recurrence.toUpperCase().startsWith('RRULE:') ? recurrence : `RRULE:${recurrence}`);
-  lines.push('END:VEVENT', 'END:VCALENDAR');
+  lines.push('END:VEVENT');
+  if (!allDay) lines.push(VTIMEZONE_PT);
+  lines.push('END:VCALENDAR');
   return lines.join('\r\n');
 }
 
