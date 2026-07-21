@@ -390,17 +390,17 @@ function renderTodaySchedule(){
   const local=(appData.events||[]).filter(e=>e.date===today).map(e=>({
     id:e.id, name:e.name, time:e.time||'', source:'local',
   }));
-  const tt=(appData.timetreeEvents||[]).filter(e=>{
+  const cal=(appData.calendarEvents||[]).filter(e=>{
     if(e.startDate!==today)return false;
-    if(!showJuliaEvents&&isTTJuliaEvent(e))return false;
+    if(!showJuliaEvents&&isJuliaEvent(e))return false;
     return true;
   }).map(e=>({
-    id:e.id, name:e.title, time:e.time||'', allDay:e.allDay, source:'timetree',
+    id:e.id, name:e.title, time:e.time||'', allDay:e.allDay, source:'calendar',
   }));
   // Update Julia toggle button state
   const jtBtn=document.getElementById('juliaToggleBtn');
   if(jtBtn){jtBtn.style.opacity=showJuliaEvents?'1':'0.45';jtBtn.title=showJuliaEvents?'Hide Julia\'s events':'Show Julia\'s events';}
-  const events=[...local,...tt].sort((a,b)=>{
+  const events=[...local,...cal].sort((a,b)=>{
     if(!a.time&&!b.time)return 0;
     if(!a.time)return 1; if(!b.time)return -1;
     return a.time.localeCompare(b.time);
@@ -430,11 +430,11 @@ function renderTodaySchedule(){
       else{status='Upcoming';cls='upcoming';}
     }
     const isBold=cls==='now';
-    const ttBadge=e.source==='timetree'?`<span style="font-size:9px;font-weight:700;letter-spacing:.5px;background:rgba(10,132,255,.15);color:var(--blue);padding:2px 5px;border-radius:4px;margin-left:5px">TT</span>`:'';
+    const calBadge=e.source==='calendar'?`<span style="font-size:9px;font-weight:700;letter-spacing:.5px;background:rgba(10,132,255,.15);color:var(--blue);padding:2px 5px;border-radius:4px;margin-left:5px">CAL</span>`:'';
     const delBtn=e.source==='local'?`<button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--muted);font-size:14px;margin-left:6px">✕</button>`:'';
     return `<div class="evt-row">
       <div class="evt-time">${e.time||'—'}</div>
-      <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}${ttBadge}</div>
+      <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}${calBadge}</div>
       <div class="evt-status">
         <span class="sbadge ${cls}">${status}</span>
         ${delBtn}

@@ -7,7 +7,7 @@
   publish = "."
   port = 8888
 
-[functions."sync-timetree"]
+[functions."sync-calendar"]
   schedule = "*/5 * * * *"
 
 # 9pm PST Sunday = 05:00 UTC Monday (Netlify cron is UTC, no DST handling)

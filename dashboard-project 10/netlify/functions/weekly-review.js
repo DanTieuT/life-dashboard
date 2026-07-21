@@ -10,7 +10,7 @@ try {
   });
 } catch {}
 
-const timetree = require('./timetree.js');
+const calendarSvc = require('./apple-calendar.js');
 
 function initFirebase() {
   if (admin.apps.length > 0) return;
@@ -150,12 +150,12 @@ exports.handler = async (event) => {
     });
     const topCategories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
-    // TimeTree: upcoming week ahead
-    const ttEvents = await timetree.getUpcomingEvents(7).catch(() => []);
+    // Calendar: upcoming week ahead
+    const calEvents = await calendarSvc.getUpcomingEvents(7).catch(() => []);
     const nextWeekStr = new Date(today + 'T12:00:00');
     nextWeekStr.setDate(nextWeekStr.getDate() + 7);
-    const danNext = ttEvents.filter(timetree.isDanEvent).slice(0, 5);
-    const juliaNext = ttEvents.filter(e => !timetree.isDanEvent(e)).slice(0, 3);
+    const danNext = calEvents.filter(calendarSvc.isDanEvent).slice(0, 5);
+    const juliaNext = calEvents.filter(e => !calendarSvc.isDanEvent(e)).slice(0, 3);
 
     // Build the message
     const lines = [];

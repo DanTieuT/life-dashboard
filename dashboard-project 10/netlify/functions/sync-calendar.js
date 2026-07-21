@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const timetree = require('./timetree.js');
+const appleCalendar = require('./apple-calendar.js');
 
 const TZ = 'America/Los_Angeles';
 const USER_DOC = 'users/aqzJe5gq4IVYdKmUIW0pNJGL2ML2/data/main';
@@ -32,7 +32,7 @@ exports.handler = async () => {
 
     const windowStart = Date.now();
     const windowEnd = windowStart + WINDOW_DAYS * 86400000;
-    const raw = await timetree.getEventsForRange(windowStart, windowEnd);
+    const raw = await appleCalendar.getEventsForRange(windowStart, windowEnd);
 
     const events = raw.map(e => {
       const startDate = e.all_day ? utcDate(e.start_at) : toLocalDate(e.start_at);
@@ -47,19 +47,18 @@ exports.handler = async () => {
         time: e.all_day ? '' : fmtTime(e.start_at),
         endTime: e.all_day ? '' : fmtTime(e.end_at),
         location: e.location || null,
-        author: e.author || null,
         startMs: e.start_at,
       };
     });
 
     const db = admin.firestore();
     const syncedAt = Date.now();
-    await db.doc(USER_DOC).set({ timetreeEvents: events, timetreeSyncedAt: syncedAt }, { merge: true });
+    await db.doc(USER_DOC).set({ calendarEvents: events, calendarSyncedAt: syncedAt }, { merge: true });
 
-    console.log(`[sync-timetree] synced ${events.length} events`);
+    console.log(`[sync-calendar] synced ${events.length} events`);
     return { statusCode: 200, headers, body: JSON.stringify({ events, syncedAt }) };
   } catch (e) {
-    console.error('[sync-timetree] error:', e.message, e.body);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: e.message, detail: e.body }) };
+    console.error('[sync-calendar] error:', e.message);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
   }
 };

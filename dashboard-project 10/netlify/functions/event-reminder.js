@@ -58,16 +58,16 @@ exports.handler = async (event) => {
     const pt = getPacificTime();
     const notifications = [];
 
-    // Merge dashboard events + cached TimeTree events into one list
+    // Merge dashboard events + cached Apple Calendar events into one list
     const dashEvents = (data.events || [])
       .filter(e => e.date === pt.date && e.time)
       .map(e => ({ name: e.name, time: e.time, source: 'dashboard' }));
 
-    const ttEvents = (data.timetreeEvents || [])
+    const calEvents = (data.calendarEvents || [])
       .filter(e => e.startDate === pt.date && e.time)
-      .map(e => ({ name: e.title, time: e.time, source: 'timetree' }));
+      .map(e => ({ name: e.title, time: e.time, source: 'calendar' }));
 
-    const todayEvents = [...dashEvents, ...ttEvents];
+    const todayEvents = [...dashEvents, ...calEvents];
 
     for (const event of todayEvents) {
       const [h, m] = event.time.split(':').map(Number);

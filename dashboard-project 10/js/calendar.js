@@ -11,15 +11,14 @@ const CAL_COLORS=[
 ];
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let calEditId=null;
-let ttSyncing=false;
+let calSyncing=false;
 window.showJuliaEvents=localStorage.getItem('showJuliaEvents')==='1'; // read by renderTodaySchedule (dashboard.js)
 
-function isTTJuliaEvent(e){
+function isJuliaEvent(e){
   const t=(e.title||'').toLowerCase();
-  const a=(e.author||'').toLowerCase();
-  if(['julia','nails','orthodontist','clinic','earrings','suki'].some(k=>t.includes(k)||a.includes(k)))return true;
+  if(['julia','nails','orthodontist','clinic','earrings','suki'].some(k=>t.includes(k)))return true;
   if(['dan','office','timesheet','rdo'].some(k=>t.includes(k)))return false;
-  return!!(a&&!a.includes('dan'));
+  return false;
 }
 window.toggleJuliaEvents=function(){
   showJuliaEvents=!showJuliaEvents;
@@ -27,26 +26,26 @@ window.toggleJuliaEvents=function(){
   renderTodaySchedule();
 };
 
-async function syncTimetreeEvents(force=false){
+async function syncCalendarEvents(force=false){
   const SIX_HOURS=6*60*60*1000;
-  if(!force&&Date.now()-(appData.timetreeSyncedAt||0)<SIX_HOURS)return;
-  if(ttSyncing)return;
-  ttSyncing=true;
+  if(!force&&Date.now()-(appData.calendarSyncedAt||0)<SIX_HOURS)return;
+  if(calSyncing)return;
+  calSyncing=true;
   const btn=document.getElementById('calRefreshBtn');
   if(btn){btn.style.opacity='.5';btn.style.pointerEvents='none';}
   try{
-    const res=await fetch('/.netlify/functions/sync-timetree',{method:'POST'});
+    const res=await fetch('/.netlify/functions/sync-calendar',{method:'POST'});
     if(res.ok){
       const data=await res.json();
       if(data.events){
-        appData.timetreeEvents=data.events;
-        appData.timetreeSyncedAt=data.syncedAt||Date.now();
+        appData.calendarEvents=data.events;
+        appData.calendarSyncedAt=data.syncedAt||Date.now();
         renderTodaySchedule();
         renderCalendarGrid();
       }
     }
-  }catch(e){console.warn('[tt] sync failed',e.message);}
-  ttSyncing=false;
+  }catch(e){console.warn('[cal] sync failed',e.message);}
+  calSyncing=false;
   if(btn){btn.style.opacity='';btn.style.pointerEvents='';}
 }
 
@@ -54,10 +53,10 @@ function calDateStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d
 
 function renderCalendar(){
   renderCalendarGrid();
-  syncTimetreeEvents();
+  syncCalendarEvents();
 }
 
-window.calRefresh=function(){syncTimetreeEvents(true);};
+window.calRefresh=function(){syncCalendarEvents(true);};
 
 function renderCalendarGrid(){
   const today=todayStr();
@@ -67,16 +66,16 @@ function renderCalendarGrid(){
   const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('calMonthLabel').textContent=MONTHS[calMonth]+' '+calYear;
 
-  // Merge local dashboard events + TimeTree events (from Firestore cache) into unified list
+  // Merge local dashboard events + Apple Calendar events (from Firestore cache) into unified list
   const localEvents=(appData.events||[]).map(e=>({
     id:e.id, name:e.name, date:e.date, endDate:e.endDate||null,
     time:e.time||'', colorIdx:e.colorIdx||0, source:'local',
   }));
-  const ttEventsNorm=(appData.timetreeEvents||[]).map(e=>({
+  const calEventsNorm=(appData.calendarEvents||[]).map(e=>({
     id:e.id, name:e.title, date:e.startDate, endDate:e.endDate||null,
-    time:e.time||'', colorIdx:ttColorIdx(e), source:'timetree',
+    time:e.time||'', colorIdx:calColorIdx(e), source:'calendar',
   }));
-  const allEvents=[...localEvents,...ttEventsNorm];
+  const allEvents=[...localEvents,...calEventsNorm];
 
   const grid=document.getElementById('calGrid');
 
@@ -173,8 +172,8 @@ function renderCalendarGrid(){
   });
 }
 
-// Assign a consistent color to TimeTree events based on title keywords
-function ttColorIdx(e){
+// Assign a consistent color to synced calendar events based on title keywords
+function calColorIdx(e){
   const t=(e.title||'').toLowerCase();
   if(t.includes('work')||t.includes('office')||t.includes('rdo')||t.includes('timesheet')) return 0; // blue
   if(t.includes('gym')||t.includes('tennis')||t.includes('barre')||t.includes('workout')) return 1; // green
@@ -182,7 +181,7 @@ function ttColorIdx(e){
   if(t.includes('doctor')||t.includes('appointment')||t.includes('clinic')||t.includes('orthodon')) return 3; // red
   if(t.includes('julia')) return 7; // pink
   if(t.includes('trip')||t.includes('travel')||t.includes('camp')) return 6; // teal
-  return 4; // purple default for TT events
+  return 4; // purple default for synced calendar events
 }
 
 window.calNav=function(dir){
@@ -240,4 +239,4 @@ window.deleteCalEvent=function(){
 };
 
 // ── GLOBAL EXPORTS ──
-Object.assign(window, { renderCalendar, renderCalendarGrid, syncTimetreeEvents, isTTJuliaEvent, ttColorIdx });
+Object.assign(window, { renderCalendar, renderCalendarGrid, syncCalendarEvents, isJuliaEvent, calColorIdx });

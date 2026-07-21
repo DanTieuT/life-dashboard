@@ -269,8 +269,8 @@ async function loadData(){
         goals:d.goals||[],
         notes:d.notes||[],
         profile:d.profile||'',
-        timetreeEvents:d.timetreeEvents||[],
-        timetreeSyncedAt:d.timetreeSyncedAt||0,
+        calendarEvents:d.calendarEvents||[],
+        calendarSyncedAt:d.calendarSyncedAt||0,
         categoryBudgets:d.categoryBudgets||{},
         netWorthHistory:d.netWorthHistory||[],
         updatedAt:d.updatedAt||0,
@@ -353,7 +353,7 @@ function renderAll(){
   renderStats();
   renderFocusTasks();
   renderTodaySchedule();
-  syncTimetreeEvents();
+  syncCalendarEvents();
   renderFinanceRing();
   renderHabitsGrid('habitsGridDash');
   renderHabitsGrid('habitsGridTab');
@@ -391,7 +391,7 @@ window.switchTab=function(tab){
     b.classList.toggle('active',b.dataset.tab===tab);
   });
   haptic(10); // light tick on tab switch (#12)
-  if(tab==='dashboard'){renderTodaySchedule();renderStats();syncTimetreeEvents();}
+  if(tab==='dashboard'){renderTodaySchedule();renderStats();syncCalendarEvents();}
   if(tab==='finance')renderFinanceTab();
   if(tab==='habits'){renderHabitsGrid('habitsGridTab');updateHabitsSummary();}
   if(tab==='tasks')renderTasks();
@@ -689,7 +689,7 @@ function haptic(ms=40){
       }
       try{
         await loadData(); // actually re-fetch from Firestore — was missing, so "refresh" only re-rendered stale in-memory data
-        await syncTimetreeEvents(true);
+        await syncCalendarEvents(true);
         renderAll();
       }catch(err){}
       _ptrRefreshing=false;

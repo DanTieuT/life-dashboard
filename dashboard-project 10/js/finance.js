@@ -334,6 +334,9 @@ window.saveAccount=function(){
   }
   saveData();closeModal('accountModal');renderFinanceTab();renderGoals();renderNWSparkline();toast('✓ Account saved');
 };
+window.deleteAccountFromModal=function(){
+  deleteAccount(document.getElementById('accountEditId').value);
+};
 window.deleteAccount=async function(id){
   const a=(appData.accounts||[]).find(x=>x.id===id);
   if(!a)return;

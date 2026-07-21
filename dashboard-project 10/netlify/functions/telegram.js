@@ -258,8 +258,8 @@ function fetchWeather(lat=38.5347, lon=-121.4442){
 // ── Obsidian memory ───────────────────────────────────────────────
 const obsidian = require('./obsidian.js');
 
-// ── TimeTree calendar ─────────────────────────────────────────────
-const timetree = require('./timetree.js');
+// ── Apple Calendar ───────────────────────────────────────────────
+const calendarSvc = require('./apple-calendar.js');
 
 // ── Build context object (mirrors buildChatContext in index.html) ──
 function buildContext(data) {
@@ -467,19 +467,19 @@ function buildSystemPrompt(ctx) {
         : `  ${t.category}: $${t.current} this month vs $${t.avg} avg (${t.pct > 0 ? '+' : ''}${t.pct}%)`).join('\n')}\n`
     : '';
 
-  // Split timetree block into Dan's and Julia's sections
-  let ttBlock = '';
+  // Split calendar block into Dan's and Julia's sections
+  let calBlock = '';
   let juliaBlock = '';
-  if (ctx.timetreeEvents) {
-    const parts = ctx.timetreeEvents.split("\n\nJulia's schedule:");
+  if (ctx.calendarEvents) {
+    const parts = ctx.calendarEvents.split("\n\nJulia's schedule:");
     const danPart = parts[0]; // "Dan's schedule:\n  ..."
     const juliaPart = parts[1] ? "Julia's schedule:" + parts[1] : '';
-    ttBlock = `\nDAN'S TIMETREE CALENDAR (next 14 days — Dan's events only):\n${danPart}\n`;
+    calBlock = `\nDAN'S CALENDAR (next 14 days — Dan's events only):\n${danPart}\n`;
     if (juliaPart) juliaBlock = `\nJULIA'S CALENDAR (girlfriend Julia's events — always label these as Julia's when mentioning them):\n${juliaPart}\n`;
   }
 
-  return `You are J.A.R.V.I.S. — Dan's personal AI assistant on Telegram. You have full visibility into his tasks, habits, schedule, finances, projects, and his TimeTree calendar. Be sharp, proactive, and genuinely helpful.
-${memoryBlock}${notesBlock}${overdueBlock}${weeklyHabitBlock}${weeklySpendBlock}${spendingPatternsBlock}${spendingTrendsBlock}${ttBlock}${juliaBlock}
+  return `You are J.A.R.V.I.S. — Dan's personal AI assistant on Telegram. You have full visibility into his tasks, habits, schedule, finances, projects, and his Apple calendar. Be sharp, proactive, and genuinely helpful.
+${memoryBlock}${notesBlock}${overdueBlock}${weeklyHabitBlock}${weeklySpendBlock}${spendingPatternsBlock}${spendingTrendsBlock}${calBlock}${juliaBlock}
 Today: ${ctx.today} (${ctx.dayName})${ctx.rdoToday ? ' — Dan is OFF today (RDO)' : ctx.rdoTomorrow ? ' — Dan is OFF tomorrow (RDO)' : ''}
 Current time: ${ctx.nowPT} Pacific
 ${ctx.weather ? `Weather: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}${ctx.weather.rain ? ', rain expected' : ''}, wind ${ctx.weather.wind}mph${ctx.weather.high != null ? `, High ${ctx.weather.high}°F / Low ${ctx.weather.low}°F` : ''}` : ''}
@@ -526,7 +526,7 @@ When asked for a morning briefing or "what's my day look like", reply in this or
    🟢 = due date is exactly TODAY (${ctx.today})
    🟡 = due date is exactly TOMORROW (${ctx.today} + 1 day)
    If there are no tasks in those three categories, skip this section entirely.
-4. 📅 Your schedule today: list Dan's events from DAN'S TIMETREE CALENDAR with times. Always include the day name before dates (e.g. "Monday, Jun 29").
+4. 📅 Your schedule today: list Dan's events from DAN'S CALENDAR with times. Always include the day name before dates (e.g. "Monday, Jun 29").
 5. 💜 Julia's plans today: list Julia's events from JULIA'S CALENDAR with times, clearly labeled as hers.
 6. ─────────────────────
 7. 2-3 sentences of personal perspective on the day — what matters, what to watch out for, something grounding. Spoken directly to Dan like a trusted friend.
@@ -542,7 +542,7 @@ PERSONALITY:
 - Give substantive responses. Reference his data when relevant.
 - Only ask a follow-up question if you can act on the answer with one of your available actions.
 - Never repeat information already given in this conversation.
-- When telling Dan about his day, use DAN'S TIMETREE CALENDAR above as his primary schedule.
+- When telling Dan about his day, use DAN'S CALENDAR above as his primary schedule.
 - Write in plain text. Do NOT use markdown bold (**word**) or italic (*word*) anywhere in replies — Telegram renders these as symbols and it looks cluttered. Use plain sentences, emojis, or line breaks instead.
 
 Respond ONLY with valid JSON — no markdown, no extra text:
@@ -557,9 +557,9 @@ AVAILABLE ACTIONS:
 {"type":"delete_task","id":"<task id>","name":"<exact task name from list>"}
 {"type":"log_habit","id":"<habit id>","name":"<habit name>"}
 {"type":"add_event","name":"...","time":"HH:MM","date":"YYYY-MM-DD"}
-{"type":"add_timetree_event","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","all_day":false,"location":"...","note":"...","recurrence":"RRULE:FREQ=WEEKLY"}
-{"type":"update_timetree_event","event_id":"<id from calendar>","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","location":"...","note":"..."}
-{"type":"delete_timetree_event","event_id":"<id from calendar>","title":"<event title for confirmation>"}
+{"type":"add_calendar_event","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","all_day":false,"location":"...","note":"...","recurrence":"RRULE:FREQ=WEEKLY"}
+{"type":"update_calendar_event","event_id":"<id from calendar>","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","location":"...","note":"..."}
+{"type":"delete_calendar_event","event_id":"<id from calendar>","title":"<event title for confirmation>"}
 {"type":"add_transaction","name":"...","amount":50,"category":"Food","transactionType":"out"}
 {"type":"set_intention","text":"..."}
 {"type":"add_project","emoji":"🔨","name":"...","stage":"planning","nextAction":"..."}
@@ -592,21 +592,21 @@ RULES:
   - DON'T save: one-off tasks, things already in the calendar, things already in memory, generic small talk
   - Keep each save_memory entry concise — one clear fact per entry
 - Use save_note for structured reference info like routines, shopping lists, schedules, or multi-line notes
-- When given an image of a WORK SCHEDULE or ROSTER: extract every shift and create one add_timetree_event action per shift (title="Work", date=YYYY-MM-DD, time=HH:MM, end_time=HH:MM). ALSO save_note with filename "work-schedule". The shifts MUST go into TimeTree.
-- TIMETREE EVENT RULES:
-  - When Dan mentions an event he wants to add, ask: "Want me to add that to TimeTree?"
-  - If yes, or if he explicitly says "add to calendar" / "put it on my calendar", use add_timetree_event
+- When given an image of a WORK SCHEDULE or ROSTER: extract every shift and create one add_calendar_event action per shift (title="Work", date=YYYY-MM-DD, time=HH:MM, end_time=HH:MM). ALSO save_note with filename "work-schedule". The shifts MUST go into the calendar.
+- CALENDAR EVENT RULES:
+  - When Dan mentions an event he wants to add, ask: "Want me to add that to your calendar?"
+  - If yes, or if he explicitly says "add to calendar" / "put it on my calendar", use add_calendar_event
   - If the event could be recurring (weekly meeting, regular appointment, shift pattern), ask as a lettered list: "Does this repeat?\nA) No, one-time\nB) Weekly\nC) Daily\nD) Monthly"
   - Recurrence values: "RRULE:FREQ=WEEKLY" / "RRULE:FREQ=DAILY" / "RRULE:FREQ=MONTHLY" / "RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR" etc.
   - Leave recurrence out (or null) for one-time events
   - time and end_time use 24h HH:MM format; omit both for all_day events
   - location and note are optional — include if Dan provides them
-  - To RESCHEDULE or EDIT an event, use update_timetree_event with the event_id from the calendar list. Only include fields that are changing.
-  - To DELETE an event, use delete_timetree_event with the event_id. Always confirm "Want me to delete [event]?" before deleting.
+  - To RESCHEDULE or EDIT an event, use update_calendar_event with the event_id from the calendar list. Only include fields that are changing.
+  - To DELETE an event, use delete_calendar_event with the event_id. Always confirm "Want me to delete [event]?" before deleting.
 - ALWAYS ask for missing required info before creating anything — do not guess:
   - add_task: if no due date given, ask "When is this due?" (open-ended — dates aren't a small set)
   - add_project: if no stage given, ask which stage — use the lettered list below (planning/sourcing/building/blocked/done are a fixed small set)
-  - add_event / add_timetree_event: if no date given, ask before creating it (open-ended)
+  - add_event / add_calendar_event: if no date given, ask before creating it (open-ended)
   - Only proceed to create once you have the key details
 - CLARIFYING QUESTIONS — multiple choice vs open-ended: whenever you're genuinely unsure, stop and ask instead of guessing — but HOW you ask depends on the shape of the answer:
   - If the valid answers form a small bounded set — which existing task/project/account/event Dan means, which category, which stage, which frequency, priority level, yes/no-with-a-couple-variants, or anything else where you could enumerate every reasonable answer in a few words each — ask as a lettered list, one line per option:
@@ -790,13 +790,13 @@ function applyActions(data, actions) {
         else { console.warn('update_project_next_action: no match for id=%s name=%s', action.id, action.name); }
         break;
       }
-      case 'add_timetree_event':
-        labels.push(`TimeTree: ${action.title} on ${action.date}`);
+      case 'add_calendar_event':
+        labels.push(`Calendar: ${action.title} on ${action.date}`);
         break;
-      case 'update_timetree_event':
+      case 'update_calendar_event':
         labels.push(`Updated event: ${action.title || action.event_id}`);
         break;
-      case 'delete_timetree_event':
+      case 'delete_calendar_event':
         labels.push(`Deleted event: ${action.title || action.event_id}`);
         break;
       case 'save_memory':
@@ -934,15 +934,15 @@ exports.handler = async (event) => {
   }
 
   // Call Claude
-  const [weather, ttEvents] = await Promise.all([
+  const [weather, calEvents] = await Promise.all([
     fetchWeather(),
-    timetree.getUpcomingEvents(14).catch((e) => { console.error('[tt] getUpcomingEvents error:', e.message); return []; }),
+    calendarSvc.getUpcomingEvents(14).catch((e) => { console.error('[cal] getUpcomingEvents error:', e.message); return []; }),
   ]);
-  console.log('[tt] events count:', ttEvents.length, '| today sample:', ttEvents.slice(0,3).map(e=>e.title+'/'+e.author).join(', '));
+  console.log('[cal] events count:', calEvents.length, '| today sample:', calEvents.slice(0,3).map(e=>e.title).join(', '));
   const ctx = buildContext(appData);
   ctx.weather = weather;
-  ctx.timetreeEvents = timetree.formatForPrompt(ttEvents);
-  console.log('[tt] prompt block:\n', ctx.timetreeEvents.slice(0, 400));
+  ctx.calendarEvents = calendarSvc.formatForPrompt(calEvents);
+  console.log('[cal] prompt block:\n', ctx.calendarEvents.slice(0, 400));
   const systemPrompt = buildSystemPrompt(ctx);
 
   let reply, actions;
@@ -973,11 +973,11 @@ exports.handler = async (event) => {
   if (actions && actions.length > 0) {
     ({ spendingAlert } = applyActions(appData, actions));
     try { await userRef.set(appData); } catch (e) { console.error('Save error', e); }
-    // Handle async actions (TimeTree)
+    // Handle async actions (Apple Calendar)
     for (const action of actions) {
-      if (action.type === 'add_timetree_event' && action.title && action.date) {
+      if (action.type === 'add_calendar_event' && action.title && action.date) {
         try {
-          await timetree.createEvent({
+          await calendarSvc.createEvent({
             title: action.title,
             date: action.date,
             time: action.time || null,
@@ -988,14 +988,14 @@ exports.handler = async (event) => {
             note: action.note || null,
             recurrence: action.recurrence || null,
           });
-          console.log('TimeTree event created:', action.title);
+          console.log('Calendar event created:', action.title);
         } catch (e) {
-          console.error('TimeTree createEvent error:', e.message);
+          console.error('Calendar createEvent error:', e.message);
         }
       }
-      if (action.type === 'update_timetree_event' && action.event_id) {
+      if (action.type === 'update_calendar_event' && action.event_id) {
         try {
-          await timetree.updateEvent(action.event_id, {
+          await calendarSvc.updateEvent(action.event_id, {
             title: action.title,
             date: action.date,
             time: action.time,
@@ -1005,17 +1005,17 @@ exports.handler = async (event) => {
             location: action.location,
             note: action.note,
           });
-          console.log('TimeTree event updated:', action.event_id);
+          console.log('Calendar event updated:', action.event_id);
         } catch (e) {
-          console.error('TimeTree updateEvent error:', e.message, e.body);
+          console.error('Calendar updateEvent error:', e.message);
         }
       }
-      if (action.type === 'delete_timetree_event' && action.event_id) {
+      if (action.type === 'delete_calendar_event' && action.event_id) {
         try {
-          await timetree.deleteEvent(action.event_id);
-          console.log('TimeTree event deleted:', action.event_id);
+          await calendarSvc.deleteEvent(action.event_id);
+          console.log('Calendar event deleted:', action.event_id);
         } catch (e) {
-          console.error('TimeTree deleteEvent error:', e.message, e.body);
+          console.error('Calendar deleteEvent error:', e.message);
         }
       }
     }

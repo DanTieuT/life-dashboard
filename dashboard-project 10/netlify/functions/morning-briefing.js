@@ -11,7 +11,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
     });
   } catch {}
 }
-const timetree = require('./timetree.js');
+const calendarSvc = require('./apple-calendar.js');
 
 function initFirebase() {
   if (admin.apps.length > 0) return;
@@ -131,9 +131,9 @@ exports.handler = async (event) => {
     const today = todayPacific();
     const dayName = new Date().toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long' });
     const monthDay = new Date().toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long', day: 'numeric' });
-    const [weather, ttAllEvents] = await Promise.all([
+    const [weather, calAllEvents] = await Promise.all([
       fetchWeather(),
-      timetree.getUpcomingEvents(7).catch(() => []),
+      calendarSvc.getUpcomingEvents(7).catch(() => []),
     ]);
 
     const overdue  = (data.projects || []).filter(t => !t.done && t.due && t.due < today).sort((a, b) => a.due < b.due ? -1 : 1);
@@ -141,13 +141,13 @@ exports.handler = async (event) => {
     const upcoming = (data.projects || []).filter(t => !t.done && t.due && t.due > today).sort((a, b) => a.due < b.due ? -1 : 1).slice(0, 3);
     const todayEvents = (data.events || []).filter(e => e.date === today).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
-    // Filter TimeTree to today's date in Pacific time, then split by owner
-    const ttToday = ttAllEvents.filter(e => {
+    // Filter calendar events to today's date in Pacific time, then split by owner
+    const calToday = calAllEvents.filter(e => {
       const d = new Date(e.start_at).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
       return d === today;
     });
-    const ttDan   = ttToday.filter(timetree.isDanEvent);
-    const ttJulia = ttToday.filter(e => !timetree.isDanEvent(e));
+    const calDan   = calToday.filter(calendarSvc.isDanEvent);
+    const calJulia = calToday.filter(e => !calendarSvc.isDanEvent(e));
     const dailyHabits = (data.habits || []).filter(h => h.type === 'daily' || !h.type);
     const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
     const now = new Date();
@@ -221,9 +221,9 @@ exports.handler = async (event) => {
       lines.push('');
     }
 
-    // Dan's schedule: TimeTree events classified as Dan's + dashboard events
+    // Dan's schedule: calendar events classified as Dan's + dashboard events
     const danSchedule = [
-      ...ttDan.map(e => ({
+      ...calDan.map(e => ({
         time: e.all_day ? '' : e.startTime,
         name: e.title,
         allDay: e.all_day,
@@ -241,9 +241,9 @@ exports.handler = async (event) => {
       lines.push('');
     }
 
-    if (ttJulia.length) {
+    if (calJulia.length) {
       lines.push(`💜 Julia's plans today:`);
-      ttJulia.forEach(e => {
+      calJulia.forEach(e => {
         const t = e.all_day ? '[all day]' : e.startTime ? `${e.startTime}${e.endTime ? '–'+e.endTime : ''}` : '';
         lines.push(`  • ${t ? t + ' — ' : ''}${e.title}`);
       });
@@ -269,7 +269,7 @@ ${weather ? `Weather: ${weather.temp}°F, ${weather.desc}` : ''}
 Overdue tasks: ${overdue.length ? overdue.map(t => t.name).join(', ') : 'none'}
 Due today: ${dueToday.length ? dueToday.map(t => t.name).join(', ') : 'nothing'}
 Dan's schedule today: ${danSchedule.length ? danSchedule.map(e => (e.time||'all day') + ' ' + e.name).join(', ') : 'nothing scheduled'}
-Julia's plans today: ${ttJulia.length ? ttJulia.map(e => (e.startTime||'all day') + ' ' + e.title).join(', ') : 'none'}
+Julia's plans today: ${calJulia.length ? calJulia.map(e => (e.startTime||'all day') + ' ' + e.title).join(', ') : 'none'}
 Coming up: ${upcoming.length ? upcoming.map(t => t.name + ' (' + humanDate(t.due, today) + ')').join(', ') : 'nothing'}
 ${budgetPct !== null ? `Budget: ${budgetPct}% used this month` : ''}`;
 

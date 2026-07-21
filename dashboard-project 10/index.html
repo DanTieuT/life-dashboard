@@ -566,7 +566,7 @@
         <button class="cal-nav-btn" onclick="calNav(1)">›</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <button class="cal-nav-btn" id="calRefreshBtn" onclick="calRefresh()" title="Refresh TimeTree events" style="font-size:13px;padding:7px 11px">↻</button>
+        <button class="cal-nav-btn" id="calRefreshBtn" onclick="calRefresh()" title="Refresh calendar events" style="font-size:13px;padding:7px 11px">↻</button>
         <button class="btn-new" onclick="openCalEventModal()">+ Event</button>
       </div>
     </div>
@@ -874,7 +874,7 @@
       <input class="form-input" id="accountBalance" type="number" placeholder="0">
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" id="accountDeleteBtn" style="display:none;margin-right:auto;color:#ff453a" onclick="deleteAccount(document.getElementById('accountEditId').value)">Remove</button>
+      <button class="btn-cancel" id="accountDeleteBtn" style="display:none;margin-right:auto;color:#ff453a" onclick="deleteAccountFromModal()">Remove</button>
       <button class="btn-cancel" onclick="closeModal('accountModal')">Cancel</button>
       <button class="btn-save" onclick="saveAccount()">Save</button>
     </div>
