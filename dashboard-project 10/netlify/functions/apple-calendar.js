@@ -109,10 +109,15 @@ function expandICALEvent(icalEvent, windowStart, windowEnd, calendarName) {
     });
 
     if (icalEvent.isRecurring()) {
-      const seed = ICAL.Time.fromJSDate(new Date(Math.min(windowStart, icalEvent.startDate.toUnixTime() * 1000)));
-      const iter = icalEvent.iterator(seed);
+      // No manual seed here — ICAL.Time.fromJSDate() doesn't preserve the DATE-only
+      // (all-day) nature of the seed, which silently corrupts occurrence times for
+      // all-day recurring events (e.g. a weekly all-day event started showing as a
+      // timed 17:00 UTC block instead of midnight, shifting it onto the wrong day).
+      // Iterating from DTSTART and skipping/breaking on the window is slightly more
+      // work but always correct; guard bound covers years of daily recurrence.
+      const iter = icalEvent.iterator();
       let next, guard = 0;
-      while ((next = iter.next()) && guard++ < 3000) {
+      while ((next = iter.next()) && guard++ < 10000) {
         const startMs = next.toUnixTime() * 1000;
         if (startMs > windowEnd) break;
         const endMs = startMs + durationSec * 1000;
