@@ -2,7 +2,7 @@
 // Caches the app shell for offline use
 // NOTE: bump CACHE_NAME on every deploy so clients pick up the new shell.
 
-const CACHE_NAME = 'cc-shell-v5';
+const CACHE_NAME = 'cc-shell-v6';
 const SHELL_URLS = [
   '/',
   '/index.html',
