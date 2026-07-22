@@ -1,25 +1,29 @@
 /* ── RESET & BASE ──────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#000;--card:#161618;--card2:#1c1c1e;--card3:#0d0d0f;
-  --border:#232327;--border2:#1f1f23;
-  --text:#fff;--sub:#8e8e93;--muted:#48484a;
-  --green:#30d158;--green-dim:rgba(48,209,88,.15);
-  --blue:#0a84ff;--blue-dim:rgba(10,132,255,.15);
-  --cyan:#64d2ff;--orange:#ff9f0a;
-  --red:#ff453a;--red-dim:rgba(255,69,58,.15);
+  /* System accent colors — Apple HIG palette, same hues in both themes */
+  --green:#34c759;--green-dim:rgba(52,199,89,.15);
+  --blue:#007aff;--blue-dim:rgba(0,122,255,.15);
+  --cyan:#30b0c7;--orange:#ff9500;
+  --red:#ff3b30;--red-dim:rgba(255,59,48,.15);
   --yellow:#ffd60a;--yellow-dim:rgba(255,214,10,.12);
-  --purple:#bf5af2;
-  --track:#242428;--seg-active:#38383c;
-  --radius:20px;--radius-lg:26px;--radius-sm:10px;}
+  --purple:#af52de;--indigo:#5856d6;
+  --card-shadow:0 1px 2px rgba(0,0,0,.2), 0 8px 20px rgba(0,0,0,.25);
+  --radius:20px;--radius-lg:26px;--radius-sm:10px;
+
+  --bg:#000;--card:#1c1c1e;--card2:#232326;--card3:#0d0d0f;
+  --border:#232327;--border2:#1f1f23;
+  --text:#fff;--sub:rgba(235,235,245,.6);--muted:#48484a;
+  --track:rgba(120,120,128,.28);--seg-active:#38383c;
+  --divider:rgba(84,84,88,.65);--pill-bg:rgba(120,120,128,.28);}
 [data-theme="light"]{
-  --bg:#f5f5f7;--card:#fff;--card2:#f2f2f7;--card3:#f9f9fb;
+  --card-shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.045);
+
+  --bg:#e7e7ec;--card:#fff;--card2:#f2f2f7;--card3:#f9f9fb;
   --border:#e5e5ea;--border2:#d1d1d6;
-  --text:#1d1d1f;--sub:#6e6e73;--muted:#aeaeb2;
-  --green:#28b348;--green-dim:rgba(40,179,72,.12);
-  --red:#e03530;--red-dim:rgba(224,53,48,.12);
-  --yellow:#c89b00;--yellow-dim:rgba(200,155,0,.12);
-  --track:rgba(0,0,0,.09);--seg-active:#fff;}
+  --text:#000;--sub:rgba(60,60,67,.6);--muted:#aeaeb2;
+  --track:rgba(120,120,128,.16);--seg-active:#fff;
+  --divider:rgba(60,60,67,.12);--pill-bg:rgba(120,120,128,.12);}
 [data-theme="light"] .auth-logo-gem{background:#d1f2e0;}
 [data-theme="light"] .sbadge.done{background:#d1f2e0;color:#1a9e6a;}
 [data-theme="light"] .sbadge.now{background:#fff3c4;color:#a07800;}
@@ -613,6 +617,11 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .tasks-section-body,.task-row,.week-cal,.month-cal,.spending-card,.payday-card,
 .nw-chart-card,.accounts-table-row,.ring-stat-card,.proj-card,.dash-proj-wrap,.jarvis-history-wrap,
 input,select,textarea,button{transition:background-color .3s ease,color .3s ease,border-color .3s ease}
+
+/* ── Card shadow (design sync — Apple HIG soft elevation) ─────────── */
+.stat-card,.focus-card,.today-card,.finance-card,.fin-card,.goal-card,.habit-card,
+.proj-card,.pkg-card,.nw-chart-card,.spending-card,.payday-card,.dash-proj-wrap,
+.ring-stat-card{box-shadow:var(--card-shadow)}
 
 /* ── COMPACT MODE (#72) ───────────────────────────────────────────── */
 [data-compact="true"] .habit-card{padding:10px 12px}

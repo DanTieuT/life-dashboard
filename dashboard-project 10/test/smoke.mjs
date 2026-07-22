@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 
 const PORT = 3457;
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const TABS = ['dashboard', 'tasks', 'habits', 'finance', 'projects', 'goals', 'calendar', 'shipping'];
+const TABS = ['dashboard', 'tasks', 'calendar', 'finance', 'projects'];
 
 const fail = (msg) => { console.error('✗ ' + msg); process.exitCode = 1; };
 const ok = (msg) => console.log('✓ ' + msg);

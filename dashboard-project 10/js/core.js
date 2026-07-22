@@ -105,7 +105,6 @@ window.toggleTheme=function(){
   // Re-render habit cards so they pick up the correct color palette
   if(typeof renderHabitsGrid==='function'){
     renderHabitsGrid('habitsGridDash');
-    renderHabitsGrid('habitsGridTab');
   }
 };
 function updateThemeBtn(){
@@ -356,7 +355,6 @@ function renderAll(){
   syncCalendarEvents();
   renderFinanceRing();
   renderHabitsGrid('habitsGridDash');
-  renderHabitsGrid('habitsGridTab');
   renderTasks();
   renderFinanceTab();
   updateHabitsSummary();
@@ -391,14 +389,11 @@ window.switchTab=function(tab){
     b.classList.toggle('active',b.dataset.tab===tab);
   });
   haptic(10); // light tick on tab switch (#12)
-  if(tab==='dashboard'){renderTodaySchedule();renderStats();syncCalendarEvents();}
-  if(tab==='finance')renderFinanceTab();
-  if(tab==='habits'){renderHabitsGrid('habitsGridTab');updateHabitsSummary();}
+  if(tab==='dashboard'){renderTodaySchedule();renderStats();syncCalendarEvents();renderDashShippingWidget();}
+  if(tab==='finance'){renderFinanceTab();renderGoals();}
   if(tab==='tasks')renderTasks();
   if(tab==='projects')renderProjects();
-  if(tab==='goals')renderGoals();
   if(tab==='calendar')renderCalendar();
-  if(tab==='shipping')renderShipping();
 };
 // ── TOAST ─────────────────────────────────────────────────────────
 function toast(msg,type=''){
@@ -577,7 +572,7 @@ window.skeletonHTML=`<div class="skeleton-wrap">
   <div class="skeleton-line short"></div>
 </div>`;
 (function showSkeletons(){
-  ['habitsGridDash','habitsGridTab','focusTasksList','todayEventsList','brainDumpList','txnList','goalsGrid','projectsCardGrid'].forEach(id=>{
+  ['habitsGridDash','focusTasksList','todayEventsList','brainDumpList','txnList','goalsGrid','projectsCardGrid'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.innerHTML=window.skeletonHTML;
   });

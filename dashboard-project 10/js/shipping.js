@@ -94,7 +94,8 @@ function renderShipping(){
   listEl.innerHTML=html;
 }
 
-// Compact dashboard widget: shows up to 3 active packages, tap → shipping tab.
+// Compact dashboard widget — the only shipping UI now (no dedicated tab), so it
+// shows every active package, not just a capped preview.
 function renderDashShippingWidget(){
   const el=document.getElementById('dashShippingWidget');
   if(!el)return;
@@ -102,13 +103,13 @@ function renderDashShippingWidget(){
     .sort((a,b)=>pkgStatusMeta(a).rank-pkgStatusMeta(b).rank);
   if(!active.length){el.style.display='none';return;}
   el.style.display='';
-  el.innerHTML=`<div class="section-hdr" style="cursor:pointer" onclick="switchTab('shipping')">
+  el.innerHTML=`<div class="section-hdr">
       <div><div class="section-title">📦 Packages</div><div class="section-sub">${active.length} on the way</div></div>
-      <span style="color:var(--muted);font-size:13px">›</span>
+      <button class="btn-new" style="padding:4px 10px;font-size:12px" onclick="openTrackModal()">+ Track</button>
     </div>
-    ${active.slice(0,3).map(p=>{
+    ${active.map(p=>{
       const meta=pkgStatusMeta(p);
-      return`<div class="pkg-mini-row" onclick="switchTab('shipping')">
+      return`<div class="pkg-mini-row">
         <span>${meta.emoji}</span>
         <span class="pkg-mini-name">${escHtml(p.description||p.retailer||p.trackingNumber)}</span>
         <span class="pkg-mini-status" style="color:${meta.color}">${meta.label}${p.eta&&p.status!=='Delivered'?` · ${fmtPkgDate(p.eta)}`:''}</span>
