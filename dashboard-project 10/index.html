@@ -128,50 +128,8 @@
         </div>
       </div>
 
-      <!-- Stats Row - Ring Cards -->
-      <div class="stats-row">
-        <div class="ring-stat-card">
-          <div class="ring-stat-title">Tasks Done</div>
-          <div id="statsRingTasks"></div>
-          <div class="ring-stat-sub"><span id="tasksDoneNum">0</span> / <span id="tasksTotalNum">0</span> today</div>
-          <div class="ring-stat-badge green" id="tasksBadge">↑ 0</div>
-        </div>
-        <div class="ring-stat-card">
-          <div class="ring-stat-title">Budget</div>
-          <div id="statsRingBudget"></div>
-          <div class="ring-stat-sub" id="statsBudgetDetail">set up budget</div>
-          <div class="ring-stat-badge green" id="statsBudgetBadge">on track</div>
-        </div>
-      </div>
-
-      <!-- Focus + Finance -->
-      <div class="mid-row">
-        <!-- Top 3 Focus Tasks -->
-        <div class="focus-card">
-          <div class="card-title">Top 3 focus tasks</div>
-          <div class="card-sub">What matters most today.</div>
-          <div id="focusTasksList"></div>
-        </div>
-
-        <!-- Today Schedule -->
-        <div class="today-card" style="margin-bottom:0">
-          <div class="today-hdr">
-            <div class="today-title-wrap">
-              <div class="card-title">Today</div>
-              <div class="card-sub">Your schedule at a glance</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <button id="juliaToggleBtn" onclick="toggleJuliaEvents()" title="Show Julia's events" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--sub);font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;opacity:0.45;transition:opacity .15s;font-family:inherit">Julia</button>
-              <span class="events-badge" id="eventsBadge">0 events</span>
-            </div>
-          </div>
-          <div id="todayEventsList"></div>
-          <button class="add-evt-btn" onclick="openModal('addEventModal')">+ Add event</button>
-        </div>
-      </div>
-
-      <!-- Net Worth Chart -->
-      <div class="fin-card nw-chart-card" id="nwCard-dash" data-nw-id="dash" style="display:none;margin-bottom:20px">
+      <!-- Net Worth Chart (mockup places this first, right after the greeting) -->
+      <div class="fin-card nw-chart-card" id="nwCard-dash" data-nw-id="dash" style="display:none;margin-bottom:0">
         <div class="nw-chart-hdr">
           <div>
             <div class="fin-section-title" style="margin-bottom:2px">Net Worth</div>
@@ -196,6 +154,47 @@
         <div class="nw-chart-body" data-role="body">
           <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
           <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
+        </div>
+      </div>
+
+      <!-- Stats Row - Ring Cards (Budget paired with Calendar below, mockup-style) -->
+      <div class="stats-row">
+        <div class="ring-stat-card">
+          <div class="ring-stat-title">Budget</div>
+          <div id="statsRingBudget"></div>
+          <div class="ring-stat-sub" id="statsBudgetDetail">set up budget</div>
+          <div class="ring-stat-badge green" id="statsBudgetBadge">on track</div>
+        </div>
+        <!-- Today Schedule -->
+        <div class="today-card" style="margin-bottom:0">
+          <div class="today-hdr">
+            <div class="today-title-wrap">
+              <div class="card-title">Today</div>
+              <div class="card-sub">Your schedule at a glance</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button id="juliaToggleBtn" onclick="toggleJuliaEvents()" title="Show Julia's events" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--sub);font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;opacity:0.45;transition:opacity .15s;font-family:inherit">Julia</button>
+              <span class="events-badge" id="eventsBadge">0 events</span>
+            </div>
+          </div>
+          <div id="todayEventsList"></div>
+          <button class="add-evt-btn" onclick="openModal('addEventModal')">+ Add event</button>
+        </div>
+      </div>
+
+      <!-- Focus + Tasks Done -->
+      <div class="mid-row">
+        <div class="ring-stat-card">
+          <div class="ring-stat-title">Tasks Done</div>
+          <div id="statsRingTasks"></div>
+          <div class="ring-stat-sub"><span id="tasksDoneNum">0</span> / <span id="tasksTotalNum">0</span> today</div>
+          <div class="ring-stat-badge green" id="tasksBadge">↑ 0</div>
+        </div>
+        <!-- Top 3 Focus Tasks -->
+        <div class="focus-card">
+          <div class="card-title">Top 3 focus tasks</div>
+          <div class="card-sub">What matters most today.</div>
+          <div id="focusTasksList"></div>
         </div>
       </div>
 
