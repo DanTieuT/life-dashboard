@@ -70,6 +70,22 @@ input,select,textarea{font-family:inherit}
 .page-title{font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1.1}
 .page-sub{font-size:14px;color:var(--sub);margin-top:4px}
 
+/* ── PAGE HEADER v2 (design sync — eyebrow + title + icon cluster) ── */
+.page-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:22px}
+.page-hdr-text{min-width:0}
+.page-hdr-eyebrow{font-size:14px;font-weight:500;color:var(--sub);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-hdr-title{font-size:25px;font-weight:700;letter-spacing:-.2px;line-height:1.2;white-space:nowrap}
+.page-hdr-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.hdr-icon-btn{width:34px;height:34px;border-radius:17px;background:var(--pill-bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex-shrink:0;padding:0;transition:filter .15s}
+.hdr-icon-btn:hover{filter:brightness(1.15)}
+.hdr-icon-btn svg{width:17px;height:17px}
+.hdr-icon-btn .icon-sun,.hdr-icon-btn .icon-eye-closed{display:none}
+[data-theme="light"] .hdr-icon-btn .icon-moon{display:none}
+[data-theme="light"] .hdr-icon-btn .icon-sun{display:block}
+[data-hide-amounts="true"] .hdr-icon-btn .icon-eye-open{display:none}
+[data-hide-amounts="true"] .hdr-icon-btn .icon-eye-closed{display:block}
+.hdr-avatar{width:36px;height:36px;border-radius:18px;background:linear-gradient(135deg,#ff9f0a,#e05a22);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer}
+
 /* ── AUTH SCREEN ─────────────────────────────────────────────────── */
 #auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:24px}
 .auth-logo{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:700}
@@ -90,6 +106,7 @@ input,select,textarea{font-family:inherit}
 .hero-greeting{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
 .hero-date{font-size:13px;color:var(--sub);margin-bottom:14px}
 .hero-intention{display:none}
+.hero-actions{position:absolute;top:14px;right:14px;display:flex;gap:6px;z-index:2}
 [data-theme="light"] .hero-card::before{background:radial-gradient(ellipse at 20% 50%,rgba(40,179,72,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(10,132,255,.06) 0%,transparent 60%)}
 
 /* ── GAUGE RING ──────────────────────────────────────────────────── */
@@ -129,8 +146,8 @@ input,select,textarea{font-family:inherit}
 .card-sub{font-size:13px;color:var(--sub);margin-bottom:18px}
 .focus-item{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .15s}
 .focus-item:last-child{border-bottom:none;padding-bottom:4px}
-.focus-num{width:26px;height:26px;border-radius:50%;background:var(--card2);color:var(--sub);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-.focus-num.done{background:var(--green-dim);color:var(--green)}
+.focus-num{width:26px;height:26px;border-radius:50%;background:transparent;border:2px solid var(--divider);color:var(--sub);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.focus-num.done{background:var(--green);border-color:var(--green);color:#fff}
 .focus-text{font-size:14px;color:var(--sub);flex:1;outline:none;background:none;border:none;caret-color:var(--green)}
 .focus-text.has-text{color:var(--text)}
 .focus-text.done-text{text-decoration:line-through;color:var(--muted)}
@@ -161,11 +178,12 @@ input,select,textarea{font-family:inherit}
 .today-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
 .today-title-wrap .card-title{margin-bottom:3px}
 .events-badge{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:12px;color:var(--sub)}
-.evt-table-head{display:grid;grid-template-columns:72px 1fr 110px;gap:12px;padding:0 6px 10px;border-bottom:1px solid var(--border)}
+.evt-table-head{display:grid;grid-template-columns:3px 72px 1fr 110px;gap:12px;padding:0 6px 10px;border-bottom:1px solid var(--border)}
 .evt-table-head span{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
 .evt-table-head span:last-child{text-align:right}
-.evt-row{display:grid;grid-template-columns:72px 1fr 110px;gap:12px;padding:14px 6px;border-bottom:1px solid var(--border);align-items:center}
+.evt-row{display:grid;grid-template-columns:3px 72px 1fr 110px;gap:12px;padding:14px 6px;border-bottom:1px solid var(--border);align-items:center}
 .evt-row:last-child{border-bottom:none}
+.evt-bar{align-self:stretch;border-radius:2px;min-height:20px}
 .evt-time{font-size:14px;color:var(--sub)}
 .evt-name{font-size:14px}
 .evt-name.bold{font-weight:600}
@@ -498,12 +516,41 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .cal-color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .15s}
 .cal-color-swatch.selected{border-color:#fff;transform:scale(1.18)}
 
+/* ── CALENDAR TAB — WEEK VIEW (design sync) ─────────────────────── */
+.cal-week-view{background:var(--card);border:1px solid var(--border);border-radius:0 0 12px 12px;box-shadow:var(--card-shadow);overflow:hidden}
+.cal-week-dow-row{display:grid;grid-template-columns:repeat(7,1fr);padding:12px 4px;border-bottom:1px solid var(--border)}
+.cal-week-dow-cell{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
+.cal-week-dow-label{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.cal-week-dow-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--text)}
+.cal-week-dow-num.today{background:var(--red);color:#fff}
+.cal-week-dow-dot{width:4px;height:4px;border-radius:2px}
+.cal-week-allday-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:6px 4px;border-bottom:1px solid var(--border)}
+.cal-week-allday-col{min-width:0;display:flex;flex-direction:column;gap:2px}
+.cal-week-allday-chip{border-radius:4px;padding:2px 5px;font-size:10px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.cal-week-hourly{display:flex;max-height:640px;overflow-y:auto}
+.cal-week-hour-labels{width:44px;flex-shrink:0}
+.cal-week-hour-label{height:48px;font-size:10px;color:var(--muted);text-align:right;padding-right:8px;box-sizing:border-box;transform:translateY(-6px)}
+.cal-week-days-grid{flex:1;position:relative}
+.cal-week-hour-lines{position:absolute;inset:0;display:flex;flex-direction:column;pointer-events:none}
+.cal-week-hour-line{height:48px;border-top:1px solid var(--border);box-sizing:border-box;flex-shrink:0}
+.cal-week-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr);height:100%}
+.cal-week-day-col{position:relative;border-left:1px solid var(--border);cursor:pointer}
+.cal-week-evt-block{position:absolute;left:2px;right:2px;border-radius:4px;padding:3px 5px;box-sizing:border-box;overflow:hidden;font-size:10px;font-weight:600;line-height:1.25;cursor:pointer}
+.cal-week-now-line{position:absolute;left:0;right:0;height:2px;background:var(--red);z-index:2;pointer-events:none}
+@media(max-width:768px){
+  .cal-week-dow-label{font-size:9px}
+  .cal-week-dow-num{width:26px;height:26px;font-size:13px}
+  .cal-week-hour-labels{width:36px}
+  .cal-week-hour-label{font-size:9px;padding-right:5px}
+  .cal-week-evt-block{font-size:9px}
+}
+
 /* ── PROJ CARD GRID ──────────────────────────────────────────────── */
 .proj-filter-bar{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:20px;width:fit-content}
 .proj-filter-btn{padding:6px 14px;border-radius:7px;border:none;background:none;color:var(--sub);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
 .proj-filter-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .proj-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.proj-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative}
+.proj-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative}
 .proj-card:hover{transform:translateY(-1px);box-shadow:0 4px 24px rgba(0,0,0,.3)}
 .proj-card-accent{height:4px}
 .proj-card-body{padding:18px 20px 16px}
@@ -621,7 +668,8 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 /* ── Card shadow (design sync — Apple HIG soft elevation) ─────────── */
 .stat-card,.focus-card,.today-card,.finance-card,.fin-card,.goal-card,.habit-card,
 .proj-card,.pkg-card,.nw-chart-card,.spending-card,.payday-card,.dash-proj-wrap,
-.ring-stat-card{box-shadow:var(--card-shadow)}
+.ring-stat-card,.jarvis-history-wrap,#acctCardsRow,.tasks-section-body,
+.week-cal,.month-cal{box-shadow:var(--card-shadow)}
 
 /* ── COMPACT MODE (#72) ───────────────────────────────────────────── */
 [data-compact="true"] .habit-card{padding:10px 12px}
@@ -929,7 +977,7 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   }
   .bottom-tab svg{width:25px;height:25px;opacity:.55;flex-shrink:0;transition:opacity .15s}
   .bottom-tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px}
-  .bottom-tab.active{color:var(--green)}
+  .bottom-tab.active{color:var(--blue)}
   .bottom-tab.active svg{opacity:1}
 
   /* ── Main content: account for top + bottom nav + safe areas ── */
@@ -953,8 +1001,8 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   .mid-row{grid-template-columns:1fr;gap:12px}
 
   /* ── Schedule / event rows ── */
-  .evt-row{grid-template-columns:58px 1fr auto;gap:8px;padding:12px 4px}
-  .evt-table-head{grid-template-columns:58px 1fr auto;padding:0 4px 8px}
+  .evt-row{grid-template-columns:3px 58px 1fr auto;gap:8px;padding:12px 4px}
+  .evt-table-head{grid-template-columns:3px 58px 1fr auto;padding:0 4px 8px}
   .evt-time{font-size:13px}
 
   /* All pages fill the full scrollable height so bottom nav always looks consistent */

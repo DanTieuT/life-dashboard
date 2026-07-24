@@ -115,6 +115,16 @@
 
       <!-- Hero Card -->
       <div class="hero-card">
+        <div class="hero-actions">
+          <button class="hdr-icon-btn" onclick="toggleTheme()" title="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 3a8.5 8.5 0 108.4 9.7A7 7 0 0112.3 3z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4" y1="4" x2="5.8" y2="5.8"/><line x1="18.2" y1="18.2" x2="20" y2="20"/><line x1="20" y1="4" x2="18.2" y2="5.8"/><line x1="5.8" y1="18.2" x2="4" y2="20"/></g></svg>
+          </button>
+          <button class="hdr-icon-btn" onclick="toggleHideNumbers()" title="Hide amounts">
+            <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
         <div class="hero-gauge-wrap" id="heroGaugeLeft">
           <!-- rendered by renderStats() -->
         </div>
@@ -279,12 +289,23 @@
 
     <!-- ── TASKS TAB ── -->
     <div class="page" id="page-tasks">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Tasks</div>
-          <div class="page-sub" id="tasksTabSub">What needs to get done.</div>
+      <div class="page-hdr">
+        <div class="page-hdr-text">
+          <div class="page-hdr-eyebrow" id="tasksTabSub">What needs to get done.</div>
+          <div class="page-hdr-title">Tasks</div>
         </div>
-        <button class="btn-new" onclick="openNewTaskModal()">+ New task</button>
+        <div class="page-hdr-actions">
+          <button class="hdr-icon-btn" onclick="toggleTheme()" title="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 3a8.5 8.5 0 108.4 9.7A7 7 0 0112.3 3z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4" y1="4" x2="5.8" y2="5.8"/><line x1="18.2" y1="18.2" x2="20" y2="20"/><line x1="20" y1="4" x2="18.2" y2="5.8"/><line x1="5.8" y1="18.2" x2="4" y2="20"/></g></svg>
+          </button>
+          <button class="hdr-icon-btn" onclick="toggleHideNumbers()" title="Hide amounts">
+            <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+          <div class="hdr-avatar" onclick="toggleProfileDropdown()"></div>
+          <button class="btn-new" onclick="openNewTaskModal()">+ New task</button>
+        </div>
       </div>
       <input class="list-search" id="taskSearch" placeholder="Search tasks..." oninput="renderTasks()">
       <div class="week-cal-wrap">
@@ -313,16 +334,21 @@
 
     <!-- ── FINANCE TAB ── -->
     <div class="page" id="page-finance">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Finance</div>
-          <div class="page-sub">Budget, spending, and net worth.</div>
+      <div class="page-hdr">
+        <div class="page-hdr-text">
+          <div class="page-hdr-eyebrow">Net worth &amp; budget</div>
+          <div class="page-hdr-title">Finance</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="hide-num-btn" onclick="toggleHideNumbers()" id="hideNumBtn">
-            <svg id="hideNumIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span id="hideNumLabel">Hide</span>
+        <div class="page-hdr-actions">
+          <button class="hdr-icon-btn" onclick="toggleTheme()" title="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 3a8.5 8.5 0 108.4 9.7A7 7 0 0112.3 3z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4" y1="4" x2="5.8" y2="5.8"/><line x1="18.2" y1="18.2" x2="20" y2="20"/><line x1="20" y1="4" x2="18.2" y2="5.8"/><line x1="5.8" y1="18.2" x2="4" y2="20"/></g></svg>
           </button>
+          <button class="hdr-icon-btn" onclick="toggleHideNumbers()" title="Hide amounts">
+            <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+          <div class="hdr-avatar" onclick="toggleProfileDropdown()"></div>
         </div>
       </div>
 
@@ -495,12 +521,23 @@
 
     <!-- ── PROJECTS TAB ── -->
     <div class="page" id="page-projects">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Projects</div>
-          <div class="page-sub" id="projectsTabSub">—</div>
+      <div class="page-hdr">
+        <div class="page-hdr-text">
+          <div class="page-hdr-eyebrow" id="projectsTabSub">—</div>
+          <div class="page-hdr-title">Projects</div>
         </div>
-        <button class="btn-new" onclick="openProjectModal()">+ New project</button>
+        <div class="page-hdr-actions">
+          <button class="hdr-icon-btn" onclick="toggleTheme()" title="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 3a8.5 8.5 0 108.4 9.7A7 7 0 0112.3 3z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4" y1="4" x2="5.8" y2="5.8"/><line x1="18.2" y1="18.2" x2="20" y2="20"/><line x1="20" y1="4" x2="18.2" y2="5.8"/><line x1="5.8" y1="18.2" x2="4" y2="20"/></g></svg>
+          </button>
+          <button class="hdr-icon-btn" onclick="toggleHideNumbers()" title="Hide amounts">
+            <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+          <div class="hdr-avatar" onclick="toggleProfileDropdown()"></div>
+          <button class="btn-new" onclick="openProjectModal()">+ New project</button>
+        </div>
       </div>
       <input class="list-search" id="projSearch" placeholder="Search projects..." oninput="renderProjects()">
       <div class="proj-filter-bar" id="projFilterBar">
@@ -530,14 +567,23 @@
         <button class="cal-nav-btn" onclick="calNav(1)">›</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
+        <div class="cal-view-toggle">
+          <button class="cal-view-btn active" id="calTabViewMonthBtn" onclick="setCalTabView('month')">Month</button>
+          <button class="cal-view-btn" id="calTabViewWeekBtn" onclick="setCalTabView('week')">Week</button>
+        </div>
+        <button class="hdr-icon-btn" onclick="toggleTheme()" title="Toggle theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 3a8.5 8.5 0 108.4 9.7A7 7 0 0112.3 3z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4" y1="4" x2="5.8" y2="5.8"/><line x1="18.2" y1="18.2" x2="20" y2="20"/><line x1="20" y1="4" x2="18.2" y2="5.8"/><line x1="5.8" y1="18.2" x2="4" y2="20"/></g></svg>
+        </button>
         <button class="cal-nav-btn" id="calRefreshBtn" onclick="calRefresh()" title="Refresh calendar events" style="font-size:13px;padding:7px 11px">↻</button>
         <button class="btn-new" onclick="openCalEventModal()">+ Event</button>
       </div>
     </div>
-    <div class="cal-dow-row">
+    <div class="cal-dow-row" id="calDowRow">
       <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-week-view" id="calWeekView" style="display:none"></div>
   </div>
 </div>
 

@@ -25,6 +25,8 @@ const CALENDAR_COLOR_IDX={
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let calEditId=null;
 let calSyncing=false;
+let _calTabView='month'; // 'month' | 'week' — Calendar TAB's own toggle (distinct from Tasks page's mini-cal _calView)
+let calWeekAnchor=new Date(); // any date within the currently displayed week
 window.showJuliaEvents=localStorage.getItem('showJuliaEvents')==='1'; // read by renderTodaySchedule (dashboard.js)
 
 function isJuliaEvent(e){
@@ -65,8 +67,24 @@ async function syncCalendarEvents(force=false){
 
 function calDateStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
+// Merge local dashboard events + Apple Calendar events (from Firestore cache) into
+// one unified list. Each event's colorIdx is pre-resolved here so callers never
+// need to branch on source.
+function getAllCalEvents(){
+  const localEvents=(appData.events||[]).map(e=>({
+    id:e.id, name:e.name, date:e.date, endDate:e.endDate||null,
+    time:e.time||'', colorIdx:e.colorIdx||0, source:'local',
+  }));
+  const calEventsNorm=(appData.calendarEvents||[]).map(e=>({
+    id:e.id, name:e.title, date:e.startDate, endDate:e.endDate||null,
+    time:e.time||'', colorIdx:calColorIdx(e), source:'calendar',
+  }));
+  return [...localEvents,...calEventsNorm];
+}
+
 function renderCalendar(){
-  renderCalendarGrid();
+  if(_calTabView==='week') renderCalendarWeek();
+  else renderCalendarGrid();
   syncCalendarEvents();
 }
 
@@ -80,16 +98,7 @@ function renderCalendarGrid(){
   const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('calMonthLabel').textContent=MONTHS[calMonth]+' '+calYear;
 
-  // Merge local dashboard events + Apple Calendar events (from Firestore cache) into unified list
-  const localEvents=(appData.events||[]).map(e=>({
-    id:e.id, name:e.name, date:e.date, endDate:e.endDate||null,
-    time:e.time||'', colorIdx:e.colorIdx||0, source:'local',
-  }));
-  const calEventsNorm=(appData.calendarEvents||[]).map(e=>({
-    id:e.id, name:e.title, date:e.startDate, endDate:e.endDate||null,
-    time:e.time||'', colorIdx:calColorIdx(e), source:'calendar',
-  }));
-  const allEvents=[...localEvents,...calEventsNorm];
+  const allEvents=getAllCalEvents();
 
   const grid=document.getElementById('calGrid');
 
@@ -200,14 +209,181 @@ function calColorIdx(e){
   if(t.includes('trip')||t.includes('travel')||t.includes('camp')) return 6; // teal
   return 4; // purple default for synced calendar events
 }
+// Resolve an event straight to its {bg,text} color, for callers outside this
+// module (e.g. the dashboard's Today widget) that don't need the raw index.
+function calColorFor(e){
+  const idx=e.source==='calendar'?calColorIdx(e):(e.colorIdx||0);
+  return CAL_COLORS[idx]||CAL_COLORS[0];
+}
 
 window.calNav=function(dir){
-  calMonth+=dir;
-  if(calMonth>11){calMonth=0;calYear++;}
-  if(calMonth<0){calMonth=11;calYear--;}
+  if(_calTabView==='week'){
+    calWeekAnchor.setDate(calWeekAnchor.getDate()+dir*7);
+  } else {
+    calMonth+=dir;
+    if(calMonth>11){calMonth=0;calYear++;}
+    if(calMonth<0){calMonth=11;calYear--;}
+  }
   renderCalendar();
 };
-window.calGoToday=function(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar();};
+window.calGoToday=function(){
+  calYear=new Date().getFullYear();calMonth=new Date().getMonth();
+  calWeekAnchor=new Date();
+  renderCalendar();
+};
+
+// ── Month/Week toggle for the Calendar tab ──────────────────────────
+window.setCalTabView=function(v){
+  if(v===_calTabView)return;
+  _calTabView=v;
+  document.getElementById('calTabViewMonthBtn')?.classList.toggle('active',v==='month');
+  document.getElementById('calTabViewWeekBtn')?.classList.toggle('active',v==='week');
+  document.getElementById('calDowRow')?.style.setProperty('display',v==='month'?'':'none');
+  const gridEl=document.getElementById('calGrid');
+  if(gridEl)gridEl.style.display=v==='month'?'':'none';
+  const weekEl=document.getElementById('calWeekView');
+  if(weekEl)weekEl.style.display=v==='week'?'':'none';
+  if(v==='week'){
+    const now=new Date();
+    calWeekAnchor=(calYear===now.getFullYear()&&calMonth===now.getMonth())?now:new Date(calYear,calMonth,1);
+  }
+  renderCalendar();
+};
+
+function startOfWeek(d){
+  const nd=new Date(d);
+  nd.setDate(nd.getDate()-nd.getDay());
+  nd.setHours(0,0,0,0);
+  return nd;
+}
+
+function renderCalendarWeek(){
+  const today=todayStr();
+  const weekStart=startOfWeek(calWeekAnchor);
+  const days=Array.from({length:7},(_,i)=>{const d=new Date(weekStart);d.setDate(d.getDate()+i);return d;});
+  const MONTHS_SHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const first=days[0], last=days[6];
+  const label=first.getMonth()===last.getMonth()
+    ?`${MONTHS_SHORT[first.getMonth()]} ${first.getDate()}–${last.getDate()}, ${last.getFullYear()}`
+    :`${MONTHS_SHORT[first.getMonth()]} ${first.getDate()} – ${MONTHS_SHORT[last.getMonth()]} ${last.getDate()}, ${last.getFullYear()}`;
+  const lblEl=document.getElementById('calMonthLabel');
+  if(lblEl)lblEl.textContent=label;
+
+  const allEvents=getAllCalEvents();
+  const wrap=document.getElementById('calWeekView');
+  if(!wrap)return;
+  wrap.innerHTML='';
+
+  // Day-of-week circle row
+  const DOW=['S','M','T','W','T','F','S'];
+  const dowRow=document.createElement('div');
+  dowRow.className='cal-week-dow-row';
+  days.forEach(d=>{
+    const ds=calDateStr(d.getFullYear(),d.getMonth(),d.getDate());
+    const isToday=ds===today;
+    const dayEvt=allEvents.find(e=>e.date===ds||(e.endDate&&e.date<=ds&&e.endDate>=ds));
+    const cell=document.createElement('div');
+    cell.className='cal-week-dow-cell';
+    cell.onclick=()=>openCalEventModal(ds);
+    cell.innerHTML=`<div class="cal-week-dow-label">${DOW[d.getDay()]}</div>`+
+      `<div class="cal-week-dow-num${isToday?' today':''}">${d.getDate()}</div>`+
+      `<div class="cal-week-dow-dot" style="background:${dayEvt?CAL_COLORS[dayEvt.colorIdx].bg:'transparent'}"></div>`;
+    dowRow.appendChild(cell);
+  });
+  wrap.appendChild(dowRow);
+
+  // All-day / multi-day chip row (only shown if there's at least one)
+  const allDayByDay=days.map(d=>{
+    const ds=calDateStr(d.getFullYear(),d.getMonth(),d.getDate());
+    return allEvents.filter(e=>!e.time&&(e.date===ds||(e.endDate&&e.date<=ds&&e.endDate>=ds)));
+  });
+  if(allDayByDay.some(list=>list.length)){
+    const allDayRow=document.createElement('div');
+    allDayRow.className='cal-week-allday-row';
+    days.forEach((d,i)=>{
+      const ds=calDateStr(d.getFullYear(),d.getMonth(),d.getDate());
+      const col=document.createElement('div');
+      col.className='cal-week-allday-col';
+      allDayByDay[i].forEach(e=>{
+        const c=CAL_COLORS[e.colorIdx];
+        const chip=document.createElement('div');
+        chip.className='cal-week-allday-chip';
+        chip.style.cssText=`background:${c.bg};color:${c.text}`;
+        chip.textContent=e.name;
+        chip.onclick=ev=>{ev.stopPropagation();if(e.source==='local')openCalEventModal(ds,e.id);};
+        col.appendChild(chip);
+      });
+      allDayRow.appendChild(col);
+    });
+    wrap.appendChild(allDayRow);
+  }
+
+  // Hourly grid — 6am to 10pm, colored event blocks, red "now" line
+  const HOUR_START=6,HOUR_END=22,ROW_H=48;
+  const parseTimeMin=t=>{
+    const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');
+    if(!m)return null;
+    return parseInt(m[1],10)*60+parseInt(m[2],10);
+  };
+  const hourly=document.createElement('div');
+  hourly.className='cal-week-hourly';
+
+  const labelsCol=document.createElement('div');
+  labelsCol.className='cal-week-hour-labels';
+  for(let h=HOUR_START;h<=HOUR_END;h++){
+    const lbl=document.createElement('div');
+    lbl.className='cal-week-hour-label';
+    lbl.textContent=h===12?'12 PM':h<12?`${h} AM`:h===24?'12 AM':`${h-12} PM`;
+    labelsCol.appendChild(lbl);
+  }
+  hourly.appendChild(labelsCol);
+
+  const daysGrid=document.createElement('div');
+  daysGrid.className='cal-week-days-grid';
+  daysGrid.style.height=`${(HOUR_END-HOUR_START)*ROW_H}px`;
+
+  const linesEl=document.createElement('div');
+  linesEl.className='cal-week-hour-lines';
+  for(let h=HOUR_START;h<=HOUR_END;h++){
+    const line=document.createElement('div');
+    line.className='cal-week-hour-line';
+    linesEl.appendChild(line);
+  }
+  daysGrid.appendChild(linesEl);
+
+  const colsEl=document.createElement('div');
+  colsEl.className='cal-week-cols';
+  const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+  days.forEach(d=>{
+    const ds=calDateStr(d.getFullYear(),d.getMonth(),d.getDate());
+    const col=document.createElement('div');
+    col.className='cal-week-day-col';
+    col.onclick=()=>openCalEventModal(ds);
+    const timedToday=allEvents.filter(e=>e.date===ds&&!(e.endDate&&e.endDate>e.date)&&parseTimeMin(e.time)!=null);
+    timedToday.forEach(e=>{
+      const startMin=parseTimeMin(e.time);
+      const top=Math.max(0,((startMin-HOUR_START*60)/60)*ROW_H);
+      const c=CAL_COLORS[e.colorIdx];
+      const block=document.createElement('div');
+      block.className='cal-week-evt-block';
+      block.style.cssText=`top:${top}px;height:${ROW_H-4}px;background:${c.bg};color:${c.text}`;
+      block.textContent=e.name;
+      block.onclick=ev=>{ev.stopPropagation();if(e.source==='local')openCalEventModal(ds,e.id);};
+      col.appendChild(block);
+    });
+    if(ds===today&&nowMin>=HOUR_START*60&&nowMin<=HOUR_END*60){
+      const nowLine=document.createElement('div');
+      nowLine.className='cal-week-now-line';
+      nowLine.style.top=`${((nowMin-HOUR_START*60)/60)*ROW_H}px`;
+      col.appendChild(nowLine);
+    }
+    colsEl.appendChild(col);
+  });
+  daysGrid.appendChild(colsEl);
+  hourly.appendChild(daysGrid);
+  wrap.appendChild(hourly);
+}
 
 window.openCalEventModal=function(dateStr,eventId){
   calEditId=eventId||null;
@@ -256,4 +432,4 @@ window.deleteCalEvent=function(){
 };
 
 // ── GLOBAL EXPORTS ──
-Object.assign(window, { renderCalendar, renderCalendarGrid, syncCalendarEvents, isJuliaEvent, calColorIdx });
+Object.assign(window, { renderCalendar, renderCalendarGrid, renderCalendarWeek, syncCalendarEvents, isJuliaEvent, calColorIdx, calColorFor });

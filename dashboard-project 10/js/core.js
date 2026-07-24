@@ -115,9 +115,11 @@ function updateThemeBtn(){
 }
 // ── HIDE NUMBERS ─────────────────────────────────────────────────────
 let numbersHidden=localStorage.getItem('hideNumbers')==='1';
+if(numbersHidden)document.documentElement.setAttribute('data-hide-amounts','true');
 function toggleHideNumbers(){
   numbersHidden=!numbersHidden;
   localStorage.setItem('hideNumbers',numbersHidden?'1':'0');
+  document.documentElement.toggleAttribute('data-hide-amounts',numbersHidden);
   updateHideNumBtn();
   renderFinanceTab();
   renderGoals();
@@ -187,8 +189,7 @@ onAuthStateChanged(auth, async user=>{
     appEl.style.flexDirection='column';
     updateThemeBtn();
     const initials=(user.displayName||'D').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const avatarEl=document.getElementById('userAvatar');
-    if(avatarEl)avatarEl.textContent=initials;
+    document.querySelectorAll('#userAvatar,.hdr-avatar').forEach(el=>el.textContent=initials);
     userRef=doc(db,'users',user.uid,'data','main');
     await loadData();
     renderAll();
