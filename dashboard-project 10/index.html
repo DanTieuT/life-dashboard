@@ -124,6 +124,7 @@
             <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg class="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
+          <div class="hdr-avatar" onclick="toggleProfileDropdown()"></div>
         </div>
         <div class="hero-gauge-wrap" id="heroGaugeLeft">
           <!-- rendered by renderStats() -->
@@ -154,16 +155,16 @@
             <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
           </div>
         </div>
+        <div class="nw-chart-body" data-role="body">
+          <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
+          <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
+        </div>
         <div class="nw-range-bar" data-role="rangebar">
           <button class="nw-range-btn" data-range="30" onclick="setNWRange(30,this)">30D</button>
           <button class="nw-range-btn" data-range="90" onclick="setNWRange(90,this)">90D</button>
           <button class="nw-range-btn" data-range="180" onclick="setNWRange(180,this)">6M</button>
           <button class="nw-range-btn" data-range="365" onclick="setNWRange(365,this)">1Y</button>
           <button class="nw-range-btn" data-range="0" onclick="setNWRange(0,this)">All</button>
-        </div>
-        <div class="nw-chart-body" data-role="body">
-          <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
-          <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
         </div>
       </div>
 
@@ -174,6 +175,7 @@
           <div id="statsRingBudget"></div>
           <div class="ring-stat-sub" id="statsBudgetDetail">set up budget</div>
           <div class="ring-stat-badge green" id="statsBudgetBadge">on track</div>
+          <div class="ring-stat-catlist" id="statsBudgetCatList"></div>
         </div>
         <!-- Today Schedule -->
         <div class="today-card" style="margin-bottom:0">
@@ -239,7 +241,7 @@
           </div>
           <button class="btn-new" onclick="openAddHabitModal()">+ New habit</button>
         </div>
-        <div class="habits-grid" id="habitsGridDash"></div>
+        <div id="habitsGridDash"></div>
         <div style="text-align:center;margin-top:12px">
           <button class="show-archived-btn" id="showArchivedHabitsBtn" onclick="toggleShowArchivedHabits()">Show archived habits</button>
         </div>
@@ -367,16 +369,16 @@
             <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
           </div>
         </div>
+        <div class="nw-chart-body" data-role="body">
+          <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
+          <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
+        </div>
         <div class="nw-range-bar" data-role="rangebar">
           <button class="nw-range-btn" data-range="30" onclick="setNWRange(30,this)">30D</button>
           <button class="nw-range-btn" data-range="90" onclick="setNWRange(90,this)">90D</button>
           <button class="nw-range-btn" data-range="180" onclick="setNWRange(180,this)">6M</button>
           <button class="nw-range-btn" data-range="365" onclick="setNWRange(365,this)">1Y</button>
           <button class="nw-range-btn" data-range="0" onclick="setNWRange(0,this)">All</button>
-        </div>
-        <div class="nw-chart-body" data-role="body">
-          <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
-          <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
         </div>
       </div>
 

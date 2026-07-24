@@ -205,8 +205,14 @@ function renderDashProjectsWidget(){
     const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
     const prColor=p.priority?PRIORITY_COLORS[p.priority]:'#444';
     const prLabel=p.priority?(p.priority.charAt(0).toUpperCase()+p.priority.slice(1)):'—';
+    const tasks=p.tasks||[];
+    const doneCount=tasks.filter(t=>t.done).length;
+    const pct=tasks.length>0?Math.round(doneCount/tasks.length*100):{planning:10,sourcing:30,building:60,blocked:20,done:100}[p.stage]||10;
     return`<div class="dash-proj-row">
-      <div><div class="dash-proj-name">${p.name}</div>${p.category?`<div class="dash-proj-cat">${p.category}</div>`:''}</div>
+      <div>
+        <div class="dash-proj-name">${p.name}</div>${p.category?`<div class="dash-proj-cat">${p.category}</div>`:''}
+        <div class="dash-proj-prog-track"><div class="dash-proj-prog-fill" style="width:${pct}%;background:${s.dotColor}"></div></div>
+      </div>
       <div><span class="proj-status-pill" style="background:${s.bg}"><span class="proj-status-dot" style="background:${s.dotColor}"></span>${s.label}</span></div>
       <div>${p.priority?`<span class="proj-priority"><span class="proj-priority-dot" style="background:${prColor}"></span>${prLabel}</span>`:'<span style="color:var(--muted);font-size:13px">—</span>'}</div>
     </div>`;

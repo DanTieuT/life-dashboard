@@ -236,15 +236,26 @@ window.saveIntention=()=>{
   saveData();
 };
 // ── GAUGE RING SVG HELPER ─────────────────────────────────────────
-function gaugeRingSVG(pct,color,label,sub,size=100){
+// paceTick (0-100, optional): draws a radial line marking "on pace" —
+// e.g. % of the month elapsed, so you can see spend-vs-time at a glance.
+function gaugeRingSVG(pct,color,label,sub,size=100,paceTick=null){
   const r=size*0.38,cx=size/2,cy=size/2,sw=size*0.09;
   const circ=2*Math.PI*r;
   const offset=circ*(1-Math.min(pct/100,1));
+  let tickSvg='';
+  if(paceTick!=null){
+    const angle=(Math.min(paceTick,100)/100)*360-90;
+    const rad=angle*Math.PI/180;
+    const x1=cx+(r-sw*0.7)*Math.cos(rad), y1=cy+(r-sw*0.7)*Math.sin(rad);
+    const x2=cx+(r+sw*0.7)*Math.cos(rad), y2=cy+(r+sw*0.7)*Math.sin(rad);
+    tickSvg=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/>`;
+  }
   return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="gauge-svg">
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${sw}" stroke-linecap="round"/>
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round"
       stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
       transform="rotate(-90 ${cx} ${cy})" style="transition:stroke-dashoffset .8s ease"/>
+    ${tickSvg}
     <text x="${cx}" y="${cy-size*0.06}" text-anchor="middle" dominant-baseline="middle"
       font-family="-apple-system,'SF Pro Display',sans-serif" font-size="${size*0.18}" font-weight="700" fill="var(--text)">${label}</text>
     <text x="${cx}" y="${cy+size*0.13}" text-anchor="middle" dominant-baseline="middle"
@@ -285,7 +296,7 @@ function renderStats(){
 
   // Ring stat cards
   const rstTasks=document.getElementById('statsRingTasks');
-  if(rstTasks) rstTasks.innerHTML=gaugeRingSVG(taskPct,'var(--blue)',doneTasks,'done',80);
+  if(rstTasks) rstTasks.innerHTML=gaugeRingSVG(taskPct,'var(--blue)',doneTasks,'done',108);
   const rstHabits=document.getElementById('statsRingHabits');
   if(rstHabits) rstHabits.innerHTML=gaugeRingSVG(pct,'var(--cyan)',pct+'%','this week',80);
   const sdn=document.getElementById('statsHabitsDoneN');
@@ -302,7 +313,9 @@ function renderStats(){
     const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
     const bPct=budgetAmt>0?Math.min(bSpent/budgetAmt*100,100):0;
     const bColor=bPct>=100?'var(--red)':bPct>=80?'var(--yellow)':'var(--orange)';
-    rstBudget.innerHTML=gaugeRingSVG(bPct,bColor,fmtM(bSpent),'spent',80);
+    const daysInBMonth=new Date(bYear,bMonth+1,0).getDate();
+    const pacePct=budgetAmt>0?(new Date().getDate()/daysInBMonth*100):null;
+    rstBudget.innerHTML=gaugeRingSVG(bPct,bColor,fmtM(bSpent),budgetAmt>0?'of '+fmtM(budgetAmt):'spent',108,pacePct);
     const bd=document.getElementById('statsBudgetDetail');
     const bb=document.getElementById('statsBudgetBadge');
     if(bd) bd.textContent=budgetAmt>0?`${fmtM(bSpent)} / ${fmtM(budgetAmt)}`:'set up budget →';
@@ -311,6 +324,17 @@ function renderStats(){
       bb.style.display=budgetAmt>0?'':'none';
       bb.textContent=bPct>=100?'over budget':bPct>=80?'close to limit':'on track';
       bb.className='ring-stat-badge '+(bPct>=100?'red':bPct>=80?'yellow':'green');
+    }
+    // Top spending categories this month (dot + name + amount), mirrors the
+    // mockup's Budget-card category breakdown list
+    const catListEl=document.getElementById('statsBudgetCatList');
+    if(catListEl){
+      const CAT_DOT_COLORS=['#007aff','#34c759','#ff9500','#af52de','#30b0c7','#ff3b30'];
+      const catSpends=Object.keys(appData.budget.categories||{}).map((cat,i)=>({
+        cat,spent:bMt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0),
+        color:CAT_DOT_COLORS[i%CAT_DOT_COLORS.length],
+      })).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent).slice(0,3);
+      catListEl.innerHTML=catSpends.map(c=>`<div class="ring-stat-cat-row"><span><span class="ring-stat-cat-dot" style="background:${c.color}"></span>${c.cat}</span><span>${fmtM(c.spent)}</span></div>`).join('');
     }
   }
 }
@@ -346,7 +370,7 @@ function renderMiniChart(id,vals){
   el.innerHTML=vals.map((v,i)=>{
     const h=Math.max(Math.round(v/max*36),3);
     const isToday=i===13;
-    const color=isToday?'#30d158':v>0?'rgba(48,209,88,.25)':'var(--border)';
+    const color=isToday?'var(--green)':v>0?'rgba(52,199,89,.25)':'var(--border)';
     return `<div class="mini-bar" style="height:${h}px;background:${color}"></div>`;
   }).join('');
 }
@@ -432,7 +456,9 @@ function renderTodaySchedule(){
     const isBold=cls==='now';
     const calBadge=e.source==='calendar'?`<span style="font-size:9px;font-weight:700;letter-spacing:.5px;background:rgba(10,132,255,.15);color:var(--blue);padding:2px 5px;border-radius:4px;margin-left:5px">CAL</span>`:'';
     const delBtn=e.source==='local'?`<button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--muted);font-size:14px;margin-left:6px">✕</button>`:'';
+    const barColor=(typeof calColorFor==='function'?calColorFor(e):null)?.bg||'var(--blue)';
     return `<div class="evt-row">
+      <div class="evt-bar" style="background:${barColor}"></div>
       <div class="evt-time">${e.time||'—'}</div>
       <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}${calBadge}</div>
       <div class="evt-status">
@@ -441,7 +467,7 @@ function renderTodaySchedule(){
       </div>
     </div>`;
   });
-  el.innerHTML=`<div class="evt-table-head"><span>TIME</span><span>EVENT</span><span style="text-align:right">STATUS</span></div>`+rows.join('');
+  el.innerHTML=`<div class="evt-table-head"><span></span><span>TIME</span><span>EVENT</span><span style="text-align:right">STATUS</span></div>`+rows.join('');
 }
 
 window.deleteEvent=function(id){

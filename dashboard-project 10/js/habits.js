@@ -1,4 +1,55 @@
-// ── HABITS GRID ───────────────────────────────────────────────────
+// ── HABITS — combined card (tabs + 12-week heatmap + streak list) ──
+// Design-synced to the mockup: one card, "All" + per-habit tabs, an 84-cell
+// (12-week) heatmap, and a streak list. Logging/edit/delete aren't part of
+// the mockup (it's a read-only demo) — kept reachable via the focused
+// per-habit tab so the real quick-log workflow isn't lost.
+let _habitTab='all';
+window.setHabitTab=function(key){
+  _habitTab=key;
+  renderHabitsGrid('habitsGridDash');
+};
+
+const HEATMAP_WEEKS=12;
+function last84Dates(){
+  const dates=[];
+  for(let week=0;week<HEATMAP_WEEKS;week++){
+    for(let day=0;day<7;day++){
+      const daysAgo=(HEATMAP_WEEKS-1-week)*7+(6-day);
+      const d=new Date();d.setDate(d.getDate()-daysAgo);
+      dates.push(d.toLocaleDateString('en-CA'));
+    }
+  }
+  return dates; // oldest → newest, column-major (matches grid-auto-flow:column)
+}
+
+function combinedHeatmapCellsHTML(habits){
+  const LEVEL_COLORS=['var(--track)','rgba(52,199,89,.35)','rgba(52,199,89,.65)','var(--green)'];
+  const total=habits.length;
+  return last84Dates().map(ds=>{
+    const doneCount=habits.filter(h=>habitDone(h,ds)).length;
+    const ratio=total?doneCount/total:0;
+    const level=ratio===0?0:ratio>0.75?3:ratio>0.4?2:1;
+    return `<div class="hh-cell" style="background:${LEVEL_COLORS[level]}" title="${ds}: ${doneCount}/${total}"></div>`;
+  }).join('');
+}
+
+function habitHeatmapCellsHTML(h,c){
+  return last84Dates().map(ds=>{
+    const done=habitDone(h,ds);
+    return `<div class="hh-cell" style="background:${done?c.dot:'var(--track)'}" title="${ds}"></div>`;
+  }).join('');
+}
+
+function habitColorFor(h,idx){
+  const colors=habitColors();
+  const ci=typeof h.colorIdx==='number'?h.colorIdx:idx%colors.length;
+  if(h.customColor){
+    const hex=h.customColor;
+    return{bg:hex+'22',dot:hex,dim:hex+'33',btn:hex,ico:hex+'22'};
+  }
+  return colors[ci];
+}
+
 function renderHabitsGrid(containerId){
   const el=document.getElementById(containerId);
   if(!el)return;
@@ -7,120 +58,68 @@ function renderHabitsGrid(containerId){
     el.innerHTML='<div class="habit-empty">No habits yet — add your first one above!</div>';
     return;
   }
-  // Filter archived, sort by order property
   const sorted=[...appData.habits].filter(h=>!h.archived).sort((a,b)=>{
     const ao=typeof a.order==='number'?a.order:9999;
     const bo=typeof b.order==='number'?b.order:9999;
     return ao-bo;
   });
-  el.innerHTML=sorted.map((h,idx)=>habitCardHTML(h,idx)).join('');
-  // Attach drag listeners + archived-button visibility post-render
-  afterRenderHabitsGrid(containerId);
-}
-
-// Progress-ring button: N arc segments around a circle, like HabitKit
-function habitRingBtn(count,target,c,size=38){
-  const cx=size/2,cy=size/2,r=size*0.34,sw=size*0.11;
-  const circ=2*Math.PI*r;
-  const isDone=count>=target;
-  // Gap between segments as arc-length; 0 for single-segment ring
-  const gapArc=target>1?Math.min(circ*0.055,circ/target*0.22):0;
-  const segArc=(circ-gapArc*target)/target;
-  // Offset each segment by half a gap so gaps land exactly at 12 o'clock / 6 o'clock
-  const halfGapDeg=target>1?(gapArc/circ)*180:0;
-  let segs='';
-  for(let i=0;i<target;i++){
-    const startDeg=-90+i*(360/target)+halfGapDeg;
-    const filled=i<count;
-    segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
-      stroke="${filled?c.dot:'rgba(0,0,0,0.35)'}"
-      stroke-width="${sw}" stroke-linecap="round"
-      stroke-dasharray="${segArc.toFixed(2)} ${(circ-segArc).toFixed(2)}"
-      transform="rotate(${startDeg.toFixed(1)} ${cx} ${cy})"/>`;
+  if(!sorted.length){
+    el.innerHTML='<div class="habit-empty">No active habits — add one above, or restore an archived habit.</div>';
+    return;
   }
-  const icon=isDone?'✓':'+';
-  const iconFill=isDone?c.dot:'rgba(255,255,255,0.75)';
-  const iconSz=(size*(isDone?0.26:0.32)).toFixed(0);
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block">
-    ${segs}
-    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
-      font-size="${iconSz}" font-weight="700" fill="${iconFill}"
-      font-family="-apple-system,'SF Pro Text',sans-serif">${icon}</text>
-  </svg>`;
-}
-function habitCardHTML(h,idx){
-  const colors=habitColors();
-  const ci=typeof h.colorIdx==='number'?h.colorIdx:idx%colors.length;
-  let c=colors[ci];
-  // If custom color set, build a synthetic color object
-  if(h.customColor){
-    const hex=h.customColor;
-    c={bg:hex+'22',dot:hex,dim:hex+'33',btn:hex,ico:hex+'22'};
-  }
-  const today=todayStr();
-  const isWeekly=h.type==='weekly';
-  const dailyTarget=h.dailyTarget||1;
-  const weeklyTarget=h.target||1;
-  const count=habitCount(h,today);
-  const done=isWeekly?(count>0):(count>=dailyTarget);
+  if(_habitTab!=='all'&&!sorted.find(h=>h.id===_habitTab))_habitTab='all';
 
-  const dots=[];
-  if(isWeekly){
-    for(let week=0;week<52;week++){
-      const baseAgo=(51-week)*7;
-      let sessionsThisWeek=0;
-      for(let day=0;day<7;day++){
-        const daysAgo=baseAgo+(6-day);
-        const d=new Date();d.setDate(d.getDate()-daysAgo);
-        sessionsThisWeek+=habitCount(h,d.toLocaleDateString('en-CA'));
-      }
-      sessionsThisWeek=Math.min(sessionsThisWeek,weeklyTarget);
-      for(let slot=0;slot<weeklyTarget;slot++){
-        dots.push(`<div class="yd" style="background:${slot<sessionsThisWeek?c.dot:c.dim}"></div>`);
-      }
-    }
+  const tabsHTML=['<button class="habit-tab-pill'+(_habitTab==='all'?' active':'')+'" onclick="setHabitTab(\'all\')">All</button>']
+    .concat(sorted.map(h=>`<button class="habit-tab-pill${_habitTab===h.id?' active':''}" onclick="setHabitTab('${h.id}')">${h.name}</button>`))
+    .join('');
+
+  let bodyHTML;
+  if(_habitTab==='all'){
+    const heatmap=combinedHeatmapCellsHTML(sorted);
+    const streakRows=sorted.map((h,idx)=>{
+      const c=habitColorFor(h,idx);
+      const streak=calcStreak(h);
+      return `<div class="habit-streak-row" onclick="setHabitTab('${h.id}')">
+        <span class="habit-streak-left">
+          <span class="habit-streak-dot" style="background:${c.dot}"></span>
+          <span class="habit-streak-name">${h.name}</span>
+        </span>
+        <span class="habit-streak-val">${streak>0?`${streak} day streak`:'no streak yet'}</span>
+      </div>`;
+    }).join('');
+    bodyHTML=`<div class="habit-heatmap">${heatmap}</div><div class="habit-streak-list">${streakRows}</div>`;
   } else {
-    for(let week=0;week<52;week++){
-      for(let day=0;day<7;day++){
-        const daysAgo=(51-week)*7+(6-day);
-        const d=new Date();d.setDate(d.getDate()-daysAgo);
-        const cnt=habitCount(h,d.toLocaleDateString('en-CA'));
-        const dotBg=cnt>0?c.dot:c.dim;
-        const dotOp=cnt>0?(cnt/dailyTarget).toFixed(2):'1';
-        dots.push(`<div class="yd" style="background:${dotBg};opacity:${dotOp}"></div>`);
-      }
-    }
-  }
-  const gridStyle=isWeekly
-    ?`grid-template-rows:repeat(${weeklyTarget},1fr);aspect-ratio:${52}/${weeklyTarget}`
-    :`grid-template-rows:repeat(7,1fr);aspect-ratio:52/7`;
-
-  const ringTarget=isWeekly?1:dailyTarget;
-  const btnContent=habitRingBtn(count,ringTarget,c);
-
-  const streak=calcStreak(h);
-  const best=bestStreakEver(h);
-  const streakBadge=streak>=2?`<span class="habit-streak" title="Best: ${best} days">🔥 ${streak}</span>`:'';
-
-  return `<div class="habit-card" data-habit-id="${h.id}" style="background:${c.bg}" draggable="true">
-    <div class="habit-card-top">
-      <span class="drag-handle" title="Drag to reorder">⠿</span>
-      <div class="habit-icon" style="background:${c.dim}">${h.emoji||'⭐'}</div>
-      <div class="habit-info">
-        <div class="habit-name">${h.name}${streakBadge}</div>
-        <div class="habit-sub">${h.sub||h.name}</div>
+    const idx=sorted.findIndex(h=>h.id===_habitTab);
+    const h=sorted[idx];
+    const c=habitColorFor(h,idx);
+    const today=todayStr();
+    const isWeekly=h.type==='weekly'||h.type==='monthly';
+    const dailyTarget=h.dailyTarget||1;
+    const count=habitCount(h,today);
+    const done=isWeekly?count>0:count>=dailyTarget;
+    const streak=calcStreak(h);
+    const heatmap=habitHeatmapCellsHTML(h,c);
+    bodyHTML=`<div class="habit-focused-row">
+        <span class="habit-streak-left">
+          <span class="habit-streak-dot" style="background:${c.dot}"></span>
+          <span class="habit-focused-name">${h.name}</span>
+        </span>
+        <span class="habit-streak-val">${streak>0?`${streak} day streak`:'no streak yet'}</span>
       </div>
-      <div class="habit-card-actions">
+      <div class="habit-heatmap" style="margin-bottom:14px">${heatmap}</div>
+      <div class="habit-focused-actions">
+        <button class="habit-log-check${done?' checked':''}" style="${done?`background:${c.dot};border-color:${c.dot}`:''}" onclick="logHabit('${h.id}')" title="${isWeekly?'Log':`Log (${count}/${dailyTarget})`}">${done?'✓':(dailyTarget>1?count:'')}</button>
+        <span class="habit-focused-sub">${h.sub||''}</span>
         <button class="habit-action-btn" onclick="openEditHabitModal('${h.id}')" title="Edit">✎</button>
         <button class="habit-action-btn habit-del-btn" onclick="deleteHabit('${h.id}')" title="Delete">✕</button>
-      </div>
-      <button class="habit-log-btn" style="background:${c.dim};padding:0;opacity:1"
-        onclick="logHabit('${h.id}')">
-        ${btnContent}
-      </button>
-    </div>
-    <div class="year-grid" style="${gridStyle}">${dots.join('')}</div>
+      </div>`;
+  }
+
+  el.innerHTML=`<div class="habit-combined-card">
+    <div class="habit-tabs-row">${tabsHTML}</div>
+    ${bodyHTML}
   </div>`;
+  afterRenderHabitsGrid(containerId);
 }
 window.logHabit=function(id){
   haptic(40);
@@ -307,111 +306,9 @@ window.deleteHabit=function(id){
 
 // Enter advances fields; Cmd/Ctrl+Enter saves (#11)
 setupModalEnterFlow('addHabitModal',['newHabitName','newHabitSub','newHabitEmoji'],()=>saveHabitModal());
-let _dragHabitId=null;
 
-function attachHabitDragListeners(containerId){
-  const container=document.getElementById(containerId);
-  if(!container)return;
-  container.querySelectorAll('.habit-card[data-habit-id]').forEach(card=>{
-    card.addEventListener('dragstart',e=>{
-      _dragHabitId=card.dataset.habitId;
-      setTimeout(()=>card.classList.add('dragging'),0);
-      e.dataTransfer.effectAllowed='move';
-    });
-    card.addEventListener('dragend',()=>{
-      card.classList.remove('dragging');
-      container.querySelectorAll('.habit-card').forEach(c=>c.classList.remove('drag-over'));
-    });
-    card.addEventListener('dragover',e=>{
-      e.preventDefault();
-      e.dataTransfer.dropEffect='move';
-      container.querySelectorAll('.habit-card').forEach(c=>c.classList.remove('drag-over'));
-      card.classList.add('drag-over');
-    });
-    card.addEventListener('drop',e=>{
-      e.preventDefault();
-      const fromId=_dragHabitId;
-      const toId=card.dataset.habitId;
-      if(fromId&&toId&&fromId!==toId){
-        const habits=appData.habits;
-        const fromIdx=habits.findIndex(h=>h.id===fromId);
-        const toIdx=habits.findIndex(h=>h.id===toId);
-        if(fromIdx>-1&&toIdx>-1){
-          const [moved]=habits.splice(fromIdx,1);
-          habits.splice(toIdx,0,moved);
-          // Update order property
-          habits.forEach((h,i)=>h.order=i);
-          saveData();
-          renderHabitsGrid('habitsGridDash');
-          renderHabitsGrid('habitsGridTab');
-          attachHabitDragListeners('habitsGridDash');
-          attachHabitDragListeners('habitsGridTab');
-        }
-      }
-      card.classList.remove('drag-over');
-    });
-  });
-
-  // Touch drag support for mobile
-  let touchDragCard=null,touchClone=null,touchStartY=0,touchStartX=0;
-  container.querySelectorAll('.drag-handle').forEach(handle=>{
-    handle.addEventListener('touchstart',e=>{
-      const card=handle.closest('.habit-card[data-habit-id]');
-      if(!card)return;
-      touchDragCard=card;
-      _dragHabitId=card.dataset.habitId;
-      const t=e.touches[0];
-      touchStartX=t.clientX;touchStartY=t.clientY;
-      // Create clone for visual feedback
-      touchClone=card.cloneNode(true);
-      touchClone.style.cssText=`position:fixed;top:${card.getBoundingClientRect().top}px;left:${card.getBoundingClientRect().left}px;width:${card.offsetWidth}px;opacity:0.7;z-index:9999;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);border-radius:var(--radius)`;
-      document.body.appendChild(touchClone);
-      card.style.opacity='0.3';
-    },{passive:true});
-    handle.addEventListener('touchmove',e=>{
-      if(!touchDragCard||!touchClone)return;
-      const t=e.touches[0];
-      const dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;
-      touchClone.style.transform=`translate(${dx}px,${dy}px)`;
-      // Find card under finger
-      touchClone.style.pointerEvents='none';
-      const el=document.elementFromPoint(t.clientX,t.clientY);
-      const overCard=el?.closest('.habit-card[data-habit-id]');
-      container.querySelectorAll('.habit-card').forEach(c=>c.classList.remove('drag-over'));
-      if(overCard&&overCard!==touchDragCard)overCard.classList.add('drag-over');
-    },{passive:true});
-    handle.addEventListener('touchend',e=>{
-      if(!touchDragCard)return;
-      const t=e.changedTouches[0];
-      const el=document.elementFromPoint(t.clientX,t.clientY);
-      const overCard=el?.closest('.habit-card[data-habit-id]');
-      if(overCard&&overCard!==touchDragCard){
-        const fromId=_dragHabitId;
-        const toId=overCard.dataset.habitId;
-        const habits=appData.habits;
-        const fromIdx=habits.findIndex(h=>h.id===fromId);
-        const toIdx=habits.findIndex(h=>h.id===toId);
-        if(fromIdx>-1&&toIdx>-1){
-          const [moved]=habits.splice(fromIdx,1);
-          habits.splice(toIdx,0,moved);
-          habits.forEach((h,i)=>h.order=i);
-          saveData();
-          renderHabitsGrid('habitsGridDash');
-          renderHabitsGrid('habitsGridTab');
-          attachHabitDragListeners('habitsGridDash');
-          attachHabitDragListeners('habitsGridTab');
-        }
-      }
-      if(touchClone){touchClone.remove();touchClone=null;}
-      if(touchDragCard){touchDragCard.style.opacity='';touchDragCard=null;}
-      container.querySelectorAll('.habit-card').forEach(c=>c.classList.remove('drag-over'));
-    },{passive:true});
-  });
-}
-
-// After renderHabitsGrid runs: attach drag listeners + archived-btn visibility
+// After renderHabitsGrid runs: show/hide the archived-habits toggle
 function afterRenderHabitsGrid(containerId){
-  attachHabitDragListeners(containerId);
   const hasArchived=(appData.habits||[]).some(h=>h.archived);
   const btn=document.getElementById('showArchivedHabitsBtn');
   if(btn)btn.style.display=hasArchived?'':'none';
