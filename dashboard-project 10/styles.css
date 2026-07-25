@@ -25,10 +25,6 @@
   --track:rgba(120,120,128,.16);--seg-active:#fff;
   --divider:rgba(60,60,67,.12);--pill-bg:rgba(120,120,128,.12);}
 [data-theme="light"] .auth-logo-gem{background:#d1f2e0;}
-[data-theme="light"] .sbadge.done{background:#d1f2e0;color:#1a9e6a;}
-[data-theme="light"] .sbadge.now{background:#fff3c4;color:#a07800;}
-[data-theme="light"] .sbadge.next{background:#f2f2f7;color:#555;}
-[data-theme="light"] .sbadge.upcoming{background:#f0f0f5;color:#888;}
 [data-theme="light"] .mc-today .mc-num{color:#fff;}
 [data-theme="light"] .chat-panel{box-shadow:0 12px 48px rgba(0,0,0,.15);}
 [data-theme="light"] .modal-overlay{background:rgba(0,0,0,0.35);}
@@ -104,8 +100,8 @@ input,select,textarea{font-family:inherit}
 .hero-gauge-label{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--sub)}
 .hero-gauge-val{font-size:13px;font-weight:700;color:var(--text)}
 .hero-center{flex:1;text-align:center;z-index:1}
-.hero-greeting{font-size:25px;font-weight:700;letter-spacing:.2px;margin-bottom:4px}
-.hero-date{font-size:15px;font-weight:500;color:var(--sub);margin-bottom:14px}
+.hero-date{font-size:15px;font-weight:500;color:var(--sub);margin-bottom:2px}
+.hero-greeting{font-size:25px;font-weight:700;letter-spacing:.2px;margin-bottom:14px}
 .hero-intention{display:none}
 .hero-actions{position:absolute;top:14px;right:14px;display:flex;gap:6px;z-index:2}
 [data-theme="light"] .hero-card::before{background:radial-gradient(ellipse at 20% 50%,rgba(40,179,72,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(10,132,255,.06) 0%,transparent 60%)}
@@ -179,22 +175,14 @@ input,select,textarea{font-family:inherit}
 .today-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
 .today-title-wrap .card-title{margin-bottom:3px}
 .events-badge{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:12px;color:var(--sub)}
-.evt-table-head{display:grid;grid-template-columns:3px 72px 1fr 110px;gap:12px;padding:0 6px 10px;border-bottom:1px solid var(--border)}
-.evt-table-head span{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
-.evt-table-head span:last-child{text-align:right}
-.evt-row{display:grid;grid-template-columns:3px 72px 1fr 110px;gap:12px;padding:14px 6px;border-bottom:.5px solid var(--divider);align-items:center}
+.evt-row{display:flex;gap:8px;align-items:flex-start;padding:8px 6px;border-bottom:.5px solid var(--divider)}
 .evt-row:last-child{border-bottom:none}
-.evt-bar{align-self:stretch;border-radius:2px;min-height:20px}
-.evt-time{font-size:11px;color:var(--sub)}
-.evt-name{font-size:12px}
-.evt-name.bold{font-weight:600}
-.evt-name.muted{color:var(--sub)}
-.evt-status{text-align:right}
-.sbadge{display:inline-flex;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:600}
-.sbadge.done{background:rgba(48,209,88,.12);color:var(--green)}
-.sbadge.now{background:rgba(255,214,10,.12);color:var(--yellow)}
-.sbadge.next{background:var(--card2);color:var(--sub)}
-.sbadge.upcoming{background:var(--card2);color:var(--muted)}
+.evt-bar{width:3px;align-self:stretch;border-radius:2px;margin-top:2px;flex-shrink:0;min-height:20px}
+.evt-body{min-width:0}
+.evt-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evt-name.bold{font-weight:700}
+.evt-name.muted{color:var(--sub);font-weight:600}
+.evt-time{font-size:11px;color:var(--sub);margin-top:1px}
 .evt-empty{color:var(--muted);font-size:13px;padding:20px 6px;text-align:center}
 .add-evt-btn{margin-top:14px;background:none;border:1px dashed var(--border);border-radius:10px;padding:9px;width:100%;color:var(--muted);font-size:13px;transition:all .2s}
 .add-evt-btn:hover{border-color:var(--green);color:var(--green)}
@@ -1032,9 +1020,7 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   .mid-row{grid-template-columns:1fr;gap:12px}
 
   /* ── Schedule / event rows ── */
-  .evt-row{grid-template-columns:3px 58px 1fr auto;gap:8px;padding:12px 4px}
-  .evt-table-head{grid-template-columns:3px 58px 1fr auto;padding:0 4px 8px}
-  .evt-time{font-size:13px}
+  .evt-row{padding:8px 4px}
 
   /* All pages fill the full scrollable height so bottom nav always looks consistent */
   .page.active{min-height:calc(100vh - 52px - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}

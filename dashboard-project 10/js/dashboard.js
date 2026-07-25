@@ -192,8 +192,7 @@ window.deleteBrainDumpNote=function(id){
 
 // ── GREETING ──────────────────────────────────────────────────────
 function renderGreeting(){
-  const name=(typeof auth!=='undefined'&&auth.currentUser?.displayName||'Dan').split(' ')[0];
-  document.getElementById('greetingText').textContent=`${getGreeting()}, ${name}`;
+  document.getElementById('greetingText').textContent=getGreeting();
   const dateEl=document.getElementById('heroDate');
   if(dateEl){
     const now=new Date();
@@ -317,13 +316,14 @@ function renderStats(){
     const pacePct=budgetAmt>0?(new Date().getDate()/daysInBMonth*100):null;
     rstBudget.innerHTML=gaugeRingSVG(bPct,bColor,fmtM(bSpent),budgetAmt>0?'of '+fmtM(budgetAmt):'spent',108,pacePct);
     const bd=document.getElementById('statsBudgetDetail');
-    const bb=document.getElementById('statsBudgetBadge');
-    if(bd) bd.textContent=budgetAmt>0?`${fmtM(bSpent)} / ${fmtM(budgetAmt)}`:'set up budget →';
-    if(bb){
-      // "on track" is meaningless with no budget configured — hide the badge
-      bb.style.display=budgetAmt>0?'':'none';
-      bb.textContent=bPct>=100?'over budget':bPct>=80?'close to limit':'on track';
-      bb.className='ring-stat-badge '+(bPct>=100?'red':bPct>=80?'yellow':'green');
+    if(bd){
+      if(budgetAmt>0){
+        const budgetLeft=budgetAmt-bSpent;
+        const leftLabel=budgetLeft>=0?`${fmtM(budgetLeft)} left`:`${fmtM(Math.abs(budgetLeft))} over budget`;
+        bd.textContent=`${leftLabel} · tick = on-pace`;
+      } else {
+        bd.textContent='set up budget →';
+      }
     }
     // Top spending categories this month (dot + name + amount), mirrors the
     // mockup's Budget-card category breakdown list
@@ -455,19 +455,17 @@ function renderTodaySchedule(){
     }
     const isBold=cls==='now';
     const calBadge=e.source==='calendar'?`<span style="font-size:9px;font-weight:700;letter-spacing:.5px;background:rgba(10,132,255,.15);color:var(--blue);padding:2px 5px;border-radius:4px;margin-left:5px">CAL</span>`:'';
-    const delBtn=e.source==='local'?`<button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--muted);font-size:14px;margin-left:6px">✕</button>`:'';
+    const delBtn=e.source==='local'?`<button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--muted);font-size:12px;margin-left:5px">✕</button>`:'';
     const barColor=(typeof calColorFor==='function'?calColorFor(e):null)?.bg||'var(--blue)';
     return `<div class="evt-row">
       <div class="evt-bar" style="background:${barColor}"></div>
-      <div class="evt-time">${e.time||'—'}</div>
-      <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}${calBadge}</div>
-      <div class="evt-status">
-        <span class="sbadge ${cls}">${status}</span>
-        ${delBtn}
+      <div class="evt-body">
+        <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}${calBadge}${delBtn}</div>
+        <div class="evt-time">${e.allDay||!e.time?'All day':e.time}</div>
       </div>
     </div>`;
   });
-  el.innerHTML=`<div class="evt-table-head"><span></span><span>TIME</span><span>EVENT</span><span style="text-align:right">STATUS</span></div>`+rows.join('');
+  el.innerHTML=rows.join('');
 }
 
 window.deleteEvent=function(id){
