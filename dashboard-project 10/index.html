@@ -113,9 +113,14 @@
     <!-- ── DASHBOARD TAB ── -->
     <div class="page active" id="page-dashboard">
 
-      <!-- Hero Card -->
-      <div class="hero-card">
-        <div class="hero-actions">
+      <!-- Home Header -->
+      <div class="page-hdr">
+        <div class="page-hdr-text">
+          <div class="page-hdr-eyebrow" id="heroDate"></div>
+          <div class="page-hdr-title" id="greetingText">Good morning</div>
+          <input class="hero-intention" id="intentionInput" type="text" placeholder="What's your intention today?" onblur="saveIntention()" onkeydown="if(event.key==='Enter')this.blur()">
+        </div>
+        <div class="page-hdr-actions">
           <button class="hdr-icon-btn" onclick="toggleTheme()" title="Toggle theme">
             <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 3a8.5 8.5 0 108.4 9.7A7 7 0 0112.3 3z"/></svg>
             <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4" y1="4" x2="5.8" y2="5.8"/><line x1="18.2" y1="18.2" x2="20" y2="20"/><line x1="20" y1="4" x2="18.2" y2="5.8"/><line x1="5.8" y1="18.2" x2="4" y2="20"/></g></svg>
@@ -126,21 +131,10 @@
           </button>
           <div class="hdr-avatar" onclick="toggleProfileDropdown()"></div>
         </div>
-        <div class="hero-gauge-wrap" id="heroGaugeLeft">
-          <!-- rendered by renderStats() -->
-        </div>
-        <div class="hero-center">
-          <div class="hero-date" id="heroDate"></div>
-          <div class="hero-greeting" id="greetingText">Good morning</div>
-          <input class="hero-intention" id="intentionInput" type="text" placeholder="What's your intention today?" onblur="saveIntention()" onkeydown="if(event.key==='Enter')this.blur()">
-        </div>
-        <div class="hero-gauge-wrap" id="heroGaugeRight">
-          <!-- rendered by renderStats() -->
-        </div>
       </div>
 
       <!-- Net Worth Chart (mockup places this first, right after the greeting) -->
-      <div class="fin-card nw-chart-card" id="nwCard-dash" data-nw-id="dash" style="display:none;margin-bottom:0">
+      <div class="fin-card nw-chart-card" id="nwCard-dash" data-nw-id="dash" style="display:none">
         <div class="nw-chart-hdr">
           <div>
             <div class="fin-section-title" style="margin-bottom:2px">Net Worth</div>
@@ -193,20 +187,11 @@
         </div>
       </div>
 
-      <!-- Focus + Tasks Done -->
-      <div class="mid-row">
-        <div class="ring-stat-card">
-          <div class="ring-stat-title">Tasks Done</div>
-          <div id="statsRingTasks"></div>
-          <div class="ring-stat-sub"><span id="tasksDoneNum">0</span> / <span id="tasksTotalNum">0</span> today</div>
-          <div class="ring-stat-badge green" id="tasksBadge">↑ 0</div>
-        </div>
-        <!-- Top 3 Focus Tasks -->
-        <div class="focus-card">
-          <div class="card-title">Top 3 focus tasks</div>
-          <div class="card-sub">What matters most today.</div>
-          <div id="focusTasksList"></div>
-        </div>
+      <!-- Top 3 Focus Tasks -->
+      <div class="focus-card" style="margin-bottom:16px">
+        <div class="card-title">Top 3 focus tasks</div>
+        <div class="card-sub">What matters most today.</div>
+        <div id="focusTasksList"></div>
       </div>
 
       <!-- Projects Widget -->
@@ -221,9 +206,6 @@
         <div class="dash-proj-cols"><span>PROJECT</span><span>STATUS</span><span>PRIORITY</span></div>
         <div id="dashProjectsWidget"></div>
       </div>
-
-      <!-- This Week digest -->
-      <div class="dash-proj-wrap" id="dashWeekDigest"></div>
 
       <!-- Reminders Widget (hidden when none upcoming) -->
       <div class="dash-proj-wrap" id="dashRemindersWidget" style="display:none"></div>
@@ -309,28 +291,13 @@
         </div>
       </div>
       <input class="list-search" id="taskSearch" placeholder="Search tasks..." oninput="renderTasks()">
-      <div class="week-cal-wrap">
-        <div class="week-cal-hdr">
-          <span class="week-cal-month" id="weekCalMonth"></span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="cal-view-toggle">
-              <button class="cal-view-btn active" id="calViewWeekBtn" onclick="setCalView('week')">Week</button>
-              <button class="cal-view-btn" id="calViewMonthBtn" onclick="setCalView('month')">Month</button>
-            </div>
-            <div class="week-cal-nav">
-              <button class="week-cal-nav-btn" onclick="weekCalNav(-1)">‹</button>
-              <button class="week-cal-today-btn" onclick="weekCalNav(0)">Today</button>
-              <button class="week-cal-nav-btn" onclick="weekCalNav(1)">›</button>
-            </div>
-          </div>
-        </div>
-        <div class="week-cal" id="weekCalendar"></div>
-        <div class="month-cal" id="monthCalendar" style="display:none"></div>
+      <div class="task-filter-bar" id="taskFilterBar">
+        <button class="task-filter-btn active" onclick="setTaskFilter('all')" data-filter="all">All</button>
+        <button class="task-filter-btn" onclick="setTaskFilter('active')" data-filter="active">Active</button>
+        <button class="task-filter-btn" onclick="setTaskFilter('done')" data-filter="done">Done</button>
       </div>
-      <div id="tasksOverdueSection"></div>
       <div id="tasksTodaySection"></div>
       <div id="tasksUpcomingSection"></div>
-      <div id="tasksDoneSection"></div>
     </div>
 
     <!-- ── FINANCE TAB ── -->
@@ -561,30 +528,45 @@
 
   <!-- Calendar lives outside .main so it fills full width -->
   <div class="page cal-fullpage" id="page-calendar">
-    <div class="cal-header">
-      <div class="cal-month-nav">
-        <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
-        <button class="cal-month-title" onclick="calGoToday()"><span id="calMonthLabel"></span></button>
-        <button class="cal-nav-btn" onclick="calNav(1)">›</button>
+    <div class="page-hdr">
+      <div class="page-hdr-text">
+        <div class="page-hdr-eyebrow">Calendar</div>
+        <div class="page-hdr-title" id="calMonthLabel"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="cal-view-toggle">
-          <button class="cal-view-btn active" id="calTabViewMonthBtn" onclick="setCalTabView('month')">Month</button>
-          <button class="cal-view-btn" id="calTabViewWeekBtn" onclick="setCalTabView('week')">Week</button>
-        </div>
+      <div class="page-hdr-actions">
         <button class="hdr-icon-btn" onclick="toggleTheme()" title="Toggle theme">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 3a8.5 8.5 0 108.4 9.7A7 7 0 0112.3 3z"/></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4" y1="4" x2="5.8" y2="5.8"/><line x1="18.2" y1="18.2" x2="20" y2="20"/><line x1="20" y1="4" x2="18.2" y2="5.8"/><line x1="5.8" y1="18.2" x2="4" y2="20"/></g></svg>
         </button>
-        <button class="cal-nav-btn" id="calRefreshBtn" onclick="calRefresh()" title="Refresh calendar events" style="font-size:13px;padding:7px 11px">↻</button>
-        <button class="btn-new" onclick="openCalEventModal()">+ Event</button>
+        <button class="hdr-icon-btn" onclick="toggleHideNumbers()" title="Hide amounts">
+          <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+        <div class="hdr-avatar" onclick="toggleProfileDropdown()"></div>
       </div>
     </div>
+
+    <div class="cal-month-nav">
+      <button class="cal-nav-chevron" onclick="calNav(-1)" title="Previous">
+        <svg width="9" height="16" viewBox="0 0 8 14"><path d="M7 1L1 7l6 6" stroke="#FF3B30" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="cal-month-title" onclick="calGoToday()"><span id="calMonthLabelNav"></span></button>
+      <button class="cal-nav-chevron" onclick="calNav(1)" title="Next">
+        <svg width="9" height="16" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="#FF3B30" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="cal-view-toggle">
+      <button class="cal-view-btn active" id="calTabViewMonthBtn" onclick="setCalTabView('month')">Month</button>
+      <button class="cal-view-btn" id="calTabViewWeekBtn" onclick="setCalTabView('week')">Week</button>
+    </div>
+
     <div class="cal-dow-row" id="calDowRow">
-      <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+      <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
     <div class="cal-week-view" id="calWeekView" style="display:none"></div>
+    <div class="cal-selected-day" id="calSelectedDay"></div>
   </div>
 </div>
 

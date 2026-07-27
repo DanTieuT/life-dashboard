@@ -155,6 +155,15 @@ const ACCT_TYPE_META={
 
 const fmt=n=>'$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
 const fmtM=n=>numbersHidden?'••••':fmt(n); // masked version
+// "14:30" -> "2:30 PM" — events store 24h time (native <input type=time>), display as 12h
+function fmtTime12(t){
+  const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');
+  if(!m)return t||'';
+  let h=parseInt(m[1],10);
+  const ampm=h>=12?'PM':'AM';
+  h=h%12||12;
+  return `${h}:${m[2]} ${ampm}`;
+}
 function humanDate(dateStr,today){
   const d=new Date(dateStr+'T12:00:00'),t=new Date(today+'T12:00:00');
   const diff=Math.round((d-t)/86400000);
@@ -347,29 +356,38 @@ function saveData(){
 }
 
 // ── RENDER ALL ────────────────────────────────────────────────────
+// Each widget renders independently — a bug in one (bad data shape, edge
+// case) must not throw and cancel every render call queued after it, which
+// otherwise silently blanks the rest of the page with no visible error.
+function safeRender(fn,...args){
+  try{fn(...args);}catch(e){
+    console.error(`[renderAll] ${fn.name||'render'} failed:`,e);
+    if(typeof toast==='function')toast(`⚠️ ${fn.name||'a widget'} failed: ${e.message}`,'error');
+  }
+}
 function renderAll(){
-  renderGreeting();
-  renderIntention();
-  renderStats();
-  renderFocusTasks();
-  renderTodaySchedule();
-  syncCalendarEvents();
-  renderFinanceRing();
-  renderHabitsGrid('habitsGridDash');
-  renderTasks();
-  renderFinanceTab();
-  updateHabitsSummary();
-  renderProjects();
-  renderDashProjectsWidget();
-  renderGoals();
-  renderNWSparkline();
-  renderBrainDump();
-  renderJarvisHistory();
-  renderShipping();
-  renderDashShippingWidget();
-  renderRemindersWidget();
-  renderWeekDigest();
-  updateLastBackupLabel();
+  safeRender(renderGreeting);
+  safeRender(renderIntention);
+  safeRender(renderStats);
+  safeRender(renderFocusTasks);
+  safeRender(renderTodaySchedule);
+  safeRender(syncCalendarEvents);
+  safeRender(renderFinanceRing);
+  safeRender(renderHabitsGrid,'habitsGridDash');
+  safeRender(renderTasks);
+  safeRender(renderFinanceTab);
+  safeRender(updateHabitsSummary);
+  safeRender(renderProjects);
+  safeRender(renderDashProjectsWidget);
+  safeRender(renderGoals);
+  safeRender(renderNWSparkline);
+  safeRender(renderBrainDump);
+  safeRender(renderJarvisHistory);
+  safeRender(renderShipping);
+  safeRender(renderDashShippingWidget);
+  safeRender(renderRemindersWidget);
+  safeRender(renderWeekDigest);
+  safeRender(updateLastBackupLabel);
 }
 
 // ── SHARED HELPERS ────────────────────────────────────────────────
@@ -760,7 +778,7 @@ function haptic(ms=40){
 
 // ── GLOBAL EXPORTS (inline handlers + cross-module refs resolve via window) ──
 Object.assign(window, {
-  uid, todayStr, fmt, fmtM, humanDate, getGreeting, daysInMonth, escHtml,
+  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, escHtml,
   habitColors, calcStreak, migrateOldSavings, saveData, loadData, renderAll,
   updateThemeBtn, updateHideNumBtn, haptic, updateCompactSwitch, updateFontSizeBtns,
   updateLastBackupLabel,

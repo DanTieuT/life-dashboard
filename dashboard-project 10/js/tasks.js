@@ -9,7 +9,7 @@ function taskRowHTML(t){
     if(t.due<today){cls='overdue';label=humanDate(t.due,today);}
     else if(t.due===today){cls='today';label='Today';}
     else{cls='upcoming';label=humanDate(t.due,today);}
-    duePill=`<span class="due-pill ${cls}">${label}</span>`;
+    duePill=`<span class="due-text ${cls}">${label}</span>`;
   }
   const recentDone=isRecentDone(t);
   const rowCls=t.done?(recentDone?'recent-done-row':'done-row'):'';
@@ -48,40 +48,18 @@ window.toggleSubtask=function(taskId,subId){
   renderTasks();
   if(wasOpen)document.getElementById('tnotes-'+taskId)?.classList.add('open');
 };
-function renderTaskSection(containerId,label,tasks,color){
+function renderTaskSection(containerId,label,tasks){
   const el=document.getElementById(containerId);
   if(!el)return;
   if(!tasks.length){el.innerHTML='';return;}
-  const dotColors={red:'var(--red)',yellow:'var(--blue)','':'var(--muted)'};
-  const dotColor=dotColors[color]||'var(--muted)';
   el.innerHTML=`<div class="tasks-section">
-    <div class="tasks-section-hdr">
-      <span class="tasks-section-dot" style="background:${dotColor}"></span>
-      <span class="tasks-section-label">${label}</span>
-      <span class="tasks-section-count">${tasks.length}</span>
-    </div>
     <div class="tasks-section-body">
+      <div class="card-title">${label}</div>
       ${tasks.map(t=>taskRowHTML(t)).join('')}
     </div>
   </div>`;
 }
 
-function renderDoneSection(done){
-  const el=document.getElementById('tasksDoneSection');
-  if(!el){return;}
-  if(!done.length){el.innerHTML='';return;}
-  const isOpen=el.dataset.open==='true';
-  el.innerHTML=`<div class="tasks-section">
-    <div class="tasks-section-hdr">
-      <button class="done-toggle-btn" onclick="toggleDoneSection()">
-        <span class="tasks-section-dot" style="background:var(--green)"></span>
-        <span class="tasks-section-label">${isOpen?'▾ ':'▸ '}Done</span>
-        <span class="tasks-section-count">${done.length}</span>
-      </button>
-    </div>
-    ${isOpen?`<div class="tasks-section-body">${done.slice(0,30).map(t=>taskRowHTML(t)).join('')}</div>`:''}
-  </div>`;
-}
 let _weekOffset=0;
 window._calView='week'; // read by mobile swipe nav in core.js
 let _monthOffset=0;
@@ -191,14 +169,24 @@ window.weekCalNav=function(dir){
   }
 };
 
+let _taskFilter='all';
+window.setTaskFilter=function(f){
+  _taskFilter=f;
+  document.querySelectorAll('.task-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===f));
+  renderTasks();
+};
+
 function renderTasks(){
-  if(_calView==='month')renderMonthCalendar();else renderWeekCalendar();
   const today=todayStr();
   const q=(document.getElementById('taskSearch')?.value||'').trim().toLowerCase();
   const all=q
     ? (appData.projects||[]).filter(t=>(t.name||'').toLowerCase().includes(q)||(t.notes||'').toLowerCase().includes(q))
     : (appData.projects||[]);
-  const active=t=>!t.done||isRecentDone(t);
+  const matchesFilter=t=>_taskFilter==='all'||(_taskFilter==='active'&&!t.done)||(_taskFilter==='done'&&t.done);
+  // "active" here means visible-not-permanently-hidden — done tasks stay for a
+  // beat after completion (isRecentDone) so the checkmark animation registers,
+  // then drop out unless the Done filter is selected.
+  const visible=t=>matchesFilter(t)&&(!t.done||isRecentDone(t)||_taskFilter==='done');
   const doneSort=(a,b)=>{
     if(a.done&&!b.done)return 1;
     if(!a.done&&b.done)return -1;
@@ -209,18 +197,15 @@ function renderTasks(){
     const bo=typeof b.order==='number'?b.order:9999;
     return ao-bo;
   };
-  const overdue=all.filter(t=>active(t)&&t.due&&t.due<today).sort((a,b)=>doneSort(a,b)||orderSort(a,b)||(a.due<b.due?-1:1));
-  const todayTasks=all.filter(t=>active(t)&&t.due===today).sort((a,b)=>doneSort(a,b)||orderSort(a,b));
-  const upcoming=all.filter(t=>active(t)&&(!t.due||t.due>today)).sort((a,b)=>{
+  // Today = due today or overdue (overdue tasks keep their red due-pill so
+  // the distinction isn't lost, just not a separate section anymore).
+  const todayTasks=all.filter(t=>visible(t)&&t.due&&t.due<=today).sort((a,b)=>doneSort(a,b)||(a.due<b.due?-1:1)||orderSort(a,b));
+  const upcoming=all.filter(t=>visible(t)&&(!t.due||t.due>today)).sort((a,b)=>{
     const ds=doneSort(a,b);if(ds)return ds;
-    const os=orderSort(a,b);if(os)return os;
-    if(!a.due&&!b.due)return 0;if(!a.due)return 1;if(!b.due)return -1;return a.due<b.due?-1:1;
+    if(!a.due&&!b.due)return orderSort(a,b);if(!a.due)return 1;if(!b.due)return -1;return a.due<b.due?-1:1;
   });
-  const done=all.filter(t=>t.done&&!isRecentDone(t)).sort((a,b)=>(b.doneAt||0)>(a.doneAt||0)?1:-1);
-  renderTaskSection('tasksOverdueSection','Overdue',overdue,'red');
-  renderTaskSection('tasksTodaySection','Today',todayTasks,'yellow');
-  renderTaskSection('tasksUpcomingSection','Upcoming',upcoming,'');
-  renderDoneSection(done);
+  renderTaskSection('tasksTodaySection','Today',todayTasks);
+  renderTaskSection('tasksUpcomingSection','Upcoming',upcoming);
   // Touch devices: long-press to reorder + swipe to delete (one handler).
   // Desktop (fine pointer): keep HTML5 drag from the hover ⠿ handle.
   if(_isTouchDevice){
@@ -231,20 +216,15 @@ function renderTasks(){
     document.querySelectorAll('.tasks-section-body').forEach(el=>{ if(typeof attachTaskDragListeners==='function')attachTaskDragListeners(el); });
   }
   // Nav badge
-  const urgentCount=overdue.filter(t=>!t.done).length+todayTasks.filter(t=>!t.done).length;
+  const urgentCount=todayTasks.filter(t=>!t.done).length;
   const badge=document.getElementById('taskNavBadge');
   if(badge){badge.textContent=urgentCount;badge.style.display=urgentCount>0?'inline-block':'none';}
-  // Subtitle
+  // Subtitle — "N remaining of M" (design sync)
   const remaining=all.filter(t=>!t.done).length;
   const sub=document.getElementById('tasksTabSub');
-  if(sub)sub.textContent=remaining?`${remaining} task${remaining!==1?'s':''} remaining`:'All caught up!';
+  if(sub)sub.textContent=`${remaining?`${remaining} remaining`:'All done'} of ${all.length}`;
 }
 
-window.toggleDoneSection=function(){
-  const el=document.getElementById('tasksDoneSection');
-  el.dataset.open=el.dataset.open==='true'?'false':'true';
-  renderDoneSection((appData.projects||[]).filter(t=>t.done));
-};
 
 window.addTask=function(){
   const name=document.getElementById('taskInput').value.trim();

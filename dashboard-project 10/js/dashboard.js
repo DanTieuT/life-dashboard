@@ -285,13 +285,8 @@ function renderStats(){
   const pct=dailyHabits.length?Math.round(doneHabits/dailyHabits.length*100):0;
   const cnEl=document.getElementById('completionNum');if(cnEl)cnEl.textContent=pct;
 
-  // Hero gauge rings
   const totalTasks=(appData.projects||[]).filter(t=>!t.done).length+doneTasks||1;
   const taskPct=doneTasks/totalTasks*100;
-  const gl=document.getElementById('heroGaugeLeft');
-  const gr=document.getElementById('heroGaugeRight');
-  if(gl) gl.innerHTML=gaugeRingSVG(taskPct,'var(--green)',doneTasks,'tasks done');
-  if(gr) gr.innerHTML=gaugeRingSVG(pct,'var(--blue)',pct+'%','habits done');
 
   // Ring stat cards
   const rstTasks=document.getElementById('statsRingTasks');
@@ -461,7 +456,7 @@ function renderTodaySchedule(){
       <div class="evt-bar" style="background:${barColor}"></div>
       <div class="evt-body">
         <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}${calBadge}${delBtn}</div>
-        <div class="evt-time">${e.allDay||!e.time?'All day':e.time}</div>
+        <div class="evt-time">${e.allDay||!e.time?'All day':fmtTime12(e.time)}</div>
       </div>
     </div>`;
   });

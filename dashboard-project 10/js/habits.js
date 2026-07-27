@@ -42,11 +42,15 @@ function habitHeatmapCellsHTML(h,c){
 
 function habitColorFor(h,idx){
   const colors=habitColors();
-  const ci=typeof h.colorIdx==='number'?h.colorIdx:idx%colors.length;
   if(h.customColor){
     const hex=h.customColor;
     return{bg:hex+'22',dot:hex,dim:hex+'33',btn:hex,ico:hex+'22'};
   }
+  // Wrap out-of-range colorIdx (e.g. legacy data from a larger palette) via
+  // modulo instead of indexing straight off the array — an undefined color
+  // object here throws downstream and used to take the whole render with it.
+  const raw=typeof h.colorIdx==='number'?h.colorIdx:idx;
+  const ci=((raw%colors.length)+colors.length)%colors.length;
   return colors[ci];
 }
 

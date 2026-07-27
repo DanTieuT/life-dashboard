@@ -27,6 +27,7 @@ let calEditId=null;
 let calSyncing=false;
 let _calTabView='month'; // 'month' | 'week' — Calendar TAB's own toggle (distinct from Tasks page's mini-cal _calView)
 let calWeekAnchor=new Date(); // any date within the currently displayed week
+let calSelectedDate=todayStr(); // date shown in the below-grid event list (month view only)
 window.showJuliaEvents=localStorage.getItem('showJuliaEvents')==='1'; // read by renderTodaySchedule (dashboard.js)
 
 function isJuliaEvent(e){
@@ -90,109 +91,83 @@ function renderCalendar(){
 
 window.calRefresh=function(){syncCalendarEvents(true);};
 
+function setCalMonthLabel(label){
+  const a=document.getElementById('calMonthLabel'); if(a)a.textContent=label;
+  const b=document.getElementById('calMonthLabelNav'); if(b)b.textContent=label;
+}
+
 function renderCalendarGrid(){
   const today=todayStr();
   const firstDay=new Date(calYear,calMonth,1).getDay();
   const daysInM=daysInMonth(calYear,calMonth);
-  const prevDays=daysInMonth(calYear,calMonth-1);
   const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('calMonthLabel').textContent=MONTHS[calMonth]+' '+calYear;
+  setCalMonthLabel(MONTHS[calMonth]+' '+calYear);
 
   const allEvents=getAllCalEvents();
-
   const grid=document.getElementById('calGrid');
-
-  // Build 6-row × 7-col cell array
-  const cells=[];
-  for(let i=0;i<firstDay;i++){
-    const pm=calMonth===0?11:calMonth-1, py=calMonth===0?calYear-1:calYear;
-    cells.push({y:py,m:pm,d:prevDays-firstDay+1+i,other:true});
-  }
-  for(let d=1;d<=daysInM;d++) cells.push({y:calYear,m:calMonth,d,other:false});
-  const nm=calMonth===11?0:calMonth+1, ny=calMonth===11?calYear+1:calYear;
-  for(let d=1;cells.length<42;d++) cells.push({y:ny,m:nm,d,other:true});
-
-  // Lane layout for multi-day events
-  const multiEvents=allEvents.filter(e=>e.endDate&&e.endDate>e.date).sort((a,b)=>a.date.localeCompare(b.date));
-  const laneMap={}, usedLanes={};
-  multiEvents.forEach(e=>{
-    const dates=[];
-    const sd=new Date(e.date+'T00:00:00'), ed=new Date(e.endDate+'T00:00:00');
-    for(let dt=new Date(sd);dt<=ed;dt.setDate(dt.getDate()+1)) dates.push(dt.toISOString().slice(0,10));
-    let lane=0;
-    while(!dates.every(ds=>!(usedLanes[ds]?.has(lane)))){lane++;if(lane>5)break;}
-    dates.forEach((ds,i)=>{
-      if(!laneMap[ds])laneMap[ds]=[];
-      if(!usedLanes[ds])usedLanes[ds]=new Set();
-      usedLanes[ds].add(lane);
-      laneMap[ds].push({event:e,lane,isStart:i===0,isEnd:i===dates.length-1});
-    });
-  });
+  if(!grid)return;
 
   grid.innerHTML='';
-  cells.forEach(({y,m,d,other})=>{
-    const ds=calDateStr(y,m,d);
-    const dow=new Date(y,m,d).getDay();
+  // Leading blanks only — no faded prev/next-month padding (matches design)
+  for(let i=0;i<firstDay;i++) grid.appendChild(document.createElement('div'));
+
+  for(let d=1;d<=daysInM;d++){
+    const ds=calDateStr(calYear,calMonth,d);
     const rdo=isRDO(ds);
+    const isToday=ds===today;
+    const isSelected=ds===calSelectedDate&&!isToday;
+    const dayEvents=allEvents.filter(e=>e.date===ds||(e.endDate&&e.date<=ds&&e.endDate>=ds));
+    const dotColor=dayEvents.length?CAL_COLORS[dayEvents[0].colorIdx||0].bg:'transparent';
+
     const cell=document.createElement('div');
-    cell.className='cal-cell'+(other?' other-month':'')+(ds===today?' today':'')+(dow===0?' sunday':'')+(rdo?' rdo-day':'');
-    cell.onclick=()=>openCalEventModal(ds);
+    cell.className='cal-day-cell'+(rdo?' rdo-day':'');
+    cell.onclick=()=>calSelectDay(ds);
 
-    const num=document.createElement('div');
-    num.className='cal-day-num';
-    num.textContent=d;
-    cell.appendChild(num);
-    if(rdo){
-      const badge=document.createElement('div');
-      badge.className='cal-rdo-badge';
-      badge.textContent='RDO';
-      cell.appendChild(badge);
-    }
+    const circle=document.createElement('div');
+    circle.className='cal-day-circle'+(isToday?' today':isSelected?' selected':'');
+    circle.textContent=d;
+    cell.appendChild(circle);
 
-    const evtWrap=document.createElement('div');
-    evtWrap.className='cal-events';
+    const dot=document.createElement('div');
+    dot.className='cal-day-dot';
+    dot.style.background=dotColor;
+    cell.appendChild(dot);
 
-    const multiForDay=(laneMap[ds]||[]).sort((a,b)=>a.lane-b.lane);
-    const usedMultiIds=new Set(multiForDay.map(x=>x.event.id));
-
-    let lastLane=-1;
-    multiForDay.forEach(({event:e,lane,isStart,isEnd})=>{
-      for(let l=lastLane+1;l<lane;l++){
-        const sp=document.createElement('div');sp.style.height='20px';evtWrap.appendChild(sp);
-      }
-      lastLane=lane;
-      const c=CAL_COLORS[e.colorIdx||0];
-      const pill=document.createElement('div');
-      const isWeekStart=dow===0;
-      pill.className='cal-pill'+(isStart?' multiday-start':isEnd?' multiday-end':' multiday-mid');
-      pill.style.cssText=`background:${c.bg};color:${c.text};height:20px;display:flex;align-items:center;`;
-      if(isStart||isWeekStart) pill.textContent=(e.time?e.time+' ':'')+e.name;
-      else pill.innerHTML='&nbsp;';
-      pill.onclick=ev=>{ev.stopPropagation();if(e.source==='local')openCalEventModal(ds,e.id);};
-      evtWrap.appendChild(pill);
-    });
-
-    const singles=allEvents.filter(e=>e.date===ds&&!usedMultiIds.has(e.id)&&!(e.endDate&&e.endDate>e.date));
-    const maxVis=Math.max(1,3-multiForDay.length);
-    singles.slice(0,maxVis).forEach(e=>{
-      const c=CAL_COLORS[e.colorIdx||0];
-      const pill=document.createElement('div');
-      pill.className='cal-pill single';
-      pill.innerHTML=`<span class="cal-dot" style="background:${c.bg}"></span><span class="cal-pill-name"></span>${e.time?`<span class="cal-pill-time"></span>`:''}`;
-      pill.querySelector('.cal-pill-name').textContent=e.name;
-      if(e.time)pill.querySelector('.cal-pill-time').textContent=e.time;
-      pill.onclick=ev=>{ev.stopPropagation();if(e.source==='local')openCalEventModal(ds,e.id);};
-      evtWrap.appendChild(pill);
-    });
-    if(singles.length>maxVis){
-      const more=document.createElement('div');
-      more.className='cal-more';
-      more.textContent=`+${singles.length-maxVis} more`;
-      evtWrap.appendChild(more);
-    }
-
-    cell.appendChild(evtWrap);
     grid.appendChild(cell);
+  }
+
+  renderCalSelectedDay();
+}
+
+window.calSelectDay=function(ds){
+  calSelectedDate=ds;
+  renderCalendarGrid();
+};
+
+function renderCalSelectedDay(){
+  const el=document.getElementById('calSelectedDay');
+  if(!el)return;
+  if(_calTabView!=='month'){el.innerHTML='';return;}
+  const allEvents=getAllCalEvents();
+  const ds=calSelectedDate;
+  const label=new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const dayEvents=allEvents.filter(e=>e.date===ds||(e.endDate&&e.date<=ds&&e.endDate>=ds))
+    .sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const rows=dayEvents.map(e=>{
+    const c=CAL_COLORS[e.colorIdx||0];
+    return `<div class="cal-selected-evt-row" data-id="${e.id}" data-source="${e.source}">
+      <div class="cal-selected-evt-time">${e.time?fmtTime12(e.time):'All day'}</div>
+      <div class="cal-selected-evt-bar" style="background:${c.bg}"></div>
+      <div class="cal-selected-evt-name">${e.name}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML=`
+    <div class="cal-selected-day-divider"></div>
+    <div class="cal-selected-date-label">${label}</div>
+    ${dayEvents.length?rows:'<div class="cal-selected-empty">No events</div>'}
+    <button class="add-evt-btn" onclick="openCalEventModal('${ds}')">+ Add event</button>`;
+  el.querySelectorAll('.cal-selected-evt-row').forEach(row=>{
+    row.onclick=()=>{if(row.dataset.source==='local')openCalEventModal(ds,row.dataset.id);};
   });
 }
 
@@ -229,6 +204,7 @@ window.calNav=function(dir){
 window.calGoToday=function(){
   calYear=new Date().getFullYear();calMonth=new Date().getMonth();
   calWeekAnchor=new Date();
+  calSelectedDate=todayStr();
   renderCalendar();
 };
 
@@ -266,13 +242,14 @@ function renderCalendarWeek(){
   const label=first.getMonth()===last.getMonth()
     ?`${MONTHS_SHORT[first.getMonth()]} ${first.getDate()}–${last.getDate()}, ${last.getFullYear()}`
     :`${MONTHS_SHORT[first.getMonth()]} ${first.getDate()} – ${MONTHS_SHORT[last.getMonth()]} ${last.getDate()}, ${last.getFullYear()}`;
-  const lblEl=document.getElementById('calMonthLabel');
-  if(lblEl)lblEl.textContent=label;
+  setCalMonthLabel(label);
 
   const allEvents=getAllCalEvents();
   const wrap=document.getElementById('calWeekView');
   if(!wrap)return;
   wrap.innerHTML='';
+  const selEl=document.getElementById('calSelectedDay');
+  if(selEl)selEl.innerHTML='';
 
   // Day-of-week circle row
   const DOW=['S','M','T','W','T','F','S'];

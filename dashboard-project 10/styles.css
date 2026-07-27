@@ -15,7 +15,8 @@
   --border:#232327;--border2:#1f1f23;
   --text:#fff;--sub:rgba(235,235,245,.6);--muted:#48484a;
   --track:rgba(120,120,128,.28);--seg-active:#38383c;
-  --divider:rgba(84,84,88,.65);--pill-bg:rgba(120,120,128,.28);}
+  --divider:rgba(84,84,88,.65);--pill-bg:rgba(120,120,128,.28);
+  --invert-bg:#fff;--invert-text:#000;}
 [data-theme="light"]{
   --card-shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.045);
 
@@ -23,7 +24,8 @@
   --border:#e5e5ea;--border2:#d1d1d6;
   --text:#000;--sub:rgba(60,60,67,.6);--muted:#aeaeb2;
   --track:rgba(120,120,128,.16);--seg-active:#fff;
-  --divider:rgba(60,60,67,.12);--pill-bg:rgba(120,120,128,.12);}
+  --divider:rgba(60,60,67,.12);--pill-bg:rgba(120,120,128,.12);
+  --invert-bg:#000;--invert-text:#fff;}
 [data-theme="light"] .auth-logo-gem{background:#d1f2e0;}
 [data-theme="light"] .mc-today .mc-num{color:#fff;}
 [data-theme="light"] .chat-panel{box-shadow:0 12px 48px rgba(0,0,0,.15);}
@@ -94,17 +96,7 @@ input,select,textarea{font-family:inherit}
 .btn-google svg{width:20px;height:20px}
 
 /* ── HERO CARD ───────────────────────────────────────────────────── */
-.hero-card{background:var(--card3);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:36px 40px;display:flex;align-items:center;gap:32px;margin-bottom:16px;position:relative;overflow:hidden}
-.hero-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(48,209,88,.05) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(10,132,255,.05) 0%,transparent 60%);pointer-events:none}
-.hero-gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0}
-.hero-gauge-label{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--sub)}
-.hero-gauge-val{font-size:13px;font-weight:700;color:var(--text)}
-.hero-center{flex:1;text-align:center;z-index:1}
-.hero-date{font-size:15px;font-weight:500;color:var(--sub);margin-bottom:2px}
-.hero-greeting{font-size:25px;font-weight:700;letter-spacing:.2px;margin-bottom:14px}
 .hero-intention{display:none}
-.hero-actions{position:absolute;top:14px;right:14px;display:flex;gap:6px;z-index:2}
-[data-theme="light"] .hero-card::before{background:radial-gradient(ellipse at 20% 50%,rgba(40,179,72,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(10,132,255,.06) 0%,transparent 60%)}
 
 /* ── GAUGE RING ──────────────────────────────────────────────────── */
 .gauge-svg{overflow:visible}
@@ -214,7 +206,7 @@ input,select,textarea{font-family:inherit}
 .habit-combined-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--card-shadow)}
 .habit-tabs-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .habit-tab-pill{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;background:none;border:none;color:var(--sub);font-family:inherit;transition:all .15s}
-.habit-tab-pill.active{background:var(--text);color:var(--bg)}
+.habit-tab-pill.active{background:var(--invert-bg);color:var(--invert-text)}
 .habit-heatmap{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;margin-bottom:12px;width:fit-content}
 .hh-cell{width:10px;height:10px;border-radius:2.5px}
 .habit-streak-list{display:flex;flex-direction:column;gap:8px}
@@ -253,9 +245,6 @@ input,select,textarea{font-family:inherit}
 .week-evt{font-size:9px;padding:2px 5px;border-radius:4px;background:rgba(130,160,255,.14);color:#93b5ff;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;max-width:100%}
 .week-task{font-size:9px;padding:2px 5px;border-radius:4px;background:rgba(255,214,0,.1);color:var(--yellow);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;max-width:100%}
 .week-task.week-task-done{text-decoration:line-through;opacity:.45;background:rgba(255,214,0,.05)}
-.cal-view-toggle{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:2px}
-.cal-view-btn{font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;border:none;cursor:pointer;color:var(--sub);background:none;transition:all .15s}
-.cal-view-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .month-cal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 .month-cal-dow{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
 .month-cal-dow-cell{text-align:center;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:8px 0}
@@ -277,25 +266,19 @@ input,select,textarea{font-family:inherit}
 .tasks-add-date:focus{border-color:var(--green);color:var(--text)}
 .tasks-add-btn{background:var(--green);color:#000;border:none;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:600;flex-shrink:0}
 .tasks-add-btn:hover{filter:brightness(1.1)}
-.tasks-section{margin-bottom:20px}
-.tasks-section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.tasks-section-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.tasks-section-label{font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.3px}
-.tasks-section-count{font-size:12px;color:var(--muted);background:var(--card2);border-radius:8px;padding:2px 8px}
-.tasks-section-body{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.task-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:.5px solid var(--divider);transition:background .1s}
+.tasks-section{margin-bottom:16px}
+.tasks-section-body{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--card-shadow)}
+.task-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:.5px solid var(--divider);transition:background .1s}
 .task-row:last-child{border-bottom:none}
 .task-row:hover{background:rgba(255,255,255,.02)}
 .task-row.done-row{opacity:.4}
 .task-row.recent-done-row{opacity:.65}
-.task-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s;cursor:pointer}
-.task-check.checked{background:var(--green);border-color:var(--green);color:#000}
+.task-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--divider);background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s;cursor:pointer}
+.task-check.checked{background:var(--green);border-color:var(--green);color:#fff}
 .task-label{flex:1;font-size:16px;font-weight:400;outline:none;background:none;border:none;color:var(--text)}
 .task-label.done-text{text-decoration:line-through;color:var(--muted)}
-.due-pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;flex-shrink:0}
-.due-pill.overdue{background:var(--red-dim);color:var(--red)}
-.due-pill.today{background:var(--blue-dim);color:var(--blue)}
-.due-pill.upcoming{background:var(--card2);color:var(--sub)}
+.due-text{font-size:12px;font-weight:500;color:var(--sub);flex-shrink:0}
+.due-text.overdue{color:var(--red)}
 /* pointer-events:none while hidden — an opacity-0 button still swallows taps,
    which on mobile made "tap task to complete" open the edit modal instead */
 .task-row-del,.task-row-edit{background:none;border:none;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px;flex-shrink:0;opacity:0;pointer-events:none;transition:opacity .15s;cursor:pointer}
@@ -493,39 +476,32 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .dash-proj-prog-fill{height:100%;border-radius:2px}
 
 /* ── CALENDAR ────────────────────────────────────────────────────── */
-.cal-fullpage{position:fixed;top:56px;left:0;right:0;bottom:0;overflow-y:auto;padding:28px;background:var(--bg);z-index:50}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.cal-month-nav{display:flex;align-items:center;gap:6px}
-.cal-nav-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 14px;color:var(--text);font-size:17px;line-height:1;cursor:pointer;transition:border-color .15s}
-.cal-nav-btn:hover{border-color:var(--green)}
-.cal-month-title{background:none;border:none;color:var(--text);font-size:20px;font-weight:700;letter-spacing:.2px;padding:4px 10px;cursor:pointer;border-radius:8px;transition:background .15s}
-.cal-month-title:hover{background:var(--card)}
-.cal-dow-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin-bottom:0;background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:12px 12px 0 0;overflow:hidden}
-.cal-dow-row div{text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:7px 0;letter-spacing:.5px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:0 0 12px 12px;overflow:hidden}
-.cal-cell{min-height:100px;min-width:0;overflow:hidden;padding:6px 4px 4px;position:relative;cursor:pointer;transition:background .12s;background:var(--bg)}
-.cal-cell:hover{background:rgba(255,255,255,.03)}
-.cal-cell.other-month .cal-day-num{color:var(--muted)}
-.cal-cell.today .cal-day-num{background:var(--red);color:#fff;border-radius:50%;font-weight:700}
-.cal-cell.sunday .cal-day-num{color:var(--red)}
-.cal-cell.other-month.sunday .cal-day-num{color:#7a3030}
-.cal-day-num{font-size:13px;font-weight:500;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin-bottom:3px;margin-left:auto;flex-shrink:0}
-.cal-cell.rdo-day{background:var(--green-dim)}
-.cal-rdo-badge{position:absolute;top:6px;left:6px;font-size:9px;font-weight:700;letter-spacing:.3px;color:var(--green);background:var(--card);padding:1px 5px;border-radius:5px}
-.cal-events{display:flex;flex-direction:column;gap:1px}
-.cal-pill{font-size:11px;font-weight:500;padding:2px 6px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;line-height:1.5;transition:opacity .1s}
-.cal-pill:hover{opacity:.85}
-.cal-pill.multiday-start{border-radius:4px 0 0 4px;margin-right:-2px}
-.cal-pill.multiday-mid{border-radius:0;padding-left:3px;margin-left:-2px;margin-right:-2px}
-.cal-pill.multiday-end{border-radius:0 4px 4px 0;padding-left:3px;margin-left:-2px}
-/* Apple Calendar month-view style: single-day timed events show as a colored
-   dot + plain text instead of a filled pill; only multi-day/all-day events
-   keep the solid colored bar. */
-.cal-pill.single{background:transparent!important;color:var(--text);padding:1px 2px;display:flex;align-items:center;gap:5px}
-.cal-pill.single .cal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.cal-pill.single .cal-pill-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cal-pill.single .cal-pill-time{color:var(--sub);font-weight:400;margin-left:auto;padding-left:4px;flex-shrink:0}
-.cal-more{font-size:10px;color:var(--sub);padding:1px 6px;cursor:pointer}
+.cal-fullpage{position:fixed;top:56px;left:0;right:0;bottom:0;overflow-y:auto;padding:16px 20px 28px;background:var(--bg);z-index:50}
+.cal-month-nav{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 0;margin-bottom:14px}
+.cal-nav-chevron{background:none;border:none;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cal-month-title{background:none;border:none;color:var(--text);font-size:20px;font-weight:700;letter-spacing:.2px;cursor:pointer}
+.cal-view-toggle{display:flex;background:var(--track);border-radius:9px;padding:2px;gap:2px;margin-bottom:16px}
+.cal-view-btn{flex:1;text-align:center;font-size:13px;font-weight:600;padding:6px 0;border-radius:7px;border:none;cursor:pointer;color:var(--sub);background:none;transition:all .15s}
+.cal-view-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
+.cal-dow-row div{text-align:center;font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:10px}
+.cal-day-cell{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border-radius:8px}
+.cal-day-cell.rdo-day{background:var(--green-dim)}
+.cal-day-circle{width:30px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:400;color:var(--text);background:transparent}
+.cal-day-circle.today{background:var(--red);color:#fff;font-weight:600}
+.cal-day-circle.selected{background:var(--pill-bg)}
+.cal-day-dot{width:4px;height:4px;border-radius:2px}
+
+/* ── Selected-day event list (below the month grid) ──────────────── */
+.cal-selected-day-divider{height:.5px;background:var(--divider);margin:20px 0 16px}
+.cal-selected-date-label{font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px}
+.cal-selected-evt-row{display:flex;gap:14px;align-items:flex-start;padding:10px 0;border-bottom:.5px solid var(--divider);cursor:pointer}
+.cal-selected-evt-row:last-of-type{border-bottom:none}
+.cal-selected-evt-time{width:62px;flex-shrink:0;font-size:12px;color:var(--sub);padding-top:1px}
+.cal-selected-evt-bar{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.cal-selected-evt-name{font-size:15px;font-weight:500;color:var(--text)}
+.cal-selected-empty{font-size:14px;color:var(--sub);padding:10px 0}
 .cal-color-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .cal-color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .15s}
 .cal-color-swatch.selected{border-color:#fff;transform:scale(1.18)}
@@ -562,7 +538,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 /* ── PROJ CARD GRID ──────────────────────────────────────────────── */
 .proj-filter-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
 .proj-filter-btn{padding:6px 12px;border-radius:8px;border:none;background:none;color:var(--sub);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
-.proj-filter-btn.active{background:var(--text);color:var(--bg)}
+.proj-filter-btn.active{background:var(--invert-bg);color:var(--invert-text)}
 .proj-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .proj-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative}
 .proj-card:hover{transform:translateY(-1px);box-shadow:0 4px 24px rgba(0,0,0,.3)}
@@ -703,8 +679,6 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 [data-compact="true"] .goal-card{padding:14px}
 [data-compact="true"] .txn-item{padding:9px 0}
 [data-compact="true"] .main{padding-top:20px}
-[data-compact="true"] .hero-card{padding:20px 24px}
-[data-compact="true"] .hero-greeting{font-size:24px}
 [data-compact="true"] .brain-dump-card{padding:8px 12px}
 [data-compact="true"] .accounts-table-row{padding:9px 16px}
 [data-compact="true"] .payday-card{padding:10px 16px}
@@ -1003,17 +977,9 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   .main{padding:14px 14px calc(84px + env(safe-area-inset-bottom));padding-top:calc(14px + env(safe-area-inset-top))}
   .cal-fullpage{top:48px;padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 
-  .hero-date{margin-bottom:0}
   .chat-panel{left:10px;right:10px;width:auto;bottom:calc(64px + env(safe-area-inset-bottom))}
   .chat-fab{bottom:calc(64px + env(safe-area-inset-bottom));right:14px;width:46px;height:46px;font-size:19px}
   /* .toast mobile position handled by #79 rule (top of screen) */
-
-  /* ── Hero card: single-column, hide side gauges ── */
-  .hero-card{flex-direction:column;padding:20px 18px;gap:0;align-items:stretch}
-  .hero-gauge-wrap{display:none}
-  .hero-center{text-align:left}
-  .hero-greeting{font-size:24px}
-  .hero-date{margin-bottom:10px}
 
   /* ── Stats / grid rows ── */
   .stats-row{grid-template-columns:1fr 1fr;gap:10px}
@@ -1061,8 +1027,8 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   /* ── Calendar ── */
   .section-title{font-size:17px}
   .month-nav{margin-bottom:10px}
-  .cal-cell{min-height:62px;padding:4px 3px 3px}
-  .cal-dow-row div{font-size:9px;padding:4px 0}
+  .cal-day-circle{width:26px;height:26px;font-size:14px}
+  .cal-dow-row div{font-size:10px;padding:4px 0}
 
   /* ── Modals: centered dialog on mobile ── */
   .modal{width:calc(100vw - 24px);max-width:none;border-radius:16px;max-height:85vh;margin:0}
@@ -1119,7 +1085,7 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 .nw-collapse-btn:hover{background:var(--card)}
 .nw-range-bar{display:flex;gap:6px;margin-top:12px}
 .nw-range-btn{flex:1;text-align:center;background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;padding:6px 0;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .12s}
-.nw-range-btn.active{background:var(--text);color:var(--bg)}
+.nw-range-btn.active{background:var(--invert-bg);color:var(--invert-text)}
 .nw-chart-x{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
 /* Collapsed: keep header (amount/delta/subline) visible, hide range bar + graph */
 .nw-chart-card.collapsed .nw-range-bar,
@@ -1144,6 +1110,11 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 .list-search{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px}
 .list-search:focus{border-color:var(--green)}
 .list-search::placeholder{color:var(--muted)}
+
+/* ── TASK FILTER TABS (design sync) ─────────────────────────────── */
+.task-filter-bar{display:flex;gap:6px;margin-bottom:16px}
+.task-filter-btn{flex:1;text-align:center;background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;padding:7px 0;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .15s}
+.task-filter-btn.active{background:var(--invert-bg);color:var(--invert-text)}
 
 /* ── THIS WEEK DIGEST ────────────────────────────────────────────── */
 .week-digest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 20px 18px}
