@@ -289,13 +289,23 @@ async function loadData(){
         cardRewards:d.cardRewards||{},
       };
     } else {
-      // New user: seed default habits
+      // No document at this path. Almost always means we're authenticated as a
+      // different Google account than the one holding the data — NOT data loss.
+      // Surface it, because silently seeding defaults looks identical to a wipe.
+      console.warn('[loadData] no document at',userRef.path);
+      if(typeof toast==='function')toast(`No data for this account (uid ${_uidOf(userRef).slice(0,8)}…). Wrong Google account?`,'error');
       if(!appData.habits.length)appData.habits=[...DEFAULT_HABITS];
     }
-  }catch(e){console.error('Load error',e);}
+  }catch(e){
+    // A swallowed error here (e.g. Firestore permission-denied) renders as a
+    // completely empty dashboard with no explanation. Always surface it.
+    console.error('Load error',e);
+    if(typeof toast==='function')toast(`Could not load data: ${e.message}`,'error');
+  }
   _snapshotSavedState();
   _dataLoaded=true;
 }
+function _uidOf(ref){return (ref?.path||'').split('/')[1]||'unknown';}
 
 // ── OFFLINE WRITE QUEUE (item #5) ─────────────────────────────────
 function _queuePendingSave(){
