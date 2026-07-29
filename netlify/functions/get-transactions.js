@@ -9,16 +9,56 @@ function getFirebase() {
   return admin;
 }
 
-function mapCategory(plaidCategories) {
-  if (!plaidCategories || !plaidCategories.length) return 'Other';
-  const joined = plaidCategories.join(' ').toLowerCase();
-  if (/food|restaurant|groceries|dining|coffee/.test(joined)) return 'Food';
-  if (/travel|transport|taxi|uber|lyft|gas station|parking|airlines/.test(joined)) return 'Transport';
-  if (/medical|health|fitness|gym|sport|dental|pharmacy/.test(joined)) return 'Health & Fitness';
-  if (/entertainment|recreation|arts|music|movies|video games/.test(joined)) return 'Entertainment';
-  if (/shops|shopping|retail|clothing|department/.test(joined)) return 'Shopping';
-  if (/transfer|savings|investment|deposit/.test(joined)) return 'Savings';
-  if (/rent|mortgage|utilities|housing/.test(joined)) return 'Housing';
+const CATEGORY_MAP = [
+  ['Food',             ['Food and Drink', 'Restaurants', 'Coffee Shop', 'Fast Food', 'Groceries', 'Supermarkets']],
+  ['Transport',        ['Travel', 'Taxi', 'Uber', 'Lyft', 'Gas Stations', 'Airlines', 'Public Transportation', 'Parking']],
+  ['Health & Fitness', ['Gyms and Fitness Centers', 'Pharmacies', 'Medical']],
+  ['Entertainment',    ['Recreation', 'Arts and Entertainment', 'Music', 'Movies']],
+  ['Shopping',         ['Shops', 'Clothing', 'Department Stores', 'Electronics']],
+  ['Savings',          ['Transfer', 'Savings', 'Investment']],
+  ['Housing',          ['Rent', 'Mortgage', 'Utilities']],
+];
+
+const MERCHANT_MAP = [
+  ['Food',             ['mcdonald', 'starbucks', 'chipotle', 'subway', 'pizza', 'burger', 'taco', 'wendy', 'kfc', 'chick-fil', 'dunkin', 'panera', 'domino']],
+  ['Transport',        ['uber', 'lyft', 'shell', 'chevron', 'bp', 'exxon', 'mobil', 'sunoco', 'delta', 'american airlines', 'united', 'southwest']],
+  ['Health & Fitness', ['gym', 'planet fitness', 'crossfit', 'equinox', 'peloton', 'cvs', 'walgreen', 'pharmacy']],
+  ['Entertainment',    ['netflix', 'spotify', 'hulu', 'disney', 'youtube', 'apple music', 'ticketmaster', 'amc']],
+  ['Shopping',         ['amazon', 'walmart', 'target', 'best buy', 'apple store', 'ikea', 'costco', 'home depot']],
+];
+
+function matchKeywords(text, map) {
+  const t = text.toLowerCase();
+  for (const [label, keywords] of map) {
+    for (const kw of keywords) {
+      if (t.includes(kw)) return label;
+    }
+  }
+  return null;
+}
+
+function mapCategory(plaidCategories, personalFinanceCategory, merchantName) {
+  // 1. Try standard category array (cats[0] and cats[1])
+  if (plaidCategories && plaidCategories.length) {
+    const primary = plaidCategories[0] || '';
+    const sub = plaidCategories[1] || '';
+    const result = matchKeywords(primary + ' ' + sub, CATEGORY_MAP);
+    if (result) return result;
+  }
+
+  // 2. Try personal_finance_category (newer Plaid API field)
+  if (personalFinanceCategory) {
+    const pfc = (personalFinanceCategory.primary || '') + ' ' + (personalFinanceCategory.detailed || '');
+    const result = matchKeywords(pfc, CATEGORY_MAP);
+    if (result) return result;
+  }
+
+  // 3. Merchant name fallback
+  if (merchantName) {
+    const result = matchKeywords(merchantName, MERCHANT_MAP);
+    if (result) return result;
+  }
+
   return 'Other';
 }
 
@@ -74,7 +114,7 @@ exports.handler = async (event) => {
       id: 'plaid_' + t.transaction_id,
       name: t.name,
       amount: Math.abs(t.amount),
-      category: mapCategory(t.category),
+      category: mapCategory(t.category, t.personal_finance_category, t.merchant_name || t.name),
       type: t.amount > 0 ? 'out' : 'in',
       date: t.date,
       fromPlaid: true,

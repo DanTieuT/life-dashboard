@@ -54,7 +54,7 @@ function renderFinanceTab(){
             <div class="accounts-table-name-col">
               <div class="accounts-table-name">
                 <span class="accounts-table-dot" style="background:${meta.color}"></span>
-                <span>${a.name}${mask?` <span class="accounts-table-mask">••${mask}</span>`:''}${a.source==='plaid'?' <span class="accounts-table-synced" title="Synced via Plaid">Synced</span>':''}</span>
+                <span>${a.name}${mask?` <span class="accounts-table-mask">••${mask}</span>`:''}${a.source==='plaid'?` <span class="accounts-table-synced" title="Synced via Plaid">${a.updatedAt?fmtTimeAgo(new Date(a.updatedAt)):'Synced'}</span>`:''}</span>
               </div>
               ${isDebt&&creditLimit>0?`<div class="acct-card-bar"><div class="acct-card-bar-fill" style="width:${barPct}%;background:${meta.color}"></div></div>`:''}
             </div>
@@ -291,6 +291,56 @@ window.openBudgetModal=function(){
       </div>`).join('');
   }
   openModal('budgetModal');
+};
+// Pre-fills each category field with its average monthly spend over the last
+// few full calendar months — real numbers from real transactions, not an LLM
+// guessing dollar figures. Fields stay editable; nothing saves until Save.
+window.suggestBudget=function(){
+  const cats=Object.keys(appData.budget.categories||{});
+  if(!cats.length){toast('No categories yet — save a budget once first, then suggest.','error');return;}
+
+  // Parse date-only strings at noon local time, not midnight — "YYYY-MM-DD"
+  // with no time component parses as UTC midnight, which lands on the
+  // *previous* calendar day in any timezone behind UTC (all of the US).
+  // Comparing that against locally-constructed range boundaries silently
+  // drops transactions dated on the 1st of the oldest included month.
+  const parseLocal=ds=>new Date(ds+'T12:00:00');
+  const now=new Date();
+  const monthsBack=3;
+  const rangeStart=new Date(now.getFullYear(),now.getMonth()-monthsBack,1);
+  const rangeEnd=new Date(now.getFullYear(),now.getMonth(),1); // exclude the current, still-in-progress month
+  const recent=(appData.transactions||[]).filter(t=>{
+    if(t.type!=='out')return false;
+    const d=parseLocal(t.date);
+    return d>=rangeStart&&d<rangeEnd;
+  });
+  if(!recent.length){
+    toast('Not enough transaction history yet to suggest a budget','error');
+    return;
+  }
+  // Always average over the full window (not just months a category happens
+  // to appear in) — a category you only spent in once should suggest a
+  // smaller monthly amount, not the same as one you spend in every month.
+  const monthCount=Math.max(1,new Set(recent.map(t=>{const d=parseLocal(t.date);return d.getFullYear()+'-'+d.getMonth();})).size);
+
+  let filledCount=0;
+  cats.forEach(cat=>{
+    const total=recent.filter(t=>t.category===cat).reduce((s,t)=>s+t.amount,0);
+    if(total<=0)return;
+    const el=document.getElementById('bc_'+cat.replace(/[^a-z]/gi,'_'));
+    if(el){el.value=Math.round(total/monthCount);filledCount++;}
+  });
+
+  // Only pre-fill the overall income/budget field if Dan hasn't already
+  // entered a real number — never overwrite actual income data.
+  const incomeEl=document.getElementById('budgetIncome');
+  if(incomeEl&&!incomeEl.value){
+    const totalAvg=cats.reduce((s,cat)=>s+(parseFloat(document.getElementById('bc_'+cat.replace(/[^a-z]/gi,'_'))?.value)||0),0);
+    if(totalAvg>0)incomeEl.value=totalAvg;
+  }
+
+  if(filledCount)toast(`✓ Suggested from ${monthCount} month${monthCount!==1?'s':''} of history — review and Save`);
+  else toast('No matching category spending found in that history','error');
 };
 window.saveBudget=function(){
   const income=parseFloat(document.getElementById('budgetIncome').value)||0;

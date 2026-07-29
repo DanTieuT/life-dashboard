@@ -298,38 +298,72 @@ function renderStats(){
   if(sdn) sdn.textContent=doneHabits;
   if(stn) stn.textContent=dailyHabits.length;
 
-  // Budget ring stat
-  const rstBudget=document.getElementById('statsRingBudget');
-  if(rstBudget){
+  // Budget — big number + segmented bar + chips (design variant C)
+  const budgetNumEl=document.getElementById('statsBudgetNum');
+  if(budgetNumEl){
+    const now=new Date();
     const bMonth=currentMonth,bYear=currentYear;
     const budgetAmt=appData.budget.monthly||appData.budget.income||0;
     const bMt=(appData.transactions||[]).filter(t=>{const d=new Date(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
     const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-    const bPct=budgetAmt>0?Math.min(bSpent/budgetAmt*100,100):0;
-    const bColor=bPct>=100?'var(--red)':bPct>=80?'var(--yellow)':'var(--orange)';
     const daysInBMonth=new Date(bYear,bMonth+1,0).getDate();
-    const pacePct=budgetAmt>0?(new Date().getDate()/daysInBMonth*100):null;
-    rstBudget.innerHTML=gaugeRingSVG(bPct,bColor,fmtM(bSpent),budgetAmt>0?'of '+fmtM(budgetAmt):'spent',108,pacePct);
+
+    budgetNumEl.textContent=fmtM(bSpent);
+    const ofEl=document.getElementById('statsBudgetOf');
+    if(ofEl)ofEl.textContent=budgetAmt>0?'of '+fmtM(budgetAmt):'';
+
     const bd=document.getElementById('statsBudgetDetail');
     if(bd){
       if(budgetAmt>0){
         const budgetLeft=budgetAmt-bSpent;
-        const leftLabel=budgetLeft>=0?`${fmtM(budgetLeft)} left`:`${fmtM(Math.abs(budgetLeft))} over budget`;
-        bd.textContent=`${leftLabel} · tick = on-pace`;
+        const daysLeft=Math.max(0,daysInBMonth-now.getDate());
+        bd.textContent=budgetLeft>=0
+          ?`${fmtM(budgetLeft)} left · ${daysLeft}d left`
+          :`${fmtM(Math.abs(budgetLeft))} over budget`;
+        bd.style.color=budgetLeft>=0?'':'var(--red)';
       } else {
         bd.textContent='set up budget →';
+        bd.style.color='';
       }
     }
-    // Top spending categories this month (dot + name + amount), mirrors the
-    // mockup's Budget-card category breakdown list
+
+    const CAT_DOT_COLORS=['#007aff','#34c759','#ff9500','#af52de','#30b0c7','#ff3b30','#5856d6','#ff2d55'];
+    const catSpends=Object.keys(appData.budget.categories||{}).map((cat,i)=>({
+      cat,
+      spent:bMt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0),
+      color:CAT_DOT_COLORS[i%CAT_DOT_COLORS.length],
+    })).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent);
+
+    // Segments are sized against the total budget (not total spent), so the
+    // filled portion of the bar always reads as "how much of the month's
+    // budget is gone" — same semantic as the $ left line above it.
+    const segEl=document.getElementById('statsBudgetSegbar');
+    if(segEl){
+      const segBase=budgetAmt>0?budgetAmt:(bSpent||1);
+      segEl.innerHTML=catSpends.map(c=>
+        `<div class="budget-c-seg" style="width:${Math.min(c.spent/segBase*100,100)}%;background:${c.color}"></div>`
+      ).join('')+'<div class="budget-c-seg" style="flex:1;background:transparent"></div>';
+    }
+    // Pace tick — where total spend "should" be today if it tracked evenly
+    // across the month. Only meaningful for the month actually in progress;
+    // hide it if this card is showing a past/future month.
+    const tickEl=document.getElementById('statsBudgetPaceTick');
+    if(tickEl){
+      const isCurrentMonth=bMonth===now.getMonth()&&bYear===now.getFullYear();
+      if(isCurrentMonth&&budgetAmt>0){
+        const pacePct=Math.min(100,(now.getDate()/daysInBMonth)*100);
+        tickEl.style.left=pacePct+'%';
+        tickEl.style.display='';
+      } else {
+        tickEl.style.display='none';
+      }
+    }
+
     const catListEl=document.getElementById('statsBudgetCatList');
     if(catListEl){
-      const CAT_DOT_COLORS=['#007aff','#34c759','#ff9500','#af52de','#30b0c7','#ff3b30'];
-      const catSpends=Object.keys(appData.budget.categories||{}).map((cat,i)=>({
-        cat,spent:bMt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0),
-        color:CAT_DOT_COLORS[i%CAT_DOT_COLORS.length],
-      })).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent).slice(0,3);
-      catListEl.innerHTML=catSpends.map(c=>`<div class="ring-stat-cat-row"><span><span class="ring-stat-cat-dot" style="background:${c.color}"></span>${c.cat}</span><span>${fmtM(c.spent)}</span></div>`).join('');
+      catListEl.innerHTML=catSpends.length?catSpends.map(c=>
+        `<div class="budget-c-chip"><span class="budget-c-chip-dot" style="background:${c.color}"></span>${c.cat} <span class="budget-c-chip-amt">${fmtM(c.spent)}</span></div>`
+      ).join(''):'<div style="color:var(--muted);font-size:12px">No spending yet this month</div>';
     }
   }
 }

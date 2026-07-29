@@ -757,7 +757,7 @@ function haptic(ms=40){
 })();
 // ── Mobile swipe navigation ────────────────────────────────────────
 (function(){
-  const TAB_ORDER=['dashboard','tasks','finance','goals','projects','calendar'];
+  const TAB_ORDER=['dashboard','tasks','finance','projects','calendar'];
   let _sx=0,_sy=0;
   function curTabIdx(){
     const el=document.querySelector('.page.active');

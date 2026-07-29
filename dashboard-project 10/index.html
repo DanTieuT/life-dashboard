@@ -46,10 +46,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         Tasks
       </button>
-      <button class="nav-tab" onclick="switchTab('calendar')" data-tab="calendar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Calendar
-      </button>
       <button class="nav-tab" onclick="switchTab('finance')" data-tab="finance">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
         Finance
@@ -58,11 +54,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         Projects
       </button>
+      <button class="nav-tab" onclick="switchTab('calendar')" data-tab="calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Calendar
+      </button>
     </nav>
     <div class="nav-right">
       <span class="nav-clock" id="navClock"></span>
       <button class="nav-theme-btn" onclick="toggleTheme()" id="themeToggleBtn"><span id="themeLabel">Light</span></button>
-      <div class="nav-avatar" id="userAvatar" onclick="toggleProfileDropdown()"></div>
     </div>
   </header>
   <!-- Profile dropdown -->
@@ -162,29 +161,35 @@
         </div>
       </div>
 
-      <!-- Stats Row - Ring Cards (Budget paired with Calendar below, mockup-style) -->
-      <div class="stats-row">
-        <div class="ring-stat-card">
-          <div class="ring-stat-title">Budget</div>
-          <div id="statsRingBudget"></div>
-          <div class="ring-stat-sub" id="statsBudgetDetail">set up budget</div>
-          <div class="ring-stat-catlist" id="statsBudgetCatList"></div>
+      <!-- Budget (full width — big number + segmented bar) -->
+      <div class="budget-wide-card" style="margin-bottom:16px">
+        <div class="ring-stat-title" onclick="switchTab('finance')" style="cursor:pointer">Budget ›</div>
+        <div class="budget-c-top">
+          <div><span class="budget-c-num" id="statsBudgetNum">$0</span> <span class="budget-c-of" id="statsBudgetOf"></span></div>
+          <div class="budget-c-change" id="statsBudgetDetail">set up budget</div>
         </div>
-        <!-- Today Schedule -->
-        <div class="today-card" style="margin-bottom:0">
-          <div class="today-hdr">
-            <div class="today-title-wrap">
-              <div class="card-title">Today</div>
-              <div class="card-sub">Your schedule at a glance</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <button id="juliaToggleBtn" onclick="toggleJuliaEvents()" title="Show Julia's events" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--sub);font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;opacity:0.45;transition:opacity .15s;font-family:inherit">Julia</button>
-              <span class="events-badge" id="eventsBadge">0 events</span>
-            </div>
+        <div class="budget-c-segbar-wrap">
+          <div class="budget-c-segbar" id="statsBudgetSegbar"></div>
+          <div class="budget-c-pace-tick" id="statsBudgetPaceTick" title="Where you'd be on-pace today"></div>
+        </div>
+        <div class="budget-c-pace-caption">tick = on-pace for today</div>
+        <div class="budget-c-chips" id="statsBudgetCatList"></div>
+      </div>
+
+      <!-- Today Schedule (full width) -->
+      <div class="today-card" style="margin-bottom:16px">
+        <div class="today-hdr">
+          <div class="today-title-wrap">
+            <div class="card-title">Today</div>
+            <div class="card-sub">Your schedule at a glance</div>
           </div>
-          <div id="todayEventsList"></div>
-          <button class="add-evt-btn" onclick="openModal('addEventModal')">+ Add event</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button id="juliaToggleBtn" onclick="toggleJuliaEvents()" title="Show Julia's events" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--sub);font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;opacity:0.45;transition:opacity .15s;font-family:inherit">Julia</button>
+            <span class="events-badge" id="eventsBadge">0 events</span>
+          </div>
         </div>
+        <div id="todayEventsList"></div>
+        <button class="add-evt-btn" onclick="openModal('addEventModal')">+ Add event</button>
       </div>
 
       <!-- Top 3 Focus Tasks -->
@@ -635,10 +640,6 @@
     <svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="1" y="1" width="18" height="18" rx="4" stroke-width="1.6"/><path d="M5 10l3 3 7-7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span>Tasks</span>
   </button>
-  <button class="bottom-tab" onclick="switchTab('calendar')" data-tab="calendar">
-    <svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="1" y="3" width="18" height="15" rx="2.5" stroke-width="1.6"/><line x1="1" y1="7.5" x2="19" y2="7.5" stroke-width="1.6"/><line x1="6" y1="0.5" x2="6" y2="4.5" stroke-width="1.6" stroke-linecap="round"/><line x1="14" y1="0.5" x2="14" y2="4.5" stroke-width="1.6" stroke-linecap="round"/></svg>
-    <span>Calendar</span>
-  </button>
   <button class="bottom-tab" onclick="switchTab('finance')" data-tab="finance">
     <div style="font-size:17px;font-weight:700;line-height:19px">$</div>
     <span>Finance</span>
@@ -646,6 +647,10 @@
   <button class="bottom-tab" onclick="switchTab('projects')" data-tab="projects">
     <svg width="20" height="18" viewBox="0 0 20 18" fill="none" stroke="currentColor"><path d="M1 3a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3z" stroke-width="1.6" stroke-linejoin="round"/></svg>
     <span>Projects</span>
+  </button>
+  <button class="bottom-tab" onclick="switchTab('calendar')" data-tab="calendar">
+    <svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="1" y="3" width="18" height="15" rx="2.5" stroke-width="1.6"/><line x1="1" y1="7.5" x2="19" y2="7.5" stroke-width="1.6"/><line x1="6" y1="0.5" x2="6" y2="4.5" stroke-width="1.6" stroke-linecap="round"/><line x1="14" y1="0.5" x2="14" y2="4.5" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <span>Calendar</span>
   </button>
 </nav>
 
@@ -810,7 +815,10 @@
 <!-- Budget Modal -->
 <div class="modal-overlay" id="budgetModal">
   <div class="modal">
-    <div class="modal-title">⚙ Budget Settings</div>
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span>⚙ Budget Settings</span>
+      <button class="proj-btn-sm" id="suggestBudgetBtn" onclick="suggestBudget()" style="flex-shrink:0;white-space:nowrap">✨ Suggest from history</button>
+    </div>
     <div class="form-group"><label class="form-label">Monthly income / budget ($)</label><input class="form-input" id="budgetIncome" type="number" min="0" placeholder="3000"></div>
     <div id="budgetInputs"></div>
     <div class="form-group" style="margin-top:8px">
