@@ -135,11 +135,7 @@
       <!-- Net Worth Chart (mockup places this first, right after the greeting) -->
       <div class="fin-card nw-chart-card" id="nwCard-dash" data-nw-id="dash" style="display:none">
         <div class="nw-chart-hdr">
-          <div>
-            <div class="fin-section-title" style="margin-bottom:2px">Net Worth</div>
-            <div class="nw-chart-readout" data-role="readout">—</div>
-            <div class="nw-chart-subline" data-role="subline"></div>
-          </div>
+          <div class="fin-section-title" style="margin-bottom:0">Net Worth</div>
           <div style="display:flex;align-items:center;gap:6px">
             <button class="dash-proj-viewall" onclick="switchTab('finance')" style="font-size:12px">View all →</button>
             <button class="nw-collapse-btn" data-role="hideBtn" onclick="toggleHideNumbers()" title="Hide amounts">
@@ -148,6 +144,8 @@
             <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
           </div>
         </div>
+        <div class="nw-chart-readout" data-role="readout">—</div>
+        <div class="nw-chart-subline" data-role="subline"></div>
         <div class="nw-chart-body" data-role="body">
           <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
           <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
@@ -173,7 +171,7 @@
           <div class="budget-c-pace-tick" id="statsBudgetPaceTick" title="Where you'd be on-pace today"></div>
         </div>
         <div class="budget-c-pace-caption">tick = on-pace for today</div>
-        <div class="budget-c-chips" id="statsBudgetCatList"></div>
+        <div class="budget-c-catlist" id="statsBudgetCatList"></div>
       </div>
 
       <!-- Today Schedule (full width) -->
@@ -328,11 +326,7 @@
       <!-- Net Worth Chart -->
       <div class="fin-card nw-chart-card" id="nwCard-fin" data-nw-id="fin" style="display:none">
         <div class="nw-chart-hdr">
-          <div>
-            <div class="fin-section-title" style="margin-bottom:2px">Net Worth</div>
-            <div class="nw-chart-readout" data-role="readout">—</div>
-            <div class="nw-chart-subline" data-role="subline"></div>
-          </div>
+          <div class="fin-section-title" style="margin-bottom:0">Net Worth</div>
           <div style="display:flex;align-items:center;gap:6px">
             <button class="nw-collapse-btn" data-role="hideBtn" onclick="toggleHideNumbers()" title="Hide amounts">
               <svg data-role="hideIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -340,6 +334,8 @@
             <button class="nw-collapse-btn" data-role="collapseBtn" onclick="toggleNWCollapse(this)" title="Collapse graph">⌃</button>
           </div>
         </div>
+        <div class="nw-chart-readout" data-role="readout">—</div>
+        <div class="nw-chart-subline" data-role="subline"></div>
         <div class="nw-chart-body" data-role="body">
           <svg data-role="svg" width="100%" height="170" style="display:block;touch-action:pan-y"></svg>
           <div class="nw-chart-x"><span data-role="x0"></span><span data-role="x1"></span></div>
@@ -353,23 +349,15 @@
         </div>
       </div>
 
-      <!-- Accounts Table -->
-      <div id="acctCardsRow"></div>
-
-      <!-- Best Card lookup (hidden until rewards are configured) -->
-      <div class="fin-card" id="bestCardCard" style="display:none">
-        <div class="fin-section-title" style="display:flex;justify-content:space-between;align-items:center">
-          Best Card For
-          <button onclick="openCardRewardsModal()" style="background:none;border:none;color:var(--green);font-size:13px;cursor:pointer;font-family:inherit">Edit rewards</button>
+      <!-- Accounts Table (collapsible) -->
+      <div class="fin-collapsible" data-fin-id="accounts">
+        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Accounts
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
-        <div class="bestcard-chips" id="bestCardChips"></div>
-        <div id="bestCardList"></div>
-      </div>
-
-      <!-- Missed rewards report (hidden until there's data) -->
-      <div class="fin-card" id="missedRewardsCard" style="display:none">
-        <div class="fin-section-title">Missed Rewards</div>
-        <div id="missedRewardsBody"></div>
+        <div data-role="finBody">
+          <div id="acctCardsRow"></div>
+        </div>
       </div>
 
       <!-- Month nav + action buttons -->
@@ -451,6 +439,32 @@
         <div class="fin-section-title">6-Month Trend</div>
         <div class="trend-chart" id="trendChart"></div>
         <div style="display:flex;justify-content:space-around" id="trendLabels"></div>
+      </div>
+
+      <!-- Best Card lookup (collapsible, hidden until rewards are configured) -->
+      <div class="fin-card fin-collapsible" id="bestCardCard" data-fin-id="bestcard" style="display:none">
+        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Best Card For</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <button onclick="event.stopPropagation();openCardRewardsModal()" style="background:none;border:none;color:var(--green);font-size:13px;cursor:pointer;font-family:inherit">Edit rewards</button>
+            <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+          </span>
+        </div>
+        <div data-role="finBody">
+          <div class="bestcard-chips" id="bestCardChips"></div>
+          <div id="bestCardList"></div>
+        </div>
+      </div>
+
+      <!-- Missed rewards report (collapsible, hidden until there's data) -->
+      <div class="fin-card fin-collapsible" id="missedRewardsCard" data-fin-id="missedrewards" style="display:none">
+        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Missed Rewards</span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div id="missedRewardsBody"></div>
+        </div>
       </div>
 
       <!-- Subscriptions — auto-detected from recurring merchant/amount/interval patterns -->

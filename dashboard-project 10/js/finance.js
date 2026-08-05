@@ -152,7 +152,23 @@ function renderFinanceTab(){
   if(typeof renderNWSparkline==='function')renderNWSparkline();
   if(typeof renderBestCard==='function')renderBestCard();
   if(typeof renderMissedRewards==='function')renderMissedRewards(mt);
+  applyFinCollapseState();
 }
+// Collapsed/expanded state persists per section (localStorage), independent of
+// the show/hide-until-configured logic each section's own render fn applies —
+// collapsing only hides the body, never the outer .fin-collapsible/.fin-card.
+function applyFinCollapseState(){
+  document.querySelectorAll('.fin-collapsible').forEach(card=>{
+    const collapsed=localStorage.getItem('finCollapsed-'+card.dataset.finId)==='1';
+    card.classList.toggle('collapsed',collapsed);
+  });
+}
+window.toggleFinCollapse=function(hdrEl){
+  const card=hdrEl.closest('.fin-collapsible');
+  if(!card)return;
+  const collapsed=card.classList.toggle('collapsed');
+  localStorage.setItem('finCollapsed-'+card.dataset.finId,collapsed?'1':'0');
+};
 
 window.changeMonth=function(dir){
   currentMonth+=dir;
@@ -654,7 +670,9 @@ function _renderOneNWCard(card){
   const min=Math.min(...vals),max=Math.max(...vals);
   const span=max-min||Math.max(Math.abs(max)*0.02,1); // flat line → thin band, not full-height noise
   const W=svg.getBoundingClientRect().width||320,H=170;
-  const PAD_T=10,PAD_B=10;
+  // PAD_T needs room for the top gridline's label to sit ABOVE the line
+  // without its ascenders clipping against the SVG's own top edge.
+  const PAD_T=24,PAD_B=10;
   const plotH=H-PAD_T-PAD_B;
   const xy=(v,i)=>({x:(i/(vals.length-1))*W,y:H-PAD_B-((v-min)/span)*plotH});
   const pts=data.map((h,i)=>{const p=xy(h.netWorth,i);return{x:p.x,y:p.y,date:h.date,val:h.netWorth};});
@@ -664,7 +682,12 @@ function _renderOneNWCard(card){
   const up=lastVal>=vals[0];
   const color=up?'var(--green)':'var(--red)';
   const gradId='nwFill-'+id;
-  const gy=[max,(max+min)/2,min].map(v=>({v,y:xy(v,0).y}));
+  // Gridline lines still sit at the real max/mid/min y-positions, but the
+  // printed label rounds to a clean step (half a power-of-ten of the span)
+  // instead of an exact-looking value like "$175,282".
+  const gridStep=Math.pow(10,Math.floor(Math.log10(Math.max(span,1))))/2||1;
+  const niceRound=v=>Math.round(v/gridStep)*gridStep;
+  const gy=[max,(max+min)/2,min].map(v=>({v:niceRound(v),y:xy(v,0).y}));
   svg.innerHTML=`
     <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${up?'#30d158':'#ff453a'}" stop-opacity="0.22"/>
@@ -675,9 +698,17 @@ function _renderOneNWCard(card){
     <polygon points="0,${(H-PAD_B).toFixed(1)} ${line} ${W},${(H-PAD_B).toFixed(1)}" fill="url(#${gradId})"/>
     <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     <circle data-role="scrubDot" cx="${pts[pts.length-1].x.toFixed(1)}" cy="${pts[pts.length-1].y.toFixed(1)}" r="3.5" fill="${color}"/>`;
-  // Readout: latest value + change over the selected range
-  const delta=lastVal-vals[0];
-  if(readout)readout.innerHTML=`<span class="nw-chart-val">${fmtM(lastVal)}</span> <span class="nw-chart-delta" style="color:${color}">${delta>=0?'+':'−'}${fmtM(Math.abs(delta))}</span>`;
+  // Readout: latest value + TODAY's change (yesterday's close → today's live
+  // value), independent of whichever zoom range is selected below — the chart
+  // itself still reflects the selected range, but "how did today go" shouldn't
+  // change just because you tapped 90D.
+  const prevDayVal=hist.length>=2?hist[hist.length-2].netWorth:lastVal;
+  const todayDelta=lastVal-prevDayVal;
+  const todayPct=prevDayVal!==0?(todayDelta/Math.abs(prevDayVal)*100):0;
+  const deltaUp=todayDelta>=0;
+  const deltaColor=deltaUp?'var(--green)':'var(--red)';
+  const deltaBg=deltaUp?'var(--green-dim)':'var(--red-dim)';
+  if(readout)readout.innerHTML=`<span class="nw-chart-val">${fmtM(lastVal)}</span> <span class="nw-delta-pill" style="background:${deltaBg};color:${deltaColor}">${deltaUp?'▲':'▼'} ${fmtM(Math.abs(todayDelta))} · ${Math.abs(todayPct).toFixed(2)}%</span>`;
   // Subline: assets/liabilities breakdown (was the old separate "hero" text)
   const assets=accounts.filter(a=>a.type!=='debt').reduce((s,a)=>s+a.balance,0);
   const liabilities=accounts.filter(a=>a.type==='debt').reduce((s,a)=>s+a.balance,0);

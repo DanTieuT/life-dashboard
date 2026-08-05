@@ -665,10 +665,12 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .budget-c-seg{height:100%}
 .budget-c-pace-tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);border-radius:1px;opacity:.65;pointer-events:none;transition:left .4s}
 .budget-c-pace-caption{font-size:10px;color:var(--muted);margin-bottom:14px}
-.budget-c-chips{display:flex;flex-wrap:wrap;gap:7px}
-.budget-c-chip{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--text)}
-.budget-c-chip-dot{width:6px;height:6px;border-radius:3px;flex-shrink:0}
-.budget-c-chip-amt{color:var(--sub);font-variant-numeric:tabular-nums}
+.budget-c-catlist{display:flex;flex-direction:column;gap:10px}
+.budget-c-catrow-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text);margin-bottom:4px}
+.budget-c-catrow-amt{font-variant-numeric:tabular-nums;color:var(--sub)}
+.budget-c-catrow-track{height:4px;border-radius:2px;background:var(--track)}
+.budget-c-catrow-fill{height:100%;border-radius:2px}
+.budget-c-dot{width:6px;height:6px;border-radius:3px;flex-shrink:0;display:inline-block;margin-right:5px;vertical-align:middle}
 
 /* ── PAGE TRANSITION ─────────────────────────────────────────────── */
 .page.active{animation:pageFadeIn .18s ease}
@@ -830,6 +832,12 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 /* ── FINANCE BATCH 3 ─────────────────────────────────────────────── */
 .fin-section-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--sub);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .fin-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:16px}
+/* ── Collapsible finance sections (Accounts / Best Card For / Missed Rewards) ── */
+.fin-collapse-hdr{cursor:pointer}
+.fin-collapse-btn{background:none;border:none;color:var(--muted);width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:transform .15s}
+.fin-collapsible.collapsed [data-role="finBody"]{display:none}
+.fin-collapsible.collapsed [data-role="finChevron"]{transform:rotate(180deg)}
+.fin-collapsible.collapsed .fin-collapse-hdr{margin-bottom:0}
 /* Category bar chart (#21) */
 .cat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .cat-bar-label{font-size:12px;color:var(--sub);width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1032,7 +1040,6 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   /* ── Finance ── */
   .finance-tab-grid{grid-template-columns:1fr}
   .spending-inner{flex-direction:column;align-items:flex-start}
-  .nw-chart-val{font-size:26px}
   .fin-header-row{align-items:flex-start}
   .fin-header-actions{width:100%}
   .fin-header-actions .btn-new{flex:1;min-width:0;white-space:nowrap;padding-left:12px;padding-right:12px}
@@ -1096,11 +1103,17 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 
 /* ── NET WORTH CHART ─────────────────────────────────────────────── */
 .nw-chart-card{margin-bottom:16px}
-.nw-chart-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
-.nw-chart-readout{font-size:13px;margin-top:2px}
+.nw-chart-hdr{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.nw-chart-readout{font-size:13px}
 .nw-chart-val{font-size:32px;font-weight:700;letter-spacing:.2px}
 .nw-chart-delta{font-size:13px;font-weight:600;margin-left:6px}
-.nw-chart-subline{font-size:13px;color:var(--sub);margin-top:2px}
+.nw-delta-pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;margin-left:8px;display:inline-block}
+/* The line-1043 mobile override of .nw-chart-val has the same specificity as
+   the base rule above and comes earlier in the file, so the cascade was
+   silently ignoring it on phones — redeclare it after the base rule so it
+   actually wins. Keeps the value+pill on one line at phone widths. */
+@media(max-width:768px){.nw-chart-val{font-size:26px}}
+.nw-chart-subline{font-size:13px;color:var(--sub);margin-top:2px;margin-bottom:14px}
 .nw-collapse-btn{background:var(--card2);border:1px solid var(--border);color:var(--sub);width:30px;height:30px;border-radius:9px;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .12s}
 .nw-collapse-btn:hover{background:var(--card)}
 .nw-range-bar{display:flex;gap:6px;margin-top:12px}
@@ -1110,7 +1123,7 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 /* Collapsed: keep header (amount/delta/subline) visible, hide range bar + graph */
 .nw-chart-card.collapsed .nw-range-bar,
 .nw-chart-card.collapsed .nw-chart-body{display:none}
-.nw-chart-card.collapsed .nw-chart-hdr{margin-bottom:0}
+.nw-chart-card.collapsed .nw-chart-subline{margin-bottom:0}
 
 /* ── FINANCE HEADER ROW ──────────────────────────────────────────── */
 .fin-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
