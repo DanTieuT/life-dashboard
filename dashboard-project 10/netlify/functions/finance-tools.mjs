@@ -479,7 +479,7 @@ export const TOOL_SCHEMAS = [
   },
   {
     name: 'get_spending_summary',
-    description: 'Aggregated spending (outflows only) grouped by category, merchant, account, week, or month, over a date range. This is the right tool for "how much did I spend on X" and month-over-month comparisons (call it twice, once per month, and compare).',
+    description: 'Aggregated spending (outflows only) grouped by category, merchant, account, week, or month, over a date range. This is the right tool for "how much did I spend on X" and month-over-month comparisons (call it twice, once per month, and compare). If a narrow window (e.g. one specific month) comes back with transactionCount 0 or very low, call again with a wider range (3-6 months) before telling the user there\'s no data — history may just start later than expected.',
     input_schema: {
       type: 'object',
       properties: {
