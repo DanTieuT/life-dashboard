@@ -1,4 +1,4 @@
-import { db, doc, getDoc } from './core.js';
+import { db, doc, getDoc, auth } from './core.js';
 
 // ── BRAIN DUMP ────────────────────────────────────────────────────
 const NOTE_TAGS=[
@@ -361,9 +361,25 @@ function renderStats(){
 
     const catListEl=document.getElementById('statsBudgetCatList');
     if(catListEl){
-      catListEl.innerHTML=catSpends.length?catSpends.map(c=>
-        `<div class="budget-c-chip"><span class="budget-c-chip-dot" style="background:${c.color}"></span>${c.cat} <span class="budget-c-chip-amt">${fmtM(c.spent)}</span></div>`
-      ).join(''):'<div style="color:var(--muted);font-size:12px">No spending yet this month</div>';
+      // Bar length = % of that category's own budgeted amount (set per-category
+      // in Budget Settings), not share of total spend — this is meant to answer
+      // "am I close to blowing my Food budget", not "what's my biggest category".
+      catListEl.innerHTML=catSpends.length?catSpends.map(c=>{
+        const catBudgetAmt=appData.budget.categories[c.cat]||0;
+        const hasBudget=catBudgetAmt>0;
+        const pct=hasBudget?Math.min(c.spent/catBudgetAmt*100,100):100;
+        const remaining=catBudgetAmt-c.spent;
+        const over=hasBudget&&remaining<0;
+        const barColor=hasBudget?(over?'var(--red)':c.color):'var(--muted)';
+        const remainLabel=hasBudget?` · ${over?fmtM(Math.abs(remaining))+' over':fmtM(remaining)+' left'}`:'';
+        return`<div class="budget-c-catrow">
+          <div class="budget-c-catrow-top">
+            <span><span class="budget-c-dot" style="background:${c.color}"></span>${c.cat}</span>
+            <span class="budget-c-catrow-amt">${fmtM(c.spent)}<span${over?' style="color:var(--red)"':''}>${remainLabel}</span></span>
+          </div>
+          <div class="budget-c-catrow-track"><div class="budget-c-catrow-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        </div>`;
+      }).join(''):'<div style="color:var(--muted);font-size:12px">No spending yet this month</div>';
     }
   }
 }
@@ -916,12 +932,23 @@ window.sendChat=async function(){
   const sendBtn=document.getElementById('chatSendBtn');
   sendBtn.disabled=true;
   try{
+    // The chat endpoint verifies this Firebase ID token server-side before
+    // touching any financial data — see chat.mjs's verifyAuth(). Without a
+    // signed-in user there's no token to send and the request is rejected.
+    const idToken=auth.currentUser?await auth.currentUser.getIdToken():null;
     const res=await fetch('/.netlify/functions/chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json',...(idToken?{'Authorization':'Bearer '+idToken}:{})},
       body:JSON.stringify({message:msg,context:buildChatContext(await fetchWeather()),history:_chatHistory})
     });
-    if(!res.ok)throw new Error('HTTP '+res.status);
+    if(!res.ok){
+      // chat.mjs always returns {reply:'...'} JSON for its error responses
+      // (401 unauthenticated, 429 rate-limited, 400 bad input) — surface
+      // that specific message instead of a generic "can't reach it" one.
+      let serverMsg=null;
+      try{serverMsg=(await res.json())?.reply;}catch(e){}
+      throw new Error(serverMsg||('HTTP '+res.status));
+    }
     const ctype=res.headers.get('content-type')||'';
     let reply,actions,msgEl;
     if(ctype.includes('text/event-stream')&&res.body){
@@ -950,7 +977,8 @@ window.sendChat=async function(){
     if(voiceMode){await speakReply(reply);if(voiceMode)startListening();}
   }catch(e){
     thinkEl.remove();
-    appendChatMsg('Could not reach the AI. Make sure the Netlify function is deployed and ANTHROPIC_API_KEY is set.','ai');
+    const isPlainHttpError=/^HTTP \d+$/.test(e.message||'');
+    appendChatMsg(isPlainHttpError?'Could not reach the AI. Make sure the Netlify function is deployed and ANTHROPIC_API_KEY is set.':e.message,'ai');
     if(voiceMode)startListening();
   }
   sendBtn.disabled=false;

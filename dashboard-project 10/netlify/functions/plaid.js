@@ -133,7 +133,10 @@ module.exports = {
   // (and Plaid's per-item billing) lingers even after removing accounts locally.
   removeItem: (accessToken) => call('/item/remove', { access_token: accessToken }),
   // /accounts/get returns balances included with the Transactions product —
-  // avoids needing the separate (and unnecessary here) real-time Balance product.
+  // avoids needing the separate (and billed-per-call) real-time Balance product.
+  // Plaid keeps this cache fresh on its own (~daily) for Transactions-enabled
+  // Items, so a stale number here is more likely the current/available
+  // fallback below picking the wrong field than a caching-frequency problem.
   getBalances: (accessToken) => call('/accounts/get', { access_token: accessToken }),
   transactionsSync: (accessToken, cursor) => call('/transactions/sync', { access_token: accessToken, cursor: cursor || undefined, count: 200 }),
   mapAccountType,
