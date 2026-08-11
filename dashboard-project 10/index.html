@@ -349,6 +349,19 @@
         </div>
       </div>
 
+      <!-- ── Goals (folded into Finance; kept near the top per Dan's request) ── -->
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">Goals</div>
+          <div class="section-sub" id="goalsSub">Track what you're building toward.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-new" onclick="openWeeklyReview()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">📊 Weekly Review</button>
+          <button class="btn-new" onclick="openGoalModal()">+ New Goal</button>
+        </div>
+      </div>
+      <div id="goalsGrid" style="margin-bottom:20px"></div>
+
       <!-- Accounts Table (collapsible) -->
       <div class="fin-collapsible" data-fin-id="accounts">
         <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
@@ -398,21 +411,15 @@
         </div>
       </div>
 
-      <!-- Spending Card (donut + legend) -->
-      <div class="spending-card">
-        <div class="spending-card-hdr" id="spendingCardHdr">Spending</div>
-        <div class="spending-inner">
-          <div class="spending-donut" id="spendingDonutWrap">
-            <svg width="160" height="160" viewBox="0 0 160 160" id="spendingDonutSvg">
-              <circle cx="80" cy="80" r="56" fill="none" stroke="var(--track)" stroke-width="18"/>
-            </svg>
-            <div class="spending-donut-center">
-              <div class="spending-donut-total" id="spendingTotal">$0</div>
-              <div class="spending-donut-of" id="spendingOf">of $0</div>
-            </div>
-          </div>
-          <div class="spending-legend" id="spendingLegend"></div>
+      <!-- Spending Card (total + by-category breakdown, merged — was two cards) -->
+      <div class="fin-card spending-card">
+        <div class="fin-section-title" id="spendingCardHdr" style="margin-bottom:2px">Spending</div>
+        <div class="spend-total-row">
+          <span class="spend-total-num" id="spendingTotal">$0</span>
+          <span class="spend-total-of" id="spendingOf">of $0</span>
         </div>
+        <div class="spend-total-track"><div class="spend-total-fill" id="spendingTotalFill"></div></div>
+        <div id="catBarChart" style="margin-top:14px"></div>
       </div>
 
       <!-- Savings Rate (#30) -->
@@ -426,12 +433,6 @@
           <div class="savings-rate-track"><div class="savings-rate-fill" id="savingsRateFill"></div></div>
           <span style="font-size:12px;color:var(--sub)" id="savingsRateDetail"></span>
         </div>
-      </div>
-
-      <!-- By Category Chart (#21) -->
-      <div class="fin-card">
-        <div class="fin-section-title">By Category</div>
-        <div id="catBarChart"></div>
       </div>
 
       <!-- 6-Month Trend (#22) -->
@@ -484,19 +485,6 @@
         </div>
       </div>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:4px 16px" id="txnList"></div>
-
-      <!-- ── Goals (folded into Finance) ── -->
-      <div class="section-hdr" style="margin-top:24px">
-        <div>
-          <div class="section-title">Goals</div>
-          <div class="section-sub" id="goalsSub">Track what you're building toward.</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-new" onclick="openWeeklyReview()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">📊 Weekly Review</button>
-          <button class="btn-new" onclick="openGoalModal()">+ New Goal</button>
-        </div>
-      </div>
-      <div id="goalsGrid"></div>
 
       <!-- Hidden legacy elements for JS compat -->
       <div style="display:none">

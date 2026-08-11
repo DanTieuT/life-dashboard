@@ -83,50 +83,18 @@ function renderFinanceTab(){
   if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
   if(pEl('paydayPct')) pEl('paydayPct').textContent=pct+'% through pay period';
 
-  // ── Spending Donut ──────────────────────────────────────────────
-  const catEntries=Object.entries(appData.budget.categories||{});
+  // ── Spending total + progress (category breakdown renders via #21 below) ──
   const spendingHdr=document.getElementById('spendingCardHdr');
   if(spendingHdr) spendingHdr.textContent=months[currentMonth]+' spending';
-  const donutSvg=document.getElementById('spendingDonutSvg');
-  const legendEl=document.getElementById('spendingLegend');
   const totalEl=document.getElementById('spendingTotal');
   const ofEl=document.getElementById('spendingOf');
+  const totalFillEl=document.getElementById('spendingTotalFill');
   if(totalEl) totalEl.textContent=fmtM(spent);
   if(ofEl) ofEl.textContent='of '+fmtM(budget||spent||1);
-
-  // Build donut segments from category spending
-  const DONUT_COLORS=['#ff453a','#ff9f0a','#30d158','#bf5af2','#0a84ff','#64d2ff','#ffd60a','#ff6b35'];
-  const catSpends=catEntries.map(([cat,limit],i)=>{
-    const catSpent=mt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0);
-    return{cat,limit,catSpent,color:DONUT_COLORS[i%DONUT_COLORS.length]};
-  }).filter(c=>c.catSpent>0).sort((a,b)=>b.catSpent-a.catSpent);
-
-  if(donutSvg){
-    const r=56,cx=80,cy=80,circ=2*Math.PI*r;
-    const total=catSpends.reduce((s,c)=>s+c.catSpent,0)||1;
-    let offset=0;
-    let segs='<circle cx="80" cy="80" r="56" fill="none" stroke="var(--track)" stroke-width="18"/>';
-    for(const c of catSpends){
-      const dash=(c.catSpent/total)*circ;
-      const gap=circ-dash;
-      segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.color}" stroke-width="18" stroke-linecap="butt"
-        stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"
-        transform="rotate(-90 ${cx} ${cy})"/>`;
-      offset+=dash;
-    }
-    donutSvg.innerHTML=segs;
-  }
-  if(legendEl){
-    if(!catSpends.length){
-      legendEl.innerHTML='<div style="color:var(--muted);font-size:13px">No spending this month</div>';
-    } else {
-      legendEl.innerHTML=catSpends.slice(0,6).map(c=>`
-        <div class="spending-leg-row">
-          <div class="spending-leg-dot" style="background:${c.color}"></div>
-          <div class="spending-leg-name">${CATS_EMOJI[c.cat]||''} ${c.cat}</div>
-          <div class="spending-leg-amt">${fmtM(c.catSpent)}</div>
-        </div>`).join('');
-    }
+  if(totalFillEl){
+    const pct=budget>0?Math.min(spent/budget,1)*100:(spent>0?100:0);
+    totalFillEl.style.width=pct+'%';
+    totalFillEl.style.background=!budget?'var(--green)':spent>budget?'var(--red)':spent>budget*.8?'var(--yellow)':'var(--green)';
   }
 
   // ── Transactions ────────────────────────────────────────────────
@@ -847,16 +815,37 @@ const SUB_FREQS=[
   {label:'monthly',days:30,tolerance:5,monthly:x=>x},
   {label:'yearly',days:365,tolerance:20,monthly:x=>x/12},
 ];
+// Categories that recur on a schedule but are essentially never a personal
+// "subscription" — rent/mortgage/utilities is the classic false positive:
+// same amount, same day every month, which is exactly the pattern this
+// detector is built to catch. Excluded up front rather than relying on
+// amount alone, since a cheap utility bill could otherwise slip under the
+// cap below.
+const SUBSCRIPTION_EXCLUDED_CATS=new Set(['Housing']);
+// Subscriptions are typically small recurring charges (streaming, apps,
+// memberships, gym). A large fixed monthly amount is far more likely to be
+// a loan/lease/insurance payment than something anyone would call a
+// "subscription" — capped out rather than trying to classify every loan.
+const SUBSCRIPTION_MAX_MONTHLY=150;
+function _subDismissed(){
+  try{return new Set(JSON.parse(localStorage.getItem('subDismissed')||'[]'));}catch{return new Set();}
+}
+window.dismissSubscription=function(key){
+  const s=_subDismissed();s.add(key);
+  localStorage.setItem('subDismissed',JSON.stringify([...s]));
+  renderRecurringTxns();
+};
 // Scans real transaction history for merchant+amount+interval patterns that
 // look like subscriptions (2+ charges, consistent amount, regular gap).
 // Unlike the old version, this doesn't depend on the manual "Recurring"
 // checkbox — it works on ordinary Plaid-synced transactions too.
 function detectSubscriptions(){
-  const out=(appData.transactions||[]).filter(t=>t.type==='out');
+  const dismissed=_subDismissed();
+  const out=(appData.transactions||[]).filter(t=>t.type==='out'&&!SUBSCRIPTION_EXCLUDED_CATS.has(t.category));
   const groups={};
   out.forEach(t=>{
     const key=_normMerchant(t.name);
-    if(!key)return;
+    if(!key||dismissed.has(key))return;
     (groups[key]=groups[key]||[]).push(t);
   });
   const byPlaidId={};
@@ -871,14 +860,21 @@ function detectSubscriptions(){
     const freq=SUB_FREQS.find(f=>Math.abs(avgGap-f.days)<=f.tolerance);
     if(!freq)return; // irregular spacing — not a subscription pattern
     const amounts=txns.map(t=>t.amount);
-    const avgAmt=amounts.reduce((s,a)=>s+a,0)/amounts.length;
-    const maxDrift=Math.max(...amounts.map(a=>Math.abs(a-avgAmt)))/avgAmt;
-    if(maxDrift>0.15)return; // amount varies too much to be a subscription
+    // Compare each charge to the one right before it (tolerates a gradual
+    // price increase, e.g. a streaming service raising its price once) —
+    // checking against the lifetime average would reject a subscription
+    // the moment its price changed even once.
+    let maxStepDrift=0;
+    for(let i=1;i<amounts.length;i++)maxStepDrift=Math.max(maxStepDrift,Math.abs(amounts[i]-amounts[i-1])/amounts[i-1]);
+    if(maxStepDrift>0.2)return; // amount jumps around too much to be a subscription
     const last=txns[txns.length-1];
+    const monthlyEquivalent=freq.monthly(last.amount);
+    if(monthlyEquivalent>SUBSCRIPTION_MAX_MONTHLY)return; // too large — likely a loan/lease, not a subscription
     const acct=byPlaidId[last.plaidAccountId];
     results.push({
+      key:_normMerchant(last.name),
       name:last.name,category:last.category,amount:last.amount,
-      freq:freq.label,monthlyEquivalent:freq.monthly(last.amount),
+      freq:freq.label,monthlyEquivalent,
       lastDate:last.date,
       nextDate:new Date(new Date(last.date+'T12:00:00').getTime()+freq.days*86400000).toLocaleDateString('en-CA'),
       accountName:acct?acct.name+(acct.mask?' ••'+acct.mask:''):null,
@@ -886,17 +882,22 @@ function detectSubscriptions(){
     });
   });
   // Fold in anything manually flagged "Recurring" in the txn modal that the
-  // pattern detector didn't catch yet (e.g. only 1 charge in history so far).
-  const seen=new Set(results.map(r=>_normMerchant(r.name)));
-  (appData.transactions||[]).filter(t=>t.recurring&&t.type==='out').forEach(t=>{
+  // pattern detector didn't catch yet (e.g. only 1 charge in history so
+  // far — the usual reason a real subscription is missing: an annual charge,
+  // or a merchant only linked/added recently. Flagging it "Recurring" on the
+  // transaction itself is the way to force it in here immediately.)
+  const seen=new Set(results.map(r=>r.key));
+  (appData.transactions||[]).filter(t=>t.recurring&&t.type==='out'&&!SUBSCRIPTION_EXCLUDED_CATS.has(t.category)).forEach(t=>{
     const key=_normMerchant(t.name);
-    if(seen.has(key))return;
+    if(seen.has(key)||dismissed.has(key))return;
     seen.add(key);
     const acct=byPlaidId[t.plaidAccountId];
     const freq=SUB_FREQS.find(f=>f.label===(t.recurrence||'monthly'))||SUB_FREQS[1];
+    const monthlyEquivalent=freq.monthly(t.amount);
+    if(monthlyEquivalent>SUBSCRIPTION_MAX_MONTHLY)return;
     results.push({
-      name:t.name,category:t.category,amount:t.amount,
-      freq:freq.label,monthlyEquivalent:freq.monthly(t.amount),
+      key,name:t.name,category:t.category,amount:t.amount,
+      freq:freq.label,monthlyEquivalent,
       lastDate:t.date,nextDate:null,
       accountName:acct?acct.name+(acct.mask?' ••'+acct.mask:''):null,
       occurrences:1,
@@ -922,6 +923,7 @@ function renderRecurringTxns(){
     </div>
     <span class="recur-freq-badge">${s.freq}</span>
     <span class="txn-amount out" style="margin-left:8px">-${fmtM(s.amount)}</span>
+    <button class="txn-del" title="Not a subscription" onclick="dismissSubscription('${s.key.replace(/'/g,"\\'")}')">✕</button>
   </div>`).join('');
 }
 
@@ -1088,7 +1090,9 @@ function renderBestCard(){
   if(!anyRewardsConfigured()||!rewardCards().length){card.style.display='none';return;}
   card.style.display='';
   const chips=document.getElementById('bestCardChips');
-  chips.innerHTML=REWARD_CATS.map(c=>`<button class="bestcard-chip${c===_bestCardCat?' active':''}" onclick="setBestCardCat('${c.replace(/'/g,"\\'")}')">${CATS_EMOJI[c]||''} ${c}</button>`).join('');
+  chips.innerHTML=`<select class="form-select" onchange="setBestCardCat(this.value)">
+    ${REWARD_CATS.map(c=>`<option value="${c.replace(/"/g,'&quot;')}"${c===_bestCardCat?' selected':''}>${CATS_EMOJI[c]||''} ${c}</option>`).join('')}
+  </select>`;
   const today=todayStr();
   const ranked=rewardCards().map(a=>{
     const pct=effectiveRewardPct(a.id,_bestCardCat,today);
@@ -1099,7 +1103,7 @@ function renderBestCard(){
   document.getElementById('bestCardList').innerHTML=ranked.map((r,i)=>`
     <div class="bestcard-row${i===0?' best':''}">
       <span class="bestcard-rank">${i===0?'★':i+1}</span>
-      <span class="bestcard-name">${r.a.name}${r.a.mask?` <span class="accounts-table-mask">••${r.a.mask}</span>`:''}${r.boosted?' <span class="bestcard-boost">bonus</span>':''}${!r.configured?' <span class="bestcard-unset">not set up</span>':''}</span>
+      <span class="bestcard-name">${r.a.name}${r.boosted?' <span class="bestcard-boost">bonus</span>':''}${!r.configured?' <span class="bestcard-unset">not set up</span>':''}</span>
       <span class="bestcard-pct">${r.pct}%</span>
     </div>`).join('');
 }
