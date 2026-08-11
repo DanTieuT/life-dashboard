@@ -68,7 +68,8 @@ function renderFinanceTab(){
   // ── Payday Bar ──────────────────────────────────────────────────
   const now=new Date();
   const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
-  const dayOfMonth=currentMonth===now.getMonth()&&currentYear===now.getFullYear()?now.getDate():1;
+  const isCurrentMonth=currentMonth===now.getMonth()&&currentYear===now.getFullYear();
+  const dayOfMonth=isCurrentMonth?now.getDate():1;
   const paidDay=1; // pay period starts 1st
   const nextPayDay=new Date(currentYear,currentMonth+1,1);
   const daysLeft=Math.max(0,Math.ceil((nextPayDay-now)/(1000*60*60*24)));
@@ -95,6 +96,22 @@ function renderFinanceTab(){
     const pct=budget>0?Math.min(spent/budget,1)*100:(spent>0?100:0);
     totalFillEl.style.width=pct+'%';
     totalFillEl.style.background=!budget?'var(--green)':spent>budget?'var(--red)':spent>budget*.8?'var(--yellow)':'var(--green)';
+  }
+  // Pace tick — where spend "should" be today if it tracked evenly across
+  // the month (same idea as the home page's budget pace tick). Only
+  // meaningful for the month actually in progress.
+  const paceTickEl=document.getElementById('spendingPaceTick');
+  const paceCaptionEl=document.getElementById('spendingPaceCaption');
+  if(paceTickEl&&paceCaptionEl){
+    if(isCurrentMonth&&budget>0){
+      const pacePct=Math.min(100,(now.getDate()/daysInMonth)*100);
+      paceTickEl.style.left=pacePct+'%';
+      paceTickEl.style.display='';
+      paceCaptionEl.style.display='';
+    } else {
+      paceTickEl.style.display='none';
+      paceCaptionEl.style.display='none';
+    }
   }
 
   // ── Transactions ────────────────────────────────────────────────
@@ -1091,7 +1108,7 @@ function renderBestCard(){
   card.style.display='';
   const chips=document.getElementById('bestCardChips');
   chips.innerHTML=`<select class="form-select" onchange="setBestCardCat(this.value)">
-    ${REWARD_CATS.map(c=>`<option value="${c.replace(/"/g,'&quot;')}"${c===_bestCardCat?' selected':''}>${CATS_EMOJI[c]||''} ${c}</option>`).join('')}
+    ${REWARD_CATS.map(c=>`<option value="${c.replace(/"/g,'&quot;')}"${c===_bestCardCat?' selected':''}>${c}</option>`).join('')}
   </select>`;
   const today=todayStr();
   const ranked=rewardCards().map(a=>{

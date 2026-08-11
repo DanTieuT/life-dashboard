@@ -632,6 +632,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .spend-total-row{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}
 .spend-total-num{font-size:26px;font-weight:700}
 .spend-total-of{font-size:13px;color:var(--sub)}
+.spend-total-track-wrap{position:relative}
 .spend-total-track{height:6px;background:var(--track);border-radius:3px;overflow:hidden}
 .spend-total-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
 /* ── RING STAT CARDS ─────────────────────────────────────────────── */
