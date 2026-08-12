@@ -26,10 +26,6 @@ function initFirebase() {
 
 exports.handler = async (event) => {
   const key = event.queryStringParameters?.key || event.headers?.['x-gpt-key'];
-  console.log('[dashboard-actions] auth debug: headerNames=%j receivedLen=%s expectedLen=%s match=%s',
-    Object.keys(event.headers || {}), key ? key.length : null,
-    process.env.GPT_BRIDGE_KEY ? process.env.GPT_BRIDGE_KEY.length : null,
-    key === process.env.GPT_BRIDGE_KEY);
   if (key !== process.env.GPT_BRIDGE_KEY || !process.env.GPT_BRIDGE_KEY) {
     return { statusCode: 401, body: 'Unauthorized' };
   }
@@ -42,7 +38,6 @@ exports.handler = async (event) => {
   catch { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
   const actions = Array.isArray(body.actions) ? body.actions : [];
-  console.log('dashboard-actions received:', JSON.stringify(actions));
   if (!actions.length) {
     return { statusCode: 400, body: JSON.stringify({ error: 'No actions provided' }) };
   }

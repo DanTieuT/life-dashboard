@@ -211,6 +211,7 @@ function applyActions(data, actions) {
   for (const action of (actions || [])) {
     switch (action.type) {
       case 'add_task':
+        if (!action.name) { labels.push('Warning: add_task requires name'); break; }
         data.projects = data.projects || [];
         data.projects.push({ id: uidGen(), name: action.name, due: action.due || '', done: false, created: today });
         labels.push(`Added task: ${action.name}`);
@@ -249,13 +250,15 @@ function applyActions(data, actions) {
         break;
       }
       case 'add_event':
+        if (!action.name) { labels.push('Warning: add_event requires name'); break; }
         data.events = data.events || [];
-        data.events.push({ id: uidGen(), name: action.name, time: action.time, date: action.date || today });
+        data.events.push({ id: uidGen(), name: action.name, time: action.time || '', date: action.date || today });
         labels.push(`Event: ${action.name}`);
         break;
       case 'add_transaction': {
+        if (!action.name || action.amount == null) { labels.push('Warning: add_transaction requires name and amount'); break; }
         data.transactions = data.transactions || [];
-        data.transactions.push({ id: uidGen(), name: action.name, amount: action.amount, category: action.category, type: action.transactionType || 'out', date: today });
+        data.transactions.push({ id: uidGen(), name: action.name, amount: action.amount, category: action.category || 'Other', type: action.transactionType || 'out', date: today });
         labels.push(`$${action.amount} – ${action.name}`);
         // Spending alert: check if we crossed a budget threshold
         const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
@@ -273,21 +276,25 @@ function applyActions(data, actions) {
         break;
       }
       case 'set_intention':
+        if (!action.text) { labels.push('Warning: set_intention requires text'); break; }
         data.intention = action.text;
         labels.push('Intention set');
         break;
       case 'add_project':
+        if (!action.name) { labels.push('Warning: add_project requires name'); break; }
         data.userProjects = data.userProjects || [];
         data.userProjects.push({ id: uidGen(), emoji: action.emoji || '🔨', name: action.name, stage: action.stage || 'planning', nextAction: action.nextAction || '', created: today });
         labels.push(`Project: ${action.name}`);
         break;
       case 'update_project_stage': {
+        if (!action.stage) { labels.push('Warning: update_project_stage requires stage'); break; }
         const p = findById(data.userProjects, action.id, action.name);
         if (p) { p.stage = action.stage; labels.push(`${p.name} → ${action.stage}`); }
         else { console.warn('update_project_stage: no match for id=%s name=%s', action.id, action.name); labels.push('Warning: could not find project to update'); }
         break;
       }
       case 'update_project_next_action': {
+        if (!action.nextAction) { labels.push('Warning: update_project_next_action requires nextAction'); break; }
         const p = findById(data.userProjects, action.id, action.name);
         if (p) { p.nextAction = action.nextAction; labels.push(`Updated: ${p.name}`); }
         else { console.warn('update_project_next_action: no match for id=%s name=%s', action.id, action.name); labels.push('Warning: could not find project to update'); }
