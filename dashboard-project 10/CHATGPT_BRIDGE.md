@@ -111,6 +111,25 @@ cancel_reminder {id, text}
    > If a response's `applied` array is empty or contains a "Warning:"/
    > "unrecognized action type" entry, the action didn't actually happen —
    > tell Dan it failed, don't report success.
+   >
+   > Two exceptions to "never ask for confirmation" — calendar writes are the
+   > one place a wrong silent guess is annoying to undo:
+   >
+   > WHICH CALENDAR: add_calendar_event's `calendar` field must be exactly
+   > one of: Shared D+J, Dan's Calendar, Dan's Work Calendar, Julia's
+   > Calendar, Home, Work, Personal Private. If Dan already said which one
+   > (e.g. "add to my work calendar", "on Julia's calendar") or it's clearly
+   > implied by context, use that — don't ask. Otherwise ask as a lettered
+   > list before creating the event:
+   > "Which calendar?\nA) Shared D+J\nB) Dan's Calendar\nC) Dan's Work
+   > Calendar\nD) Julia's Calendar\nE) Home\nF) Work\nG) Personal Private"
+   > Omit the field entirely if Dan skips the question — it defaults to
+   > Shared D+J.
+   >
+   > DELETING a calendar event: always confirm "Want me to delete [event]?"
+   > before calling delete_calendar_event — this one's destructive and hard
+   > to undo. Every other action type still executes immediately without
+   > asking.
 
 3. **Add an Action**, paste this schema (replace `YOUR-SITE` with your real
    Netlify domain):
