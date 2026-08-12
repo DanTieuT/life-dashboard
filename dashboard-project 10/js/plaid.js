@@ -101,6 +101,12 @@ window.addInvestmentsForItem=async function(itemId,institution){
     const handler=Plaid.create({
       token:data.link_token,
       onSuccess:async()=>{
+        // Diagnostic: two failed attempts (Schwab, Robinhood) left no
+        // toast at all and no investmentsEnabled flag in Firestore — this
+        // confirms which callback Plaid actually fires for this flow
+        // instead of guessing a third time.
+        console.log('[plaid] onSuccess fired for',institution);
+        toast('Plaid confirmed — saving…');
         try{
           await plaidFetch('/.netlify/functions/plaid-link?action=investments_enabled',{
             method:'POST',headers:{'Content-Type':'application/json'},
@@ -109,7 +115,10 @@ window.addInvestmentsForItem=async function(itemId,institution){
           toast(`✓ Investments enabled for ${institution}`);
         }catch(e){toast('Saved on Plaid but failed to record locally: '+e.message,'error');}
       },
-      onExit:(err)=>{if(err)toast('Plaid: '+(err.display_message||err.error_message||'cancelled'),'error');},
+      onExit:(err,metadata)=>{
+        console.log('[plaid] onExit fired',err,metadata);
+        toast(err?('Plaid: '+(err.display_message||err.error_message||'cancelled')):'Plaid closed without confirming — see console','error');
+      },
     });
     handler.open();
   }catch(e){toast(e.message,'error');}
