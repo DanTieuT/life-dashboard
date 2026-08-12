@@ -127,6 +127,24 @@ module.exports = {
     country_codes: ['US'],
     language: 'en',
   }),
+  // Adds a product to an ALREADY-linked Item (e.g. Investments, after the
+  // original Link only requested Transactions) — Plaid's "update mode":
+  // pass the existing access_token + additional_consented_products, and
+  // omit `products` entirely (Plaid rejects both being set together for a
+  // non-credit product like Investments). The user still has to complete
+  // Link again for that Item so the brokerage can grant the extra consent —
+  // the access_token itself doesn't change.
+  createUpdateLinkToken: (userId, accessToken, additionalProducts) => call('/link/token/create', {
+    client_name: 'Command Center',
+    user: { client_user_id: userId },
+    access_token: accessToken,
+    additional_consented_products: additionalProducts,
+    country_codes: ['US'],
+    language: 'en',
+  }),
+  // Holdings only (not the separate, billed Investments Transactions data —
+  // deliberately not called anywhere in this app).
+  getInvestmentHoldings: (accessToken) => call('/investments/holdings/get', { access_token: accessToken }),
   exchangePublicToken: (publicToken) => call('/item/public_token/exchange', { public_token: publicToken }),
   // Fully revokes the bank connection on Plaid's side. Call this once no
   // local accounts reference the item anymore — otherwise the connection

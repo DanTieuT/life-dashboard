@@ -40,6 +40,32 @@ exports.handler = async (event) => {
       return json(200, { link_token: res.link_token });
     }
 
+    // Lists linked Plaid Items (institution + id) so the UI can offer
+    // "add Investments access" per institution — needed because adding a
+    // product to an existing Item requires that Item's access_token, not a
+    // fresh Link session.
+    if (action === 'list_items') {
+      initFirebase();
+      const db = admin.firestore();
+      const snap = await db.collection(`users/${USER_UID}/plaidItems`).get();
+      const items = snap.docs.map(d => ({ itemId: d.id, institution: d.data().institution || '(unknown)', investmentsEnabled: !!d.data().investmentsEnabled }));
+      return json(200, { items });
+    }
+
+    // Update-mode link_token to add Investments to an already-linked Item.
+    // See plaid.js's createUpdateLinkToken for why this can't just reuse
+    // the normal link_token action.
+    if (action === 'investments_link_token') {
+      const itemId = event.queryStringParameters?.itemId;
+      if (!itemId) return json(400, { error: 'itemId required' });
+      initFirebase();
+      const db = admin.firestore();
+      const itemSnap = await db.doc(`users/${USER_UID}/plaidItems/${itemId}`).get();
+      if (!itemSnap.exists) return json(404, { error: 'Item not found' });
+      const res = await plaid.createUpdateLinkToken(USER_UID, itemSnap.data().accessToken, ['investments']);
+      return json(200, { link_token: res.link_token });
+    }
+
     if (action === 'exchange' && event.httpMethod === 'POST') {
       let body;
       try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
@@ -91,6 +117,19 @@ exports.handler = async (event) => {
       }
       await ref.update({ accounts });
       return json(200, { ok: true, added, total: bal.accounts.length });
+    }
+
+    // Confirms Link's update-mode flow completed for an Item, so the
+    // (future) investments sync knows which Items actually have consent —
+    // calling Plaid's investments endpoint on an Item without it just errors.
+    if (action === 'investments_enabled' && event.httpMethod === 'POST') {
+      let body;
+      try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
+      if (!body.itemId) return json(400, { error: 'itemId required' });
+      initFirebase();
+      const db = admin.firestore();
+      await db.doc(`users/${USER_UID}/plaidItems/${body.itemId}`).set({ investmentsEnabled: true }, { merge: true });
+      return json(200, { ok: true });
     }
 
     if (action === 'unlink' && event.httpMethod === 'POST') {

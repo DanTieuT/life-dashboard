@@ -54,3 +54,50 @@ window.openPlaidLink=async function(){
     if(btn){btn.disabled=false;btn.textContent='🔗 Link Bank';}
   }
 };
+
+// ── Add Investments access to an already-linked institution ────────
+// One-time setup flow, not a recurring button — see CHATGPT_BRIDGE.md-adjacent
+// finance-toolkit work. Lists linked Items, opens Plaid Link in "update mode"
+// (existing access_token + additional_consented_products) for whichever one
+// you pick, since adding a product to an existing Item is a different flow
+// than the original bank link.
+window.openInvestmentsLinkPicker=async function(){
+  const menu=document.getElementById('finMoreMenu');
+  try{
+    const res=await fetch('/.netlify/functions/plaid-link?action=list_items');
+    const data=await res.json();
+    if(data.error){toast(data.error,'error');return;}
+    if(!data.items||!data.items.length){toast('No linked banks yet — use Link Bank first','error');return;}
+    // Replace the more-menu's contents with one button per linked item —
+    // simplest correct UI for a flow you'll use once or twice ever, not a
+    // permanent picker worth a full modal.
+    const prevHTML=menu.innerHTML;
+    menu.innerHTML=data.items.map(it=>
+      `<button onclick="addInvestmentsForItem('${it.itemId}','${(it.institution||'').replace(/'/g,"\\'")}')">📈 Add Investments: ${it.institution}${it.investmentsEnabled?' ✓':''}</button>`
+    ).join('')+'<button onclick="closeFinMoreMenu()">Cancel</button>';
+  }catch(e){toast('Could not load linked banks: '+e.message,'error');}
+};
+
+window.addInvestmentsForItem=async function(itemId,institution){
+  closeFinMoreMenu();
+  try{
+    await loadPlaidScript();
+    const res=await fetch(`/.netlify/functions/plaid-link?action=investments_link_token&itemId=${encodeURIComponent(itemId)}`);
+    const data=await res.json();
+    if(data.error){toast(data.error,'error');return;}
+    const handler=Plaid.create({
+      token:data.link_token,
+      onSuccess:async()=>{
+        try{
+          await fetch('/.netlify/functions/plaid-link?action=investments_enabled',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({itemId}),
+          });
+          toast(`✓ Investments enabled for ${institution}`);
+        }catch(e){toast('Saved on Plaid but failed to record locally: '+e.message,'error');}
+      },
+      onExit:(err)=>{if(err)toast('Plaid: '+(err.display_message||err.error_message||'cancelled'),'error');},
+    });
+    handler.open();
+  }catch(e){toast(e.message,'error');}
+};
