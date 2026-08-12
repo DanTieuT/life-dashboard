@@ -227,7 +227,7 @@ function applyActions(data, actions) {
       case 'complete_task': {
         const t = findById(data.projects, action.id, action.name);
         if (t) { t.done = true; t.completedDate = today; labels.push(`Completed: ${t.name}`); }
-        else { console.warn('complete_task: no match for id=%s name=%s', action.id, action.name); }
+        else { console.warn('complete_task: no match for id=%s name=%s', action.id, action.name); labels.push('Warning: could not find task to complete'); }
         break;
       }
       case 'delete_task': {
@@ -245,7 +245,7 @@ function applyActions(data, actions) {
       case 'log_habit': {
         const h = findById(data.habits, action.id, action.name);
         if (h) { h.log = h.log || {}; h.log[today] = true; labels.push(`Logged: ${h.name}`); }
-        else { console.warn('log_habit: no match for id=%s name=%s', action.id, action.name); }
+        else { console.warn('log_habit: no match for id=%s name=%s', action.id, action.name); labels.push('Warning: could not find habit to log'); }
         break;
       }
       case 'add_event':
@@ -284,13 +284,13 @@ function applyActions(data, actions) {
       case 'update_project_stage': {
         const p = findById(data.userProjects, action.id, action.name);
         if (p) { p.stage = action.stage; labels.push(`${p.name} → ${action.stage}`); }
-        else { console.warn('update_project_stage: no match for id=%s name=%s', action.id, action.name); }
+        else { console.warn('update_project_stage: no match for id=%s name=%s', action.id, action.name); labels.push('Warning: could not find project to update'); }
         break;
       }
       case 'update_project_next_action': {
         const p = findById(data.userProjects, action.id, action.name);
         if (p) { p.nextAction = action.nextAction; labels.push(`Updated: ${p.name}`); }
-        else { console.warn('update_project_next_action: no match for id=%s name=%s', action.id, action.name); }
+        else { console.warn('update_project_next_action: no match for id=%s name=%s', action.id, action.name); labels.push('Warning: could not find project to update'); }
         break;
       }
       case 'add_calendar_event':
@@ -336,6 +336,12 @@ function applyActions(data, actions) {
         labels.push(before !== data.reminders.length ? 'Reminder cancelled' : 'Reminder not found');
         break;
       }
+      default:
+        // Catches a mistyped/unsupported action type instead of silently
+        // doing nothing — this is what surfaced the ChatGPT bridge sending
+        // types outside the documented vocabulary.
+        console.warn('applyActions: unrecognized action type "%s"', action.type);
+        labels.push(`Warning: unrecognized action type "${action.type}"`);
     }
   }
   return { labels, spendingAlert };

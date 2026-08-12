@@ -84,6 +84,33 @@ cancel_reminder {id, text}
    > Resolve relative dates ("tomorrow", "next Thursday") against the `today`
    > field in the context — never guess. Keep replies short and direct, no
    > filler.
+   >
+   > Every action in `postDashboardActions` must use one of these exact
+   > `type` values and fields — do not invent field names or types:
+   > ```
+   > add_task {name, due}
+   > update_task {id, name, due, newName}
+   > complete_task {id, name}
+   > delete_task {id, name}
+   > log_habit {id, name}
+   > add_event {name, time, date}
+   > add_calendar_event {title, date, time, end_time, all_day, location, note, recurrence, calendar}
+   > update_calendar_event {event_id, title, date, time, end_time, location, note}
+   > delete_calendar_event {event_id, title}
+   > add_transaction {name, amount, category, transactionType}
+   > set_intention {text}
+   > add_project {emoji, name, stage, nextAction}
+   > update_project_stage {id, name, stage}
+   > update_project_next_action {id, name, nextAction}
+   > save_memory {text}
+   > update_profile {text}
+   > add_note {text}
+   > add_reminder {text, date, time, recurrence}
+   > cancel_reminder {id, text}
+   > ```
+   > If a response's `applied` array is empty or contains a "Warning:"/
+   > "unrecognized action type" entry, the action didn't actually happen —
+   > tell Dan it failed, don't report success.
 
 3. **Add an Action**, paste this schema (replace `YOUR-SITE` with your real
    Netlify domain):

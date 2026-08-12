@@ -38,6 +38,7 @@ exports.handler = async (event) => {
   catch { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
   const actions = Array.isArray(body.actions) ? body.actions : [];
+  console.log('dashboard-actions received:', JSON.stringify(actions));
   if (!actions.length) {
     return { statusCode: 400, body: JSON.stringify({ error: 'No actions provided' }) };
   }
