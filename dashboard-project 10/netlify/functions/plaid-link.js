@@ -38,12 +38,18 @@ function parseBearerToken(authHeaderValue) {
 // than throwing.
 async function verifyAuth(event) {
   const token = parseBearerToken(event.headers?.authorization || event.headers?.Authorization);
-  if (!token) return null;
+  if (!token) {
+    console.log('[plaid-link] auth debug: no token — headerNames=%j', Object.keys(event.headers || {}));
+    return null;
+  }
   try {
     initFirebase();
     const decoded = await admin.auth().verifyIdToken(token);
-    return decoded.uid === USER_UID ? decoded : null;
-  } catch {
+    const ok = decoded.uid === USER_UID;
+    console.log('[plaid-link] auth debug: token verified, uid=%s expected=%s match=%s', decoded.uid, USER_UID, ok);
+    return ok ? decoded : null;
+  } catch (e) {
+    console.log('[plaid-link] auth debug: verifyIdToken failed — %s', e.message);
     return null;
   }
 }
