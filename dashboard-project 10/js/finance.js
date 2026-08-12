@@ -398,7 +398,7 @@ window.deleteAccount=async function(id){
 
   if(a.source==='plaid'){
     try{
-      const res=await fetch('/.netlify/functions/plaid-link?action=unlink',{
+      const res=await plaidFetch('/.netlify/functions/plaid-link?action=unlink',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({accountId:id}),

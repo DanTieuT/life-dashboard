@@ -8,6 +8,13 @@
 //     item, also revokes the item on Plaid's side and deletes the stored
 //     access token, so a dead connection doesn't linger or keep billing.
 // No-ops with a clear error until PLAID_CLIENT_ID / PLAID_SECRET are set.
+//
+// Every action requires a valid Firebase ID token (Authorization: Bearer
+// <token>) for this app's one authorized user — same pattern chat.mjs's
+// verifyAuth uses, adapted to this file's classic (non-Web-Request) handler
+// signature. This endpoint can exchange/unlink real bank connections and
+// (as of the Investments work) list linked institution names, so it was a
+// real gap that it had no auth check at all before this.
 const admin = require('firebase-admin');
 const plaid = require('./plaid.js');
 
@@ -21,6 +28,26 @@ function initFirebase() {
   admin.initializeApp({ credential: admin.credential.cert(sa) });
 }
 
+function parseBearerToken(authHeaderValue) {
+  const m = /^Bearer (.+)$/.exec(authHeaderValue || '');
+  return m ? m[1] : null;
+}
+
+// Returns the decoded token on success, or null on any failure (missing
+// header, expired/invalid token, wrong uid) — callers respond 401 rather
+// than throwing.
+async function verifyAuth(event) {
+  const token = parseBearerToken(event.headers?.authorization || event.headers?.Authorization);
+  if (!token) return null;
+  try {
+    initFirebase();
+    const decoded = await admin.auth().verifyIdToken(token);
+    return decoded.uid === USER_UID ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
 const uidGen = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 const json = (code, body) => ({
   statusCode: code,
@@ -31,6 +58,9 @@ const json = (code, body) => ({
 exports.handler = async (event) => {
   if (!plaid.configured()) {
     return json(200, { error: 'Plaid not configured — set PLAID_CLIENT_ID and PLAID_SECRET' });
+  }
+  if (!(await verifyAuth(event))) {
+    return json(401, { error: 'Unauthorized' });
   }
   const action = event.queryStringParameters?.action || '';
 
