@@ -115,64 +115,79 @@ cancel_reminder {id, text}
 3. **Add an Action**, paste this schema (replace `YOUR-SITE` with your real
    Netlify domain):
 
-   ```yaml
-   openapi: 3.1.0
-   info:
-     title: Dan's Dashboard Bridge
-     version: 1.0.0
-   servers:
-     - url: https://YOUR-SITE.netlify.app/.netlify/functions
-   paths:
-     /dashboard-context:
-       get:
-         operationId: getDashboardContext
-         summary: Read Dan's full dashboard state
-         responses:
-           "200":
-             description: Dashboard context
-             content:
-               application/json:
-                 schema: { type: object }
-     /dashboard-actions:
-       post:
-         operationId: postDashboardActions
-         summary: Apply one or more write actions to Dan's dashboard
-         requestBody:
-           required: true
-           content:
-             application/json:
-               schema:
-                 type: object
-                 required: [actions]
-                 properties:
-                   actions:
-                     type: array
-                     items:
-                       type: object
-                       required: [type]
-                       properties:
-                         type: { type: string }
-                       additionalProperties: true
-         responses:
-           "200":
-             description: Result of applying the actions
-             content:
-               application/json:
-                 schema: { type: object }
-   components:
-     securitySchemes:
-       apiKeyAuth:
-         type: apiKey
-         in: header
-         name: x-gpt-key
-   security:
-     - apiKeyAuth: []
+   JSON parses far more reliably than YAML when pasted through ChatGPT's
+   schema box (whitespace-sensitive indentation tends to get mangled on
+   copy-paste). ChatGPT's current validator also specifically requires
+   `openapi: 3.1.x` — 3.0.x gets rejected outright. `x-openai-isConsequential:
+   false` on the POST operation is required too, or ChatGPT auto-flags every
+   write as needing a manual "Allow" click per call — exactly the
+   babying this was built to avoid:
+
+   ```json
+   {
+     "openapi": "3.1.1",
+     "info": { "title": "Dan's Dashboard Bridge", "version": "1.0.0" },
+     "servers": [{ "url": "https://dn2dashboard.netlify.app/.netlify/functions" }],
+     "paths": {
+       "/dashboard-context": {
+         "get": {
+           "operationId": "getDashboardContext",
+           "summary": "Read Dan's full dashboard state",
+           "responses": {
+             "200": {
+               "description": "Dashboard context",
+               "content": { "application/json": { "schema": { "type": "object", "properties": {}, "additionalProperties": true } } }
+             }
+           }
+         }
+       },
+       "/dashboard-actions": {
+         "post": {
+           "operationId": "postDashboardActions",
+           "summary": "Apply one or more write actions to Dan's dashboard",
+           "x-openai-isConsequential": false,
+           "requestBody": {
+             "required": true,
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "type": "object",
+                   "required": ["actions"],
+                   "properties": {
+                     "actions": {
+                       "type": "array",
+                       "items": {
+                         "type": "object",
+                         "required": ["type"],
+                         "properties": { "type": { "type": "string" } },
+                         "additionalProperties": true
+                       }
+                     }
+                   }
+                 }
+               }
+             }
+           },
+           "responses": {
+             "200": {
+               "description": "Result of applying the actions",
+               "content": { "application/json": { "schema": { "type": "object", "properties": {}, "additionalProperties": true } } }
+             }
+           }
+         }
+       }
+     }
+   }
    ```
 
-4. **Set Authentication** on the Action to **API Key**, header name `x-gpt-key`,
-   value = your `GPT_BRIDGE_KEY` from `.env`.
-5. Save. Test it: "what's on my plate today?" should call
-   `getDashboardContext`; "log that I hit the gym" should call
+4. **Set Authentication** on the Action: click the gear icon next to
+   Authentication → **Authentication Type: API Key** → **Auth Type: Custom**
+   (not Bearer — Bearer sends a different header ChatGPT's own `Authorization`
+   scheme, our endpoints check a literal `x-gpt-key` header) → **Custom Header
+   Name: `x-gpt-key`** → **API Key**: your `GPT_BRIDGE_KEY` from `.env`.
+5. Save (do this after every meaningful step — an unsaved Custom GPT can lose
+   in-progress changes on navigation). Test it: "what's on my plate today?"
+   should call `getDashboardContext`; "log that I hit the gym" should call
    `postDashboardActions` silently and just confirm afterward.
 
 ## Security note
