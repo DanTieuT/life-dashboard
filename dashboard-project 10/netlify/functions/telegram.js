@@ -448,7 +448,7 @@ AVAILABLE ACTIONS:
 {"type":"add_event","name":"...","time":"HH:MM","date":"YYYY-MM-DD"}
 {"type":"add_calendar_event","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","all_day":false,"location":"...","note":"...","recurrence":"RRULE:FREQ=WEEKLY","calendar":"<one of: Shared D+J, Dan's Calendar, Dan's Work Calendar, Julia's Calendar, Home, Work, Personal Private>"}
 {"type":"update_calendar_event","event_id":"<id from calendar>","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","location":"...","note":"..."}
-{"type":"delete_calendar_event","event_id":"<id from calendar>","title":"<event title for confirmation>"}
+{"type":"delete_calendar_event","event_id":"<id from calendar>","title":"<event title for confirmation>","occurrence_date":"<YYYY-MM-DD, required if the event repeats and Dan means just one date>","delete_series":"<true only if Dan explicitly means every occurrence>"}
 {"type":"add_transaction","name":"...","amount":50,"category":"Food","transactionType":"out"}
 {"type":"set_intention","text":"..."}
 {"type":"add_project","emoji":"🔨","name":"...","stage":"planning","nextAction":"..."}
@@ -494,7 +494,12 @@ RULES:
     "Which calendar?\nA) Shared D+J\nB) Dan's Calendar\nC) Dan's Work Calendar\nD) Julia's Calendar\nE) Home\nF) Work\nG) Personal Private"
     Omit the calendar field entirely if Dan doesn't answer / skips — it defaults to Shared D+J.
   - To RESCHEDULE or EDIT an event, use update_calendar_event with the event_id from the calendar list. Only include fields that are changing.
-  - To DELETE an event, use delete_calendar_event with the event_id. Always confirm "Want me to delete [event]?" before deleting.
+  - RECURRING EVENTS: a repeating event (e.g. "Shop Saturday" every week) shows up once per date in the calendar list but every occurrence shares the SAME [id:...] — the id alone can't tell "this Saturday" from "every Saturday". When Dan wants to delete or change one occurrence of a repeating event:
+    - DELETE one date: delete_calendar_event with event_id + occurrence_date (the specific date from the calendar list, e.g. the date under the "Sat Aug 15" entry Dan means). This only removes that date — the rest of the series is untouched.
+    - DELETE the whole series: only if Dan explicitly says "every one" / "the whole series" / "stop it recurring" — delete_calendar_event with delete_series:true, no occurrence_date.
+    - If it's ambiguous which he means, ask — don't guess. Deleting the wrong scope (one date vs. the whole series) isn't easily undoable.
+    - RESCHEDULING one occurrence's date/time (e.g. "move this Saturday's shift to 3pm") is NOT supported yet — update_calendar_event will return an error for this. Tell Dan honestly it's not possible right now; the workaround is delete_calendar_event with occurrence_date for that date, then add_calendar_event for a new one-off event at the new time. Editing title/location/note on a recurring event (applies to the whole series) still works normally.
+  - To DELETE a non-recurring event, use delete_calendar_event with the event_id. Always confirm "Want me to delete [event]?" before deleting.
 - ALWAYS ask for missing required info before creating anything — do not guess:
   - add_task: if no due date given, ask "When is this due?" (open-ended — dates aren't a small set)
   - add_project: if no stage given, ask which stage — use the lettered list below (planning/sourcing/building/blocked/done are a fixed small set)
@@ -716,11 +721,17 @@ exports.handler = async (event) => {
 
   // Apply actions and save data
   let spendingAlert = null;
+  let calendarWarnings = [];
   if (actions && actions.length > 0) {
     ({ spendingAlert } = applyActions(appData, actions));
     try { await userRef.set(appData); } catch (e) { console.error('Save error', e); }
-    // Handle async actions (Apple Calendar) — shared with dashboard-actions.js
-    await runCalendarSideEffects(actions);
+    // Handle async actions (Apple Calendar) — shared with dashboard-actions.js.
+    // Claude's `reply` text above was already generated before this runs, so
+    // it can't know a calendar write failed (or hit the recurring-event
+    // guards) — surface that as a follow-up message instead, same pattern
+    // spendingAlert already uses below.
+    const { labels: calendarLabels } = await runCalendarSideEffects(actions);
+    calendarWarnings = calendarLabels.filter(l => l.startsWith('Warning:'));
   }
 
   // Save updated conversation history (timestamped — replay filters on `at`,
@@ -752,6 +763,7 @@ exports.handler = async (event) => {
     if (!sentAsPoll) await sendMessage(chatId, reply);
   }
   if (spendingAlert) await sendMessage(chatId, spendingAlert);
+  for (const w of calendarWarnings) await sendMessage(chatId, '⚠️ ' + w);
 
   // Voice replies (#25): if the incoming message was a voice note, also send the
   // reply as speech. Text already went out above (accessibility + skimming), so

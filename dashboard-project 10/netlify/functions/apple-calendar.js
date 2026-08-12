@@ -177,6 +177,22 @@ function toICALDateOnly(ms) {
   const d = new Date(ms);
   return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
 }
+// Builds an ICAL.Time via direct field construction (year/month/day/...)
+// rather than string parsing — ICAL.Time.fromString() requires dashes/colons
+// our compact toICALLocalDateTime()/toICALDateOnly() strings don't have, and
+// direct field assignment is what's already proven correct for EXDATE above.
+function icalTimeFromLocal(ms, tz, isDate) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).formatToParts(new Date(ms));
+  const get = (type) => +parts.find(p => p.type === type).value;
+  return new ICAL.Time({
+    year: get('year'), month: get('month'), day: get('day'),
+    hour: isDate ? 0 : (get('hour') % 24), minute: isDate ? 0 : get('minute'), second: isDate ? 0 : get('second'),
+    isDate: !!isDate,
+  });
+}
 function icsEscape(s) {
   return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 }
@@ -297,16 +313,66 @@ async function createEvent({ title, date, time, endDate, endTime, allDay = false
   return { uuid: uid, title, all_day: allDay, start_at: startMs, end_at: endMs, location: location || null, note: note || null };
 }
 
+// Adds an EXDATE property to `vevent` at local date `dateStr` (YYYY-MM-DD),
+// matching DTSTART's value-type (all-day vs timed) and TZID so the exclusion
+// actually lines up with a real occurrence. Mutates `vevent` in place.
+function addExdate(vevent, dateStr) {
+  const dtstartProp = vevent.getFirstProperty('dtstart');
+  const dtstartVal = dtstartProp.getFirstValue();
+  const [y, mo, d] = dateStr.split('-').map(Number);
+  const exVal = dtstartVal.clone();
+  exVal.year = y; exVal.month = mo; exVal.day = d;
+  const exdateProp = new ICAL.Property('exdate', vevent);
+  const tzid = dtstartProp.getParameter('tzid');
+  if (tzid) exdateProp.setParameter('TZID', tzid);
+  exdateProp.setValue(exVal);
+  vevent.addProperty(exdateProp);
+}
+
+// Fetches + parses the raw component for an existing event (not just the
+// flattened ICAL.Event summary parseICS() returns) — needed so update/delete
+// can mutate RRULE/EXDATE-bearing properties in place instead of rebuilding
+// the object from scratch and silently dropping them.
+async function fetchVComponent(eventUuid) {
+  const obj = await resolveObjectForUid(eventUuid);
+  if (!obj) return null;
+  const jcal = ICAL.parse(obj.data);
+  const comp = new ICAL.Component(jcal);
+  const vevent = comp.getFirstSubcomponent('vevent');
+  if (!vevent) return null;
+  return { obj, comp, vevent, event: new ICAL.Event(vevent) };
+}
+
 async function updateEvent(eventUuid, { title, date, time, endDate, endTime, allDay, location, note }) {
   await ensureAuth();
-  const obj = await resolveObjectForUid(eventUuid);
-  if (!obj) throw new Error('Event not found on Apple Calendar: ' + eventUuid);
-  const existing = parseICS(obj.data)[0];
-  if (!existing) throw new Error('Could not parse existing Apple Calendar event');
+  const parsed = await fetchVComponent(eventUuid);
+  if (!parsed) throw new Error('Event not found on Apple Calendar: ' + eventUuid);
+  const { obj, comp, vevent, event } = parsed;
 
-  const isAllDay = allDay != null ? allDay : existing.startDate.isDate;
-  let startMs, endMs;
-  if (date) {
+  // Changing date/time on a recurring event is ambiguous — "reschedule just
+  // this Saturday" vs "change what time it recurs at every week" — and the
+  // old code silently did neither correctly (it dropped the RRULE entirely,
+  // turning the whole series into a single one-off event). Block it with a
+  // clear message instead of guessing wrong. Title/location/note edits are
+  // safe to apply to the whole series and still allowed.
+  if (event.isRecurring() && (date || time || endDate || endTime)) {
+    throw new Error(
+      `RECURRING_DATE_CHANGE_UNSUPPORTED: "${event.summary}" repeats — changing its date/time isn't ` +
+      `supported yet (per-occurrence reschedule needs a feature that doesn't exist). To move just one ` +
+      `occurrence: delete that occurrence (delete_calendar_event with occurrence_date) and add a new ` +
+      `one-off event instead. Title/location/note can still be edited on the whole series.`
+    );
+  }
+
+  if (title != null) vevent.updatePropertyWithValue('summary', title);
+  if (location != null) vevent.updatePropertyWithValue('location', location);
+  if (note != null) vevent.updatePropertyWithValue('description', note);
+
+  // Non-recurring events can still have their date/time changed freely.
+  let startMs = event.startDate.toUnixTime() * 1000;
+  let endMs = event.endDate.toUnixTime() * 1000;
+  if (date && !event.isRecurring()) {
+    const isAllDay = allDay != null ? allDay : event.startDate.isDate;
     startMs = isAllDay
       ? Date.UTC(...date.split('-').map((n, i) => i === 1 ? +n - 1 : +n))
       : localToUtcMs(date, time || '09:00', TZ);
@@ -314,28 +380,50 @@ async function updateEvent(eventUuid, { title, date, time, endDate, endTime, all
     endMs = isAllDay
       ? Date.UTC(...eDate.split('-').map((n, i) => i === 1 ? +n - 1 : +n))
       : localToUtcMs(eDate, endTime || time || '10:00', TZ);
-  } else {
-    startMs = existing.startDate.toUnixTime() * 1000;
-    endMs = existing.endDate.toUnixTime() * 1000;
+    vevent.updatePropertyWithValue('dtstart', icalTimeFromLocal(startMs, TZ, isAllDay));
+    vevent.updatePropertyWithValue('dtend', icalTimeFromLocal(isAllDay ? endMs + 86400000 : endMs, TZ, isAllDay));
+    // updatePropertyWithValue() preserves whatever TZID param the property
+    // already had — only need to touch it when isAllDay actually flips the
+    // value type (timed→all-day drops TZID; all-day→timed adds it). ical.js
+    // stores the param key lowercase ('tzid'); setParameter('TZID', ...)
+    // silently created a SECOND, differently-cased param instead of
+    // overwriting — caught via a direct round-trip test, not guessed.
+    for (const name of ['dtstart', 'dtend']) {
+      const prop = vevent.getFirstProperty(name);
+      const hasTzid = prop.getParameter('tzid');
+      if (isAllDay && hasTzid) prop.removeParameter('tzid');
+      else if (!isAllDay && !hasTzid) prop.setParameter('tzid', TZ);
+    }
   }
 
-  const ics = buildICS({
-    uid: eventUuid,
-    title: title != null ? title : existing.summary,
-    startMs, endMs, allDay: isAllDay,
-    location: location != null ? location : existing.location,
-    note: note != null ? note : existing.description,
-  });
-
-  const res = await _client.updateCalendarObject({ calendarObject: { url: obj.url, etag: obj.etag, data: ics } });
+  const res = await _client.updateCalendarObject({ calendarObject: { url: obj.url, etag: obj.etag, data: comp.toString() } });
   if (!res.ok) throw new Error(`Apple Calendar update failed: HTTP ${res.status}`);
-  return { uuid: eventUuid, title: title != null ? title : existing.summary, start_at: startMs, end_at: endMs };
+  return { uuid: eventUuid, title: title != null ? title : event.summary, start_at: startMs, end_at: endMs };
 }
 
-async function deleteEvent(eventUuid) {
+async function deleteEvent(eventUuid, { occurrenceDate, deleteSeries = false } = {}) {
   await ensureAuth();
-  const obj = await resolveObjectForUid(eventUuid);
-  if (!obj) throw new Error('Event not found on Apple Calendar: ' + eventUuid);
+  const parsed = await fetchVComponent(eventUuid);
+  if (!parsed) throw new Error('Event not found on Apple Calendar: ' + eventUuid);
+  const { obj, comp, vevent, event } = parsed;
+
+  if (event.isRecurring() && !deleteSeries) {
+    if (!occurrenceDate) {
+      throw new Error(
+        `RECURRING_NEEDS_OCCURRENCE: "${event.summary}" repeats — deleting it needs to know whether you ` +
+        `mean just one occurrence or the whole series. Pass occurrence_date (YYYY-MM-DD) to remove a single ` +
+        `date, or delete_series: true to remove all of them.`
+      );
+    }
+    // Single-occurrence delete: add an EXDATE instead of deleting the object,
+    // so the rest of the series is untouched.
+    addExdate(vevent, occurrenceDate);
+    const res = await _client.updateCalendarObject({ calendarObject: { url: obj.url, etag: obj.etag, data: comp.toString() } });
+    if (!res.ok) throw new Error(`Apple Calendar occurrence-delete failed: HTTP ${res.status}`);
+    return;
+  }
+
+  // Non-recurring, or an explicit whole-series delete.
   const res = await _client.deleteCalendarObject({ calendarObject: { url: obj.url, etag: obj.etag } });
   if (!res.ok && res.status !== 404) throw new Error(`Apple Calendar delete failed: HTTP ${res.status}`);
 }

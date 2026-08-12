@@ -51,12 +51,12 @@ exports.handler = async (event) => {
 
     const { labels, spendingAlert } = applyActions(data, actions);
     await userRef.set(data);
-    await runCalendarSideEffects(actions);
+    const { labels: calendarLabels } = await runCalendarSideEffects(actions);
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ok: true, applied: labels, spendingAlert: spendingAlert || null }),
+      body: JSON.stringify({ ok: true, applied: [...labels, ...calendarLabels], spendingAlert: spendingAlert || null }),
     };
   } catch (e) {
     console.error('dashboard-actions error:', e);

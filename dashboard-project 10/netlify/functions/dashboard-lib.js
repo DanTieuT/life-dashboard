@@ -300,14 +300,15 @@ function applyActions(data, actions) {
         else { console.warn('update_project_next_action: no match for id=%s name=%s', action.id, action.name); labels.push('Warning: could not find project to update'); }
         break;
       }
+      // add/update/delete_calendar_event: intentionally no-ops here — these
+      // don't write anything to the dashboard doc (the calendar itself is
+      // the source of truth), and the real outcome (including failures and
+      // the recurring-event guards) comes from runCalendarSideEffects()
+      // below, not this synchronous label. Listed explicitly so they don't
+      // fall into the `default` "unrecognized action type" case.
       case 'add_calendar_event':
-        labels.push(`Calendar: ${action.title} on ${action.date}`);
-        break;
       case 'update_calendar_event':
-        labels.push(`Updated event: ${action.title || action.event_id}`);
-        break;
       case 'delete_calendar_event':
-        labels.push(`Deleted event: ${action.title || action.event_id}`);
         break;
       case 'save_memory':
         data.profile = data.profile || '';
@@ -355,12 +356,18 @@ function applyActions(data, actions) {
 }
 
 // Async Apple Calendar side effects for the three calendar action types —
-// applyActions() only writes a label for these; the actual CalDAV call
-// happens here so both callers (telegram.js, dashboard-actions.js) get
-// identical calendar behavior instead of duplicating this loop.
+// applyActions() doesn't touch these three (no dashboard-doc field to write —
+// the calendar itself is the source of truth), so it's the labels below,
+// not applyActions', that are the real signal the caller should trust.
+// Previously applyActions optimistically labeled these "Updated event: X" /
+// "Deleted event: X" before this async work even ran — meaning a failure
+// here (or the recurring-event guards below) was invisible to whoever
+// asked. Returns { labels } so callers report what actually happened.
 async function runCalendarSideEffects(actions) {
+  const labels = [];
   for (const action of (actions || [])) {
-    if (action.type === 'add_calendar_event' && action.title && action.date) {
+    if (action.type === 'add_calendar_event') {
+      if (!action.title || !action.date) { labels.push('Warning: add_calendar_event requires title and date'); continue; }
       try {
         await calendarSvc.createEvent({
           title: action.title,
@@ -374,12 +381,15 @@ async function runCalendarSideEffects(actions) {
           recurrence: action.recurrence || null,
           calendar: action.calendar || null,
         });
+        labels.push(`Calendar: ${action.title} on ${action.date}`);
         console.log('Calendar event created:', action.title, '->', action.calendar || 'Shared D+J (default)');
       } catch (e) {
         console.error('Calendar createEvent error:', e.message);
+        labels.push(`Warning: failed to create calendar event — ${e.message}`);
       }
     }
-    if (action.type === 'update_calendar_event' && action.event_id) {
+    if (action.type === 'update_calendar_event') {
+      if (!action.event_id) { labels.push('Warning: update_calendar_event requires event_id'); continue; }
       try {
         await calendarSvc.updateEvent(action.event_id, {
           title: action.title,
@@ -391,20 +401,31 @@ async function runCalendarSideEffects(actions) {
           location: action.location,
           note: action.note,
         });
+        labels.push(`Updated event: ${action.title || action.event_id}`);
         console.log('Calendar event updated:', action.event_id);
       } catch (e) {
         console.error('Calendar updateEvent error:', e.message);
+        labels.push(`Warning: ${e.message}`);
       }
     }
-    if (action.type === 'delete_calendar_event' && action.event_id) {
+    if (action.type === 'delete_calendar_event') {
+      if (!action.event_id) { labels.push('Warning: delete_calendar_event requires event_id'); continue; }
       try {
-        await calendarSvc.deleteEvent(action.event_id);
-        console.log('Calendar event deleted:', action.event_id);
+        await calendarSvc.deleteEvent(action.event_id, {
+          occurrenceDate: action.occurrence_date || null,
+          deleteSeries: action.delete_series === true,
+        });
+        labels.push(action.occurrence_date
+          ? `Deleted occurrence (${action.occurrence_date}): ${action.title || action.event_id}`
+          : `Deleted event: ${action.title || action.event_id}`);
+        console.log('Calendar event deleted:', action.event_id, action.occurrence_date || '(whole series)');
       } catch (e) {
         console.error('Calendar deleteEvent error:', e.message);
+        labels.push(`Warning: ${e.message}`);
       }
     }
   }
+  return { labels };
 }
 
 module.exports = {

@@ -96,7 +96,7 @@ cancel_reminder {id, text}
    > add_event {name, time, date}
    > add_calendar_event {title, date, time, end_time, all_day, location, note, recurrence, calendar}
    > update_calendar_event {event_id, title, date, time, end_time, location, note}
-   > delete_calendar_event {event_id, title}
+   > delete_calendar_event {event_id, title, occurrence_date, delete_series}
    > add_transaction {name, amount, category, transactionType}
    > set_intention {text}
    > add_project {emoji, name, stage, nextAction}
@@ -130,6 +130,26 @@ cancel_reminder {id, text}
    > before calling delete_calendar_event — this one's destructive and hard
    > to undo. Every other action type still executes immediately without
    > asking.
+   >
+   > RECURRING EVENTS: a repeating event (e.g. "Shop Saturday" every week)
+   > shows up once per date in getDashboardContext's calendarEvents but every
+   > occurrence shares the SAME [id:...] — the id alone can't distinguish
+   > "this Saturday" from "every Saturday". When Dan wants to change or
+   > remove one occurrence:
+   > - DELETE just one date: delete_calendar_event with event_id AND
+   >   occurrence_date (the specific date he means). This only removes that
+   >   date — the rest of the series stays.
+   > - DELETE the whole series: only when Dan explicitly says "every one" /
+   >   "the whole series" / "stop it repeating" — delete_calendar_event with
+   >   delete_series: true, no occurrence_date.
+   > - If it's ambiguous which he means, ask — don't guess; picking the wrong
+   >   scope isn't easily undoable.
+   > - RESCHEDULING one occurrence's date/time isn't supported yet —
+   >   update_calendar_event will fail with an error for a recurring event's
+   >   date/time. Tell Dan honestly it's not possible right now; the
+   >   workaround is deleting that occurrence (occurrence_date) then adding a
+   >   new one-off event at the new time. Editing title/location/note on a
+   >   recurring event still works normally (applies to the whole series).
 
 3. **Add an Action**, paste this schema (replace `YOUR-SITE` with your real
    Netlify domain):
