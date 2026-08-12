@@ -63,7 +63,7 @@ function callClaude(prompt) {
   return new Promise((resolve) => {
     const payload = JSON.stringify({
       model: 'claude-haiku-4-5',
-      max_tokens: 200,
+      max_tokens: 300,
       messages: [{ role: 'user', content: prompt }]
     });
     const req = https.request({
@@ -95,6 +95,34 @@ function todayPacific() {
 }
 
 function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+
+// Mirrors js/core.js isRDO() / rdo-nudge.js's copy — 9/80 schedule, every-
+// other-Monday RDO. Falls back to the known default if Firestore hasn't
+// persisted one yet.
+const DEFAULT_RDO_SCHEDULE = { enabled: true, anchorDate: '2026-07-06', cycleDays: 14 };
+function isRDO(dateStr, sched) {
+  sched = sched || DEFAULT_RDO_SCHEDULE;
+  if (!sched.enabled || !sched.anchorDate) return false;
+  const d = new Date(dateStr + 'T12:00:00');
+  if (d.getDay() !== 1) return false;
+  const anchor = new Date(sched.anchorDate + 'T12:00:00');
+  const diffDays = Math.round((d - anchor) / 86400000);
+  const cycle = sched.cycleDays || 14;
+  return ((diffDays % cycle) + cycle) % cycle === 0;
+}
+
+// Mirrors js/finance.js's goalCurrentBalance() — sum of linked account
+// balances, falling back to the goal's manually-tracked `current` value.
+function goalCurrentBalance(g, accounts) {
+  const ids = g.linkedAccountIds || (g.linkedAccountId ? [g.linkedAccountId] : []);
+  if (ids.length) {
+    return ids.reduce((s, id) => {
+      const a = accounts.find(x => x.id === id);
+      return s + (a ? a.balance : 0);
+    }, 0);
+  }
+  return g.current || 0;
+}
 
 // "2026-07-04" → "Saturday (Jul 4)", "Next Monday (Jul 6)", "Jul 20"
 function humanDate(dateStr, today) {
@@ -157,9 +185,31 @@ exports.handler = async (event) => {
     }).reduce((s, t) => s + (t.amount || 0), 0));
     const budgetPct = budget > 0 ? Math.round(spent / budget * 100) : null;
 
+    // ── Pace: % of month elapsed vs % of budget spent — same "pace tick"
+    //    concept as the dashboard's gauge ring, just as a sentence ──────────
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const monthElapsedPct = Math.round(now.getDate() / daysInMonth * 100);
+    const pace = budgetPct !== null ? (budgetPct <= monthElapsedPct ? 'ahead of pace' : 'behind pace') : null;
+
+    // ── One concrete next-action to hand the AI note, same source rdo-nudge
+    //    uses ──────────────────────────────────────────────────────────────
+    const projectsWithNext = (data.userProjects || []).filter(p => !p.archived && p.nextAction && p.stage !== 'done');
+    const topNextAction = projectsWithNext[0] || null;
+
+    // ── Goal progress ───────────────────────────────────────────────────────
+    const goals = (data.goals || []).map(g => ({
+      name: g.name,
+      remaining: Math.max(0, (g.target || 0) - goalCurrentBalance(g, data.accounts || [])),
+    })).filter(g => g.remaining > 0);
+
     // ── Top 3 today (#24): overdue (oldest first) > due today > due tomorrow
     //    > tasks tied to a project with a near deadline (within 7 days) ──────
     const tomorrow = (() => { const d = new Date(today + 'T12:00:00'); d.setDate(d.getDate() + 1); return d.toLocaleDateString('en-CA'); })();
+
+    // ── RDO awareness (mirrors rdo-nudge.js's isRDO) ────────────────────────
+    const isRDOToday = isRDO(today, data.rdoSchedule);
+    const isRDOTomorrow = isRDO(tomorrow, data.rdoSchedule);
+
     const daysOverdue = t => Math.round((new Date(today + 'T12:00:00') - new Date(t.due + 'T12:00:00')) / 86400000);
     const nearProjects = (data.userProjects || []).filter(p => !p.archived && p.stage !== 'done' && p.dueDate && p.dueDate >= today && (new Date(p.dueDate + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000 <= 7);
     const ranked = [];
@@ -262,16 +312,20 @@ exports.handler = async (event) => {
     }
 
     // ── AI daily note ──────────────────────────────────────────────
-    const aiPrompt = `You are Dan's personal AI assistant sending him a morning briefing. Write 2-3 sentences spoken directly to him — warm, direct, like a trusted friend who knows his life. Don't greet him (already done). Don't recap the list. Just give him a moment of real perspective on his day: what actually matters, what to watch out for, or something worth thinking about. Keep it grounded and specific to what's below.
+    const aiPrompt = `You are Dan's personal AI assistant sending him a morning briefing. Write 2-4 sentences spoken directly to him — warm, direct, like a trusted friend who knows his life. Don't greet him (already done). Don't recap the list. Give him a moment of real perspective on his day: what actually matters, what to watch out for, or something worth thinking about. If two or more facts below genuinely relate to each other (e.g. free time today/tomorrow + budget slack + a waiting task or order, or a goal that's close + spending pace), connect them into one concrete suggestion. Don't force a connection that isn't really there — on an ordinary day it's fine to just give a grounded, specific thought about one thing. Keep it grounded and specific to what's below, never generic.
 
 Today: ${dayName}, ${monthDay}
 ${weather ? `Weather: ${weather.temp}°F, ${weather.desc}` : ''}
+${isRDOToday ? 'Dan is OFF today (RDO).' : isRDOTomorrow ? 'Dan is off tomorrow (RDO) — today is a workday.' : ''}
 Overdue tasks: ${overdue.length ? overdue.map(t => t.name).join(', ') : 'none'}
 Due today: ${dueToday.length ? dueToday.map(t => t.name).join(', ') : 'nothing'}
 Dan's schedule today: ${danSchedule.length ? danSchedule.map(e => (e.time||'all day') + ' ' + e.name).join(', ') : 'nothing scheduled'}
 Julia's plans today: ${calJulia.length ? calJulia.map(e => (e.startTime||'all day') + ' ' + e.title).join(', ') : 'none'}
 Coming up: ${upcoming.length ? upcoming.map(t => t.name + ' (' + humanDate(t.due, today) + ')').join(', ') : 'nothing'}
-${budgetPct !== null ? `Budget: ${budgetPct}% used this month` : ''}`;
+${topNextAction ? `Open project waiting on a next action: "${topNextAction.name}" → ${topNextAction.nextAction}` : ''}
+${arriving.length ? `Arriving today: ${arriving.map(p => p.description || p.retailer || p.trackingNumber).join(', ')}` : ''}
+${budgetPct !== null ? `Budget: ${budgetPct}% used this month, ${monthElapsedPct}% of the month elapsed (${pace})` : ''}
+${goals.length ? `Goals still open: ${goals.map(g => `${g.name} ($${Math.round(g.remaining).toLocaleString()} to go)`).join(', ')}` : ''}`;
 
     const aiNote = await callClaude(aiPrompt);
     if (aiNote) {

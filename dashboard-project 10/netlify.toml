@@ -14,10 +14,10 @@
 [functions."weekly-review"]
   schedule = "0 5 * * 1"
 
-# 8pm PST daily = 03:00 UTC next day (Netlify cron is UTC, no DST handling —
-# during PDT this fires at 8pm PT; during PST it's 7pm. Close enough for a nudge.)
-[functions."habit-reminder"]
-  schedule = "0 3 * * *"
+# 7am PT daily = 14:00 UTC (Netlify cron is UTC, no DST handling — during PDT
+# this fires at 7am PT; during PST it's 6am. Close enough for a briefing.)
+[functions."morning-briefing"]
+  schedule = "0 14 * * *"
 
 # 6pm PST daily = 02:00 UTC next day (same DST caveat as above). Only actually
 # sends a message when tomorrow is an RDO day — see rdo-nudge.js.

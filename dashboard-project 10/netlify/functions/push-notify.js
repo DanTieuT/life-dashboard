@@ -7,7 +7,7 @@
  *   GET  /push-notify?action=vapid-key  — return public VAPID key to browser
  *
  * Also exports sendPushToAll(db, {title, body, url}) for other scheduled
- * functions (habit-reminder.js, rdo-nudge.js, weekly-review.js) to call directly.
+ * functions (rdo-nudge.js, reminder-check.js, shipping-sync.js) to call directly.
  */
 
 const admin = require('firebase-admin');
