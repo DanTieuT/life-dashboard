@@ -118,6 +118,12 @@ function mapTransaction(pt) {
   };
 }
 
+// OAuth institutions (Schwab, Robinhood, etc.) redirect the browser away to
+// authenticate, then back here — Plaid requires this exact URI pre-registered
+// in the dashboard (Team Settings > API > Allowed redirect URIs), and it must
+// be a bare page with no query string/hash. See plaid-oauth-redirect.html.
+const REDIRECT_URI = 'https://dn2dashboard.netlify.app/plaid-oauth-redirect.html';
+
 module.exports = {
   configured,
   createLinkToken: (userId) => call('/link/token/create', {
@@ -126,6 +132,7 @@ module.exports = {
     products: ['transactions'],
     country_codes: ['US'],
     language: 'en',
+    redirect_uri: REDIRECT_URI,
   }),
   // Adds a product to an ALREADY-linked Item (e.g. Investments, after the
   // original Link only requested Transactions) — Plaid's "update mode":
@@ -141,6 +148,7 @@ module.exports = {
     additional_consented_products: additionalProducts,
     country_codes: ['US'],
     language: 'en',
+    redirect_uri: REDIRECT_URI,
   }),
   // Holdings only (not the separate, billed Investments Transactions data —
   // deliberately not called anywhere in this app).

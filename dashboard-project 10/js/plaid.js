@@ -30,6 +30,18 @@ function loadPlaidScript(){
   return _plaidScriptPromise;
 }
 
+// OAuth institutions (Schwab, Robinhood, etc.) leave this page entirely to
+// authenticate, then land on plaid-oauth-redirect.html — this is what that
+// page reads to know which flow to resume and finish. localStorage, not
+// sessionStorage: the brokerage login visibly opens as a separate
+// window/tab on mobile, and sessionStorage doesn't share across those.
+function stashOAuthResume(linkToken,flow,extra={}){
+  localStorage.setItem('plaidOAuthResume',JSON.stringify({linkToken,flow,...extra}));
+}
+function clearOAuthResume(){
+  localStorage.removeItem('plaidOAuthResume');
+}
+
 window.openPlaidLink=async function(){
   const btn=document.getElementById('linkBankBtn');
   try{
@@ -39,9 +51,11 @@ window.openPlaidLink=async function(){
     let data;
     try{data=await res.json();}catch{throw new Error('Bank linking unavailable — try again later');}
     if(data.error){toast(data.error,'error');return;}
+    stashOAuthResume(data.link_token,'bank');
     const handler=Plaid.create({
       token:data.link_token,
       onSuccess:async(publicToken,metadata)=>{
+        clearOAuthResume();
         toast('Linking account…');
         try{
           const ex=await plaidFetch('/.netlify/functions/plaid-link?action=exchange',{
@@ -58,7 +72,7 @@ window.openPlaidLink=async function(){
           fetch('/.netlify/functions/plaid-sync?trigger=manual').catch(()=>{});
         }catch(e){toast('Link failed: '+e.message,'error');}
       },
-      onExit:(err)=>{if(err)toast('Plaid: '+(err.display_message||err.error_message||'cancelled'),'error');},
+      onExit:(err)=>{clearOAuthResume();if(err)toast('Plaid: '+(err.display_message||err.error_message||'cancelled'),'error');},
     });
     handler.open();
   }catch(e){
@@ -98,14 +112,17 @@ window.addInvestmentsForItem=async function(itemId,institution){
     const res=await plaidFetch(`/.netlify/functions/plaid-link?action=investments_link_token&itemId=${encodeURIComponent(itemId)}`);
     const data=await res.json();
     if(data.error){toast(data.error,'error');return;}
+    // Root cause of the earlier silent failures: Schwab/Robinhood are OAuth
+    // institutions — the browser leaves this page entirely to authenticate,
+    // so onSuccess/onExit below never actually fire; plaid-oauth-redirect.html
+    // resumes and finishes the flow after the user comes back. This stash is
+    // what makes that possible; still handling onSuccess/onExit here too for
+    // the (some) institutions that complete without ever leaving the page.
+    stashOAuthResume(data.link_token,'investments',{itemId,institution});
     const handler=Plaid.create({
       token:data.link_token,
       onSuccess:async()=>{
-        // Diagnostic: two failed attempts (Schwab, Robinhood) left no
-        // toast at all and no investmentsEnabled flag in Firestore — this
-        // confirms which callback Plaid actually fires for this flow
-        // instead of guessing a third time.
-        console.log('[plaid] onSuccess fired for',institution);
+        clearOAuthResume();
         toast('Plaid confirmed — saving…');
         try{
           await plaidFetch('/.netlify/functions/plaid-link?action=investments_enabled',{
@@ -115,9 +132,9 @@ window.addInvestmentsForItem=async function(itemId,institution){
           toast(`✓ Investments enabled for ${institution}`);
         }catch(e){toast('Saved on Plaid but failed to record locally: '+e.message,'error');}
       },
-      onExit:(err,metadata)=>{
-        console.log('[plaid] onExit fired',err,metadata);
-        toast(err?('Plaid: '+(err.display_message||err.error_message||'cancelled')):'Plaid closed without confirming — see console','error');
+      onExit:(err)=>{
+        clearOAuthResume();
+        if(err)toast('Plaid: '+(err.display_message||err.error_message||'cancelled'),'error');
       },
     });
     handler.open();

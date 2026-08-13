@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1C1C1E">
+<title>Connecting…</title>
+<style>
+  body{background:#1C1C1E;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:24px;}
+  #status{max-width:360px;}
+  a{color:#4da3ff;}
+</style>
+</head>
+<body>
+<div id="status">Connecting your account…</div>
+
+<script type="module">
+// Plaid's OAuth institutions (Schwab, Robinhood, etc.) redirect the browser
+// away to authenticate, then back HERE — this exact URL is registered in
+// Plaid's dashboard as the one allowed redirect URI (plaid.js's REDIRECT_URI).
+// js/plaid.js stashes enough state in localStorage before opening Link (not
+// sessionStorage — Dan's brokerage login visibly opens as a separate
+// window/tab on mobile, and sessionStorage doesn't share across those; only
+// localStorage does) so this page can resume the flow and finish what the
+// original page started.
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+
+const statusEl = document.getElementById('status');
+function setStatus(html) { statusEl.innerHTML = html; }
+
+const app = initializeApp({
+  apiKey:"AIzaSyBxha20jT2FO2wIze_hgVP6SDzy6yI9QD0",
+  authDomain:"my-dashboard-7d8b2.firebaseapp.com",
+  projectId:"my-dashboard-7d8b2",
+  storageBucket:"my-dashboard-7d8b2.firebasestorage.app",
+  messagingSenderId:"959767882750",
+  appId:"1:959767882750:web:1b612e426cca9c7c752eaf"
+});
+const auth = getAuth(app);
+
+function loadPlaidScript(){
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.plaid.com/link/v2/stable/link-initialize.js';
+    s.onload=resolve;
+    s.onerror=()=>reject(new Error('Could not load Plaid'));
+    document.head.appendChild(s);
+  });
+}
+
+function backLink(){ return '<br><br><a href="/">Return to dashboard</a>'; }
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    setStatus('Not signed in.' + backLink());
+    return;
+  }
+
+  let resume;
+  try { resume = JSON.parse(localStorage.getItem('plaidOAuthResume') || 'null'); }
+  catch { resume = null; }
+
+  if (!resume || !resume.linkToken) {
+    setStatus("Nothing to resume — you may have opened this link directly." + backLink());
+    return;
+  }
+
+  try {
+    await loadPlaidScript();
+    const idToken = await user.getIdToken();
+
+    const handler = Plaid.create({
+      token: resume.linkToken,
+      receivedRedirectUri: window.location.href,
+      onSuccess: async (publicToken, metadata) => {
+        localStorage.removeItem('plaidOAuthResume');
+        setStatus('Saving…');
+        try {
+          if (resume.flow === 'investments') {
+            const res = await fetch('/.netlify/functions/plaid-link?action=investments_enabled', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+              body: JSON.stringify({ itemId: resume.itemId }),
+            });
+            const out = await res.json();
+            if (out.error) throw new Error(out.error);
+            setStatus(`✓ Investments enabled for ${resume.institution || 'your account'}.` + backLink());
+          } else {
+            const res = await fetch('/.netlify/functions/plaid-link?action=exchange', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+              body: JSON.stringify({ public_token: publicToken, institution: metadata?.institution?.name || resume.institution || '' }),
+            });
+            const out = await res.json();
+            if (out.error) throw new Error(out.error);
+            setStatus(`✓ Linked ${out.added?.length ? out.added.join(', ') : 'account'}.` + backLink());
+          }
+        } catch (e) {
+          setStatus('Connected on Plaid, but saving failed: ' + e.message + backLink());
+        }
+      },
+      onExit: (err) => {
+        localStorage.removeItem('plaidOAuthResume');
+        setStatus(err ? ('Plaid: ' + (err.display_message || err.error_message || 'something went wrong')) : 'Cancelled.');
+        setStatus(statusEl.innerHTML + backLink());
+      },
+    });
+    handler.open();
+  } catch (e) {
+    setStatus('Error resuming: ' + e.message + backLink());
+  }
+});
+</script>
+</body>
+</html>
