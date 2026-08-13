@@ -458,7 +458,12 @@ function eventsToBlock(events) {
     const items = evts.map(e => {
       const time = e.all_day ? '[all day]' : `${fmtEventTime(e.start_at)}–${fmtEventTime(e.end_at)}`;
       const loc = e.location ? ` @ ${e.location}` : '';
-      return `    • ${e.title} ${time}${loc} [id:${e.uuid}]`;
+      // Which of the 8 source calendars this event lives on — without this,
+      // every event just reads as generic "Dan's schedule" with no way to
+      // answer "what's on my Stock Events calendar" specifically, even
+      // though the data was always there per-event (calendarName).
+      const cal = e.calendarName ? ` [${e.calendarName}]` : '';
+      return `    • ${e.title} ${time}${loc}${cal} [id:${e.uuid}]`;
     }).join('\n');
     return `  ${date}:\n${items}`;
   }).join('\n');
