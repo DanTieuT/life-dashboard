@@ -61,6 +61,7 @@ exports.handler = async () => {
             institution: item.institution || '',
             plaidAccountId: h.account_id,
             accountName: acct.name || '',
+            accountMask: acct.mask || '',
             securityId: h.security_id,
             ticker: sec.ticker_symbol || null,
             name: sec.name || 'Unknown security',

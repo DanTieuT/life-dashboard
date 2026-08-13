@@ -100,7 +100,7 @@ function renderFinanceTab(){
       // quantities need more decimals than shares do).
       const fmtPrice=n=>n==null?'—':'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
       const fmtQty=n=>n==null?'—':n.toLocaleString(undefined,{maximumFractionDigits:Math.abs(n)<1?4:2});
-      const groupKey=h=>`${h.institution||'Unknown'} · ${h.accountName||'Account'}`;
+      const groupKey=h=>`${h.institution||'Unknown'} · ${h.accountName||'Account'}${h.accountMask?` ••${h.accountMask}`:''}`;
 
       // ── Cash: settled/uninvested balance per account (Plaid's "CUR:USD"-
       //    style cash positions — see securityType) — split out from the
