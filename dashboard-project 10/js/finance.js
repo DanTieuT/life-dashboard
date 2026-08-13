@@ -77,33 +77,28 @@ function renderFinanceTab(){
       investSection.style.display='none';
     } else {
       investSection.style.display='';
-      const totalValue=holdings.reduce((s,h)=>s+(h.currentValue||0),0);
       const sorted=[...holdings].sort((a,b)=>(b.currentValue||0)-(a.currentValue||0));
-      investRow.innerHTML=`<div class="accounts-table-head">
-          <span>Holding</span><span>Qty</span><span style="text-align:right">Value</span>
+      // Compact numeric formatting for narrow columns — not fmtM() (that's
+      // for whole-dollar account balances; positions need cents, and crypto
+      // quantities need more decimals than shares do).
+      const fmtPrice=n=>n==null?'—':'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+      const fmtQty=n=>n==null?'—':n.toLocaleString(undefined,{maximumFractionDigits:Math.abs(n)<1?4:2});
+      investRow.innerHTML=`<div class="holdings-table-head">
+          <span>Ticker</span><span style="text-align:right">Qty</span><span style="text-align:right">Buy</span><span style="text-align:right">Price</span><span style="text-align:right">Gain</span>
         </div>
         ${sorted.map(h=>{
-          const gainLoss=h.costBasis!=null&&h.currentValue!=null?h.currentValue-h.costBasis:null;
-          // fmt()/fmtM() always Math.abs() internally (see accounts table's
-          // debt row above) — sign has to be added manually or a loss
-          // silently renders as an unsigned positive number.
-          const gainLossHtml=gainLoss!=null?`<span style="color:var(${gainLoss>=0?'--green':'--red'});font-size:11px;margin-left:6px">${gainLoss>=0?'+':'-'}${fmtM(gainLoss)}</span>`:'';
-          return`<div class="accounts-table-row">
-            <div class="accounts-table-name-col">
-              <div class="accounts-table-name">
-                <span>${h.ticker?`<b>${h.ticker}</b> — `:''}${h.name}</span>
-              </div>
-              <div class="acct-card-sub" style="font-size:11px;opacity:.6">${h.institution||''}${h.accountName?' · '+h.accountName:''}</div>
-            </div>
-            <div class="accounts-table-type">${h.quantity!=null?h.quantity.toLocaleString(undefined,{maximumFractionDigits:4}):''}</div>
-            <div class="accounts-table-bal">${fmtM(h.currentValue||0)}${gainLossHtml}</div>
+          const buyPrice=h.costBasis!=null&&h.quantity?h.costBasis/h.quantity:null;
+          const gainPct=h.costBasis!=null&&h.costBasis!==0&&h.currentValue!=null?(h.currentValue-h.costBasis)/h.costBasis*100:null;
+          const gainCls=gainPct==null?'muted':gainPct>=0?'green':'red';
+          const gainTxt=gainPct==null?'—':`${gainPct>=0?'+':'-'}${Math.abs(gainPct).toFixed(1)}%`;
+          return`<div class="holdings-table-row">
+            <div class="holdings-table-ticker" title="${h.name||''}">${h.ticker||h.name||'—'}</div>
+            <div class="holdings-table-cell">${fmtQty(h.quantity)}</div>
+            <div class="holdings-table-cell muted">${fmtPrice(buyPrice)}</div>
+            <div class="holdings-table-cell">${fmtPrice(h.currentPrice)}</div>
+            <div class="holdings-table-gain ${gainCls}">${gainTxt}</div>
           </div>`;
-        }).join('')}
-        <div class="accounts-table-row" style="font-weight:600">
-          <div class="accounts-table-name-col"><div class="accounts-table-name">Total</div></div>
-          <div class="accounts-table-type"></div>
-          <div class="accounts-table-bal">${fmtM(totalValue)}</div>
-        </div>`;
+        }).join('')}`;
     }
   }
 
