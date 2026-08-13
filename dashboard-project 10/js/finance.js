@@ -71,34 +71,70 @@ function renderFinanceTab(){
   //    rather than showing an empty state most accounts will never fill. ──
   const investSection=document.getElementById('investmentsSection');
   const investRow=document.getElementById('investmentsRow');
+  const investCashRow=document.getElementById('investmentsCashRow');
   const holdings=appData.investmentHoldings||[];
   if(investSection&&investRow){
     if(!holdings.length){
       investSection.style.display='none';
     } else {
       investSection.style.display='';
-      const sorted=[...holdings].sort((a,b)=>(b.currentValue||0)-(a.currentValue||0));
       // Compact numeric formatting for narrow columns — not fmtM() (that's
       // for whole-dollar account balances; positions need cents, and crypto
       // quantities need more decimals than shares do).
       const fmtPrice=n=>n==null?'—':'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
       const fmtQty=n=>n==null?'—':n.toLocaleString(undefined,{maximumFractionDigits:Math.abs(n)<1?4:2});
-      investRow.innerHTML=`<div class="holdings-table-head">
+      const groupKey=h=>`${h.institution||'Unknown'} · ${h.accountName||'Account'}`;
+
+      // ── Cash: settled/uninvested balance per account (Plaid's "CUR:USD"-
+      //    style cash positions — see securityType) — split out from the
+      //    stock/crypto list below, not "a holding" in the same sense. ──
+      const cashHoldings=holdings.filter(h=>h.securityType==='cash');
+      if(investCashRow){
+        if(!cashHoldings.length){
+          investCashRow.innerHTML='';
+        } else {
+          const cashByGroup={};
+          cashHoldings.forEach(h=>{const k=groupKey(h);cashByGroup[k]=(cashByGroup[k]||0)+(h.currentValue||0);});
+          const total=Object.values(cashByGroup).reduce((s,v)=>s+v,0);
+          investCashRow.innerHTML=`<div class="holdings-cash-card">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">Investable cash</div>
+            ${Object.entries(cashByGroup).map(([name,amt])=>
+              `<div class="holdings-cash-row"><span class="name">${name}</span><span class="amt">${fmtPrice(amt)}</span></div>`
+            ).join('')}
+            <div class="holdings-cash-total"><span>Total</span><span>${fmtPrice(total)}</span></div>
+          </div>`;
+        }
+      }
+
+      // ── Stocks/crypto/ETFs, grouped by account ──────────────────────
+      const stockHoldings=holdings.filter(h=>h.securityType!=='cash');
+      const groups={};
+      stockHoldings.forEach(h=>{const k=groupKey(h);(groups[k]=groups[k]||[]).push(h);});
+      const groupNames=Object.keys(groups).sort((a,b)=>
+        groups[b].reduce((s,h)=>s+(h.currentValue||0),0)-groups[a].reduce((s,h)=>s+(h.currentValue||0),0)
+      );
+
+      const rowHtml=h=>{
+        const buyPrice=h.costBasis!=null&&h.quantity?h.costBasis/h.quantity:null;
+        const gainPct=h.costBasis!=null&&h.costBasis!==0&&h.currentValue!=null?(h.currentValue-h.costBasis)/h.costBasis*100:null;
+        const gainCls=gainPct==null?'muted':gainPct>=0?'green':'red';
+        const gainTxt=gainPct==null?'—':`${gainPct>=0?'+':'-'}${Math.abs(gainPct).toFixed(1)}%`;
+        return`<div class="holdings-table-row">
+          <div class="holdings-table-ticker" title="${h.name||''}">${h.ticker||h.name||'—'}</div>
+          <div class="holdings-table-cell">${fmtQty(h.quantity)}</div>
+          <div class="holdings-table-cell muted">${fmtPrice(buyPrice)}</div>
+          <div class="holdings-table-cell">${fmtPrice(h.currentPrice)}</div>
+          <div class="holdings-table-gain ${gainCls}">${gainTxt}</div>
+        </div>`;
+      };
+
+      investRow.innerHTML=stockHoldings.length?`<div class="holdings-table-head">
           <span>Ticker</span><span style="text-align:right">Qty</span><span style="text-align:right">Buy</span><span style="text-align:right">Price</span><span style="text-align:right">Gain</span>
         </div>
-        ${sorted.map(h=>{
-          const buyPrice=h.costBasis!=null&&h.quantity?h.costBasis/h.quantity:null;
-          const gainPct=h.costBasis!=null&&h.costBasis!==0&&h.currentValue!=null?(h.currentValue-h.costBasis)/h.costBasis*100:null;
-          const gainCls=gainPct==null?'muted':gainPct>=0?'green':'red';
-          const gainTxt=gainPct==null?'—':`${gainPct>=0?'+':'-'}${Math.abs(gainPct).toFixed(1)}%`;
-          return`<div class="holdings-table-row">
-            <div class="holdings-table-ticker" title="${h.name||''}">${h.ticker||h.name||'—'}</div>
-            <div class="holdings-table-cell">${fmtQty(h.quantity)}</div>
-            <div class="holdings-table-cell muted">${fmtPrice(buyPrice)}</div>
-            <div class="holdings-table-cell">${fmtPrice(h.currentPrice)}</div>
-            <div class="holdings-table-gain ${gainCls}">${gainTxt}</div>
-          </div>`;
-        }).join('')}`;
+        ${groupNames.map(name=>{
+          const rows=[...groups[name]].sort((a,b)=>(b.currentValue||0)-(a.currentValue||0));
+          return`<div class="holdings-group-label">${name}</div>${rows.map(rowHtml).join('')}`;
+        }).join('')}` : '';
     }
   }
 
