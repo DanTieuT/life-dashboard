@@ -613,6 +613,8 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
    gets its own grid instead of reusing accounts-table's 3-column layout
    (which also hides its middle column below 768px — wrong tradeoff here). */
 .holdings-table-head{display:grid;grid-template-columns:1fr 48px 58px 58px 52px;gap:6px;padding:8px 12px;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.holdings-sort-btn{cursor:pointer;user-select:none;white-space:nowrap}
+.holdings-sort-btn:active{color:var(--text)}
 .holdings-table-row{display:grid;grid-template-columns:1fr 48px 58px 58px 52px;gap:6px;padding:9px 12px;border-bottom:.5px solid var(--divider);align-items:center}
 .holdings-table-row:last-child{border-bottom:none}
 .holdings-table-ticker{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -845,9 +847,17 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 /* ── FINANCE BATCH 3 ─────────────────────────────────────────────── */
 .fin-section-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--sub);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .fin-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:16px}
-/* ── Collapsible finance sections (Accounts / Best Card For / Missed Rewards) ── */
-.fin-collapse-hdr{cursor:pointer}
-.fin-collapse-btn{background:none;border:none;color:var(--muted);width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:transform .15s}
+/* ── Collapsible finance sections (Accounts / Investments / Best Card For /
+   Missed Rewards) — the header used to be plain uppercase text with a tiny
+   13px chevron and no boundary at all on Accounts/Investments specifically
+   (Best Card/Missed Rewards happened to also carry .fin-card, which gave
+   them a background; these two didn't), so the fact they were tappable
+   collapse controls wasn't visually obvious. Header is now its own card-like
+   bar regardless of which other classes the section has. ── */
+.fin-collapsible{margin-bottom:24px}
+.fin-collapse-hdr{cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;transition:background .1s}
+.fin-collapse-hdr:active{background:var(--card2)}
+.fin-collapse-btn{background:none;border:none;color:var(--text);width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;transition:transform .15s}
 .fin-collapsible.collapsed [data-role="finBody"]{display:none}
 .fin-collapsible.collapsed [data-role="finChevron"]{transform:rotate(180deg)}
 .fin-collapsible.collapsed .fin-collapse-hdr{margin-bottom:0}

@@ -1,3 +1,20 @@
+// ── Holdings table sort state (persists across re-renders, not across
+//    reloads — resets to the value-descending default each session) ──
+let holdingsSortCol=null,holdingsSortDir='desc';
+window.sortHoldingsBy=function(col){
+  if(holdingsSortCol===col){holdingsSortDir=holdingsSortDir==='desc'?'asc':'desc';}
+  else{holdingsSortCol=col;holdingsSortDir=col==='ticker'?'asc':'desc';}
+  renderFinanceTab();
+};
+// Buy price and gain% aren't stored on the holding — Plaid gives total cost
+// basis, not per-share — so both the sort comparator and the row renderer
+// need identical math. One function, not two copies that could drift apart.
+function holdingDerived(h){
+  const buyPrice=h.costBasis!=null&&h.quantity?h.costBasis/h.quantity:null;
+  const gainPct=h.costBasis!=null&&h.costBasis!==0&&h.currentValue!=null?(h.currentValue-h.costBasis)/h.costBasis*100:null;
+  return{buyPrice,gainPct};
+}
+
 // ── FINANCE RING (legacy, kept for any callers) ───────────────────
 function renderFinanceRing(){
   // All ring DOM elements were removed from the dashboard; this is a no-op
@@ -114,9 +131,28 @@ function renderFinanceTab(){
         groups[b].reduce((s,h)=>s+(h.currentValue||0),0)-groups[a].reduce((s,h)=>s+(h.currentValue||0),0)
       );
 
+      // Column headers are click-to-sort — same column again flips direction
+      // (sortHoldingsBy above), default column/direction (value, descending)
+      // matches the old hardcoded behavior so nothing changes until you tap one.
+      const sortGetters={
+        ticker:h=>(h.ticker||h.name||'').toUpperCase(),
+        qty:h=>h.quantity||0,
+        buy:h=>holdingDerived(h).buyPrice??-Infinity,
+        price:h=>h.currentPrice||0,
+        gain:h=>holdingDerived(h).gainPct??-Infinity,
+      };
+      const sortCol=holdingsSortCol||'value';
+      const getter=sortGetters[sortCol]||(h=>h.currentValue||0);
+      const dirMul=holdingsSortDir==='asc'?1:-1;
+      const sortRows=rows=>[...rows].sort((a,b)=>{
+        const av=getter(a),bv=getter(b);
+        if(typeof av==='string')return av.localeCompare(bv)*dirMul;
+        return (av-bv)*dirMul;
+      });
+      const arrow=col=>holdingsSortCol===col?(holdingsSortDir==='asc'?' ▲':' ▼'):'';
+
       const rowHtml=h=>{
-        const buyPrice=h.costBasis!=null&&h.quantity?h.costBasis/h.quantity:null;
-        const gainPct=h.costBasis!=null&&h.costBasis!==0&&h.currentValue!=null?(h.currentValue-h.costBasis)/h.costBasis*100:null;
+        const{buyPrice,gainPct}=holdingDerived(h);
         const gainCls=gainPct==null?'muted':gainPct>=0?'green':'red';
         const gainTxt=gainPct==null?'—':`${gainPct>=0?'+':'-'}${Math.abs(gainPct).toFixed(1)}%`;
         return`<div class="holdings-table-row">
@@ -129,12 +165,15 @@ function renderFinanceTab(){
       };
 
       investRow.innerHTML=stockHoldings.length?`<div class="holdings-table-head">
-          <span>Ticker</span><span style="text-align:right">Qty</span><span style="text-align:right">Buy</span><span style="text-align:right">Price</span><span style="text-align:right">Gain</span>
+          <span class="holdings-sort-btn" onclick="sortHoldingsBy('ticker')">Ticker${arrow('ticker')}</span>
+          <span class="holdings-sort-btn" style="text-align:right" onclick="sortHoldingsBy('qty')">Qty${arrow('qty')}</span>
+          <span class="holdings-sort-btn" style="text-align:right" onclick="sortHoldingsBy('buy')">Buy${arrow('buy')}</span>
+          <span class="holdings-sort-btn" style="text-align:right" onclick="sortHoldingsBy('price')">Price${arrow('price')}</span>
+          <span class="holdings-sort-btn" style="text-align:right" onclick="sortHoldingsBy('gain')">Gain${arrow('gain')}</span>
         </div>
-        ${groupNames.map(name=>{
-          const rows=[...groups[name]].sort((a,b)=>(b.currentValue||0)-(a.currentValue||0));
-          return`<div class="holdings-group-label">${name}</div>${rows.map(rowHtml).join('')}`;
-        }).join('')}` : '';
+        ${groupNames.map(name=>
+          `<div class="holdings-group-label">${name}</div>${sortRows(groups[name]).map(rowHtml).join('')}`
+        ).join('')}` : '';
     }
   }
 
