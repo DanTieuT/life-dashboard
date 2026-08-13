@@ -287,6 +287,8 @@ async function loadData(){
         packages:d.packages||[],
         reminders:d.reminders||[],
         cardRewards:d.cardRewards||{},
+        investmentHoldings:d.investmentHoldings||[],
+        investmentHoldingsSyncedAt:d.investmentHoldingsSyncedAt||0,
       };
     } else {
       // No document at this path. Almost always means we're authenticated as a

@@ -21,7 +21,7 @@ drift apart in what they know how to do.
 `FIREBASE_SERVICE_ACCOUNT_B64` (or the local `service-account.json` fallback)
 is required the same way every other function needs it — already configured.
 
-## The two endpoints
+## The three endpoints
 
 ### `GET /.netlify/functions/dashboard-context`
 Auth: `x-gpt-key: <GPT_BRIDGE_KEY>` header, or `?key=<GPT_BRIDGE_KEY>`.
@@ -37,6 +37,29 @@ Auth: same as above. Body:
 ```
 Applies each action, saves to Firestore, runs any Apple Calendar side effects,
 returns `{ "ok": true, "applied": ["Added task: ..."], "spendingAlert": null }`.
+
+### `POST /.netlify/functions/finance-query`
+Auth: same as above. Body:
+```json
+{ "tool": "get_investment_holdings", "args": {} }
+```
+Runs the exact same read-only financial tools dashboard chat's tool-calling
+loop already uses (`finance-tools.mjs`'s `executeTool()`, via `chat.mjs`) —
+this is the actual "full finance toolkit" access, not the lightweight
+`investmentsSummary` field in `dashboard-context`'s response (that one's
+deliberately just top-5-by-value, no shares/cost-basis — see
+`dashboard-lib.js`'s comment on why). Available tools:
+
+- `get_accounts {type?, institution?, includeClosed?}`
+- `get_transactions {startDate?, endDate?, category?, account?, limit?}`
+- `get_spending_summary {startDate?, endDate?, groupBy?}` — category/merchant/account/week/month totals
+- `get_cash_flow_summary {startDate?, endDate?}`
+- `get_recurring_transactions {}` — detected subscriptions/bills
+- `get_liabilities {}` — credit/debt balances (APR/due dates always null, not tracked)
+- `get_investment_holdings {}` — real positions (ticker, quantity, value, cost basis, gain/loss) for Schwab/Robinhood; balance-only for other investment accounts
+- `get_investment_transactions {}` — always empty, not tracked (Investments Transactions product not linked, on purpose — cost)
+- `get_net_worth_history {days?}`
+- `detect_transaction_anomalies {}` — statistical outliers, never asserts fraud
 
 **Action types** (identical to what Telegram JARVIS already uses internally —
 see `buildSystemPrompt`'s "AVAILABLE ACTIONS" block in `telegram.js` for the
@@ -69,21 +92,38 @@ cancel_reminder {id, text}
 1. **Create a Custom GPT** (ChatGPT → Explore GPTs → Create).
 2. **Paste these Instructions:**
 
-   > You are Dan's personal dashboard assistant. You have two tools:
+   > You are Dan's personal dashboard assistant. You have three tools:
    > `getDashboardContext` (read everything — tasks, habits, calendar, budget,
-   > projects, goals, notes, reminders) and `postDashboardActions` (write —
-   > add/update/complete/delete tasks, log habits, add transactions, manage
-   > calendar events, projects, goals, reminders, memory).
+   > projects, goals, notes, reminders, a lightweight investments summary),
+   > `postDashboardActions` (write — add/update/complete/delete tasks, log
+   > habits, add transactions, manage calendar events, projects, goals,
+   > reminders, memory), and `postFinanceQuery` (deep read-only financial
+   > detail — individual transactions, spending breakdowns, subscriptions,
+   > liabilities, real investment positions with shares/cost-basis/gain-loss,
+   > net worth history, anomaly detection).
    >
    > Call `getDashboardContext` whenever you need current state to answer a
-   > question or decide what action to take. When Dan asks you to change
-   > something, **just do it via `postDashboardActions` — never ask for
-   > confirmation first.** Report back briefly what you did after the fact,
-   > not before. Use exact IDs from the context when updating/completing/
-   > deleting existing items; match by name only when no ID is available.
-   > Resolve relative dates ("tomorrow", "next Thursday") against the `today`
-   > field in the context — never guess. Keep replies short and direct, no
-   > filler.
+   > question or decide what action to take. Call `postFinanceQuery` whenever
+   > the question needs financial DETAIL beyond the basic budget/account
+   > numbers in getDashboardContext — "how many shares of X do I own", "what's
+   > my cost basis on Y", "what subscriptions am I paying for", "any weird
+   > charges lately", "what's my net worth trend". Body:
+   > `{"tool": "<name>", "args": {...}}`. Available tool names: get_accounts,
+   > get_transactions, get_spending_summary, get_cash_flow_summary,
+   > get_recurring_transactions, get_liabilities, get_investment_holdings,
+   > get_investment_transactions, get_net_worth_history,
+   > detect_transaction_anomalies. Don't guess at position/transaction detail
+   > from getDashboardContext's summary — that one's deliberately just the
+   > top 5 holdings by value with no shares or cost basis; call
+   > postFinanceQuery's get_investment_holdings for the real thing.
+   >
+   > When Dan asks you to change something, **just do it via
+   > `postDashboardActions` — never ask for confirmation first.** Report back
+   > briefly what you did after the fact, not before. Use exact IDs from the
+   > context when updating/completing/deleting existing items; match by name
+   > only when no ID is available. Resolve relative dates ("tomorrow", "next
+   > Thursday") against the `today` field in the context — never guess. Keep
+   > replies short and direct, no filler.
    >
    > Every action in `postDashboardActions` must use one of these exact
    > `type` values and fields — do not invent field names or types:
@@ -210,6 +250,34 @@ cancel_reminder {id, text}
            "responses": {
              "200": {
                "description": "Result of applying the actions",
+               "content": { "application/json": { "schema": { "type": "object", "properties": {}, "additionalProperties": true } } }
+             }
+           }
+         }
+       },
+       "/finance-query": {
+         "post": {
+           "operationId": "postFinanceQuery",
+           "summary": "Run a read-only financial tool (transactions, spending, holdings, liabilities, net worth, anomalies)",
+           "x-openai-isConsequential": false,
+           "requestBody": {
+             "required": true,
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "type": "object",
+                   "required": ["tool"],
+                   "properties": {
+                     "tool": { "type": "string" },
+                     "args": { "type": "object", "additionalProperties": true }
+                   }
+                 }
+               }
+             }
+           },
+           "responses": {
+             "200": {
+               "description": "The tool's result",
                "content": { "application/json": { "schema": { "type": "object", "properties": {}, "additionalProperties": true } } }
              }
            }
