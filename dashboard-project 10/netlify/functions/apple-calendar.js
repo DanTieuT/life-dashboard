@@ -15,7 +15,7 @@ const TZ = 'America/Los_Angeles';
 // Julia's Calendar events are attributed to her by source calendar, not title guessing —
 // the rest can hold either person's events (or are Dan's by default), so those still
 // fall back to keywords.
-const READ_CALENDAR_NAMES = ['Shared D+J', 'Dan’s Calendar', 'Dan’s Work Calendar', 'Julia’s Calendar', 'Home', 'Work', 'Personal Private'];
+const READ_CALENDAR_NAMES = ['Shared D+J', 'Dan’s Calendar', 'Dan’s Work Calendar', 'Julia’s Calendar', 'Home', 'Work', 'Personal Private', 'Stock Events'];
 const JULIA_CALENDAR_NAME = 'Julia’s Calendar';
 // Where JARVIS writes new events (add_calendar_event) — override with APPLE_CALENDAR_NAME.
 const WRITE_CALENDAR_NAME = process.env.APPLE_CALENDAR_NAME || 'Shared D+J';

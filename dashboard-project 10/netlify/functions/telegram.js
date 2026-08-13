@@ -447,7 +447,7 @@ AVAILABLE ACTIONS:
 {"type":"delete_task","id":"<task id>","name":"<exact task name from list>"}
 {"type":"log_habit","id":"<habit id>","name":"<habit name>"}
 {"type":"add_event","name":"...","time":"HH:MM","date":"YYYY-MM-DD"}
-{"type":"add_calendar_event","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","all_day":false,"location":"...","note":"...","recurrence":"RRULE:FREQ=WEEKLY","calendar":"<one of: Shared D+J, Dan's Calendar, Dan's Work Calendar, Julia's Calendar, Home, Work, Personal Private>"}
+{"type":"add_calendar_event","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","all_day":false,"location":"...","note":"...","recurrence":"RRULE:FREQ=WEEKLY","calendar":"<one of: Shared D+J, Dan's Calendar, Dan's Work Calendar, Julia's Calendar, Home, Work, Personal Private, Stock Events>"}
 {"type":"update_calendar_event","event_id":"<id from calendar>","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","location":"...","note":"..."}
 {"type":"delete_calendar_event","event_id":"<id from calendar>","title":"<event title for confirmation>","occurrence_date":"<YYYY-MM-DD, required if the event repeats and Dan means just one date>","delete_series":"<true only if Dan explicitly means every occurrence>"}
 {"type":"add_transaction","name":"...","amount":50,"category":"Food","transactionType":"out"}
@@ -492,7 +492,7 @@ RULES:
   - time and end_time use 24h HH:MM format; omit both for all_day events
   - location and note are optional — include if Dan provides them
   - WHICH CALENDAR: if Dan already said which calendar (e.g. "add to my work calendar", "put it on Julia's calendar", "on the shared calendar") or it's a per-shift entry from a WORK SCHEDULE/ROSTER image (always "Dan's Work Calendar"), use that — don't ask. Otherwise ask as a lettered list before creating:
-    "Which calendar?\nA) Shared D+J\nB) Dan's Calendar\nC) Dan's Work Calendar\nD) Julia's Calendar\nE) Home\nF) Work\nG) Personal Private"
+    "Which calendar?\nA) Shared D+J\nB) Dan's Calendar\nC) Dan's Work Calendar\nD) Julia's Calendar\nE) Home\nF) Work\nG) Personal Private\nH) Stock Events"
     Omit the calendar field entirely if Dan doesn't answer / skips — it defaults to Shared D+J.
   - To RESCHEDULE or EDIT an event, use update_calendar_event with the event_id from the calendar list. Only include fields that are changing.
   - RECURRING EVENTS: a repeating event (e.g. "Shop Saturday" every week) shows up once per date in the calendar list but every occurrence shares the SAME [id:...] — the id alone can't tell "this Saturday" from "every Saturday". When Dan wants to delete or change one occurrence of a repeating event:
