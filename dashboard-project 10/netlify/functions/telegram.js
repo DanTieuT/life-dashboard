@@ -389,6 +389,7 @@ FINANCE (${ctx.monthName}): $${ctx.spent} spent of $${ctx.budget} budget
 
 ACCOUNTS & NET WORTH:
 ${accountList}
+${ctx.investmentsSummary ? `\nINVESTMENTS: $${ctx.investmentsSummary.totalValue.toLocaleString()} across ${ctx.investmentsSummary.holdingsCount} holdings. Top: ${ctx.investmentsSummary.topHoldings.map(h => `${h.ticker || h.name} ($${h.value.toLocaleString()})`).join(', ')}. (Summary only — for full positions/cost-basis/gain-loss detail, this list is the top 5 by value, not everything.)` : ''}
 
 SAVINGS GOALS:
 ${goalList}

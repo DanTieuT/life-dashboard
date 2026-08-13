@@ -345,15 +345,50 @@ function get_liabilities(appData) {
 
 function get_investment_holdings(appData) {
   const invAccounts = (appData.accounts || []).filter((a) => a.type === 'investment' || a.type === 'crypto');
+  const holdings = appData.investmentHoldings || [];
+
+  // Some accounts have real position-level data (Plaid Investments linked
+  // for that item — see plaid-investments-sync.js); others still only have
+  // a total balance. Report both truthfully rather than pretending every
+  // account has the same level of detail.
+  const accountsWithHoldings = new Set(holdings.map((h) => h.plaidAccountId));
+  const accountsOut = invAccounts.map((a) => ({
+    accountId: a.id,
+    name: a.name,
+    type: a.type,
+    balance: Math.round((a.balance || 0) * 100) / 100,
+    hasPositionDetail: a.plaidAccountId ? accountsWithHoldings.has(a.plaidAccountId) : false,
+  }));
+
+  if (!holdings.length) {
+    return {
+      accounts: accountsOut,
+      totalValue: Math.round(invAccounts.reduce((s, a) => s + (a.balance || 0), 0) * 100) / 100,
+      holdings: [],
+      note: 'No individual holdings data available for any account — either Plaid Investments isn\'t linked for that account, or it hasn\'t synced yet. Do not invent a holdings breakdown; tell the user this level of detail isn\'t available for these accounts.',
+    };
+  }
+
   return {
-    accounts: invAccounts.map((a) => ({
-      accountId: a.id,
-      name: a.name,
-      type: a.type,
-      balance: Math.round((a.balance || 0) * 100) / 100,
-    })),
+    accounts: accountsOut,
     totalValue: Math.round(invAccounts.reduce((s, a) => s + (a.balance || 0), 0) * 100) / 100,
-    note: 'This dashboard only tracks total account balance for investment/crypto accounts, not individual holdings, quantities, cost basis, or allocation — the Plaid Investments product is not linked. Do not invent a holdings breakdown; tell the user this level of detail isn\'t available yet.',
+    holdings: holdings.map((h) => ({
+      institution: h.institution,
+      accountName: h.accountName,
+      ticker: h.ticker,
+      name: h.name,
+      securityType: h.securityType,
+      quantity: h.quantity,
+      currentPrice: h.currentPrice != null ? Math.round(h.currentPrice * 100) / 100 : null,
+      currentValue: h.currentValue != null ? Math.round(h.currentValue * 100) / 100 : null,
+      costBasis: h.costBasis != null ? Math.round(h.costBasis * 100) / 100 : null,
+      gainLoss: h.costBasis != null && h.currentValue != null ? Math.round((h.currentValue - h.costBasis) * 100) / 100 : null,
+      currency: h.currency,
+    })),
+    holdingsSyncedAt: appData.investmentHoldingsSyncedAt || null,
+    note: accountsOut.some((a) => !a.hasPositionDetail)
+      ? 'Some listed accounts have real position-level holdings below; others only have a total balance (Plaid Investments not linked for those) — don\'t assume every account has the same detail.'
+      : undefined,
   };
 }
 
@@ -523,7 +558,7 @@ export const TOOL_SCHEMAS = [
   },
   {
     name: 'get_investment_holdings',
-    description: 'Investment/crypto account balances. This app does NOT track individual holdings, quantities, or cost basis — only total account balance. Will explicitly say so; do not treat the absence as zero holdings.',
+    description: 'Investment/crypto account balances, plus individual positions (ticker, quantity, current value, cost basis, gain/loss) for accounts where Plaid Investments is linked — currently Schwab and Robinhood. Other investment/crypto accounts only have a total balance, no position detail; the response says which is which per account. Do not invent a holdings breakdown for accounts without it.',
     input_schema: { type: 'object', properties: {} },
   },
   {

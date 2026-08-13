@@ -65,6 +65,48 @@ function renderFinanceTab(){
     }
   }
 
+  // ── Investments (real per-position data from Plaid — see
+  //    plaid-investments-sync.js; empty/absent for accounts where it isn't
+  //    linked). Section stays hidden entirely until there's real data,
+  //    rather than showing an empty state most accounts will never fill. ──
+  const investSection=document.getElementById('investmentsSection');
+  const investRow=document.getElementById('investmentsRow');
+  const holdings=appData.investmentHoldings||[];
+  if(investSection&&investRow){
+    if(!holdings.length){
+      investSection.style.display='none';
+    } else {
+      investSection.style.display='';
+      const totalValue=holdings.reduce((s,h)=>s+(h.currentValue||0),0);
+      const sorted=[...holdings].sort((a,b)=>(b.currentValue||0)-(a.currentValue||0));
+      investRow.innerHTML=`<div class="accounts-table-head">
+          <span>Holding</span><span>Qty</span><span style="text-align:right">Value</span>
+        </div>
+        ${sorted.map(h=>{
+          const gainLoss=h.costBasis!=null&&h.currentValue!=null?h.currentValue-h.costBasis:null;
+          // fmt()/fmtM() always Math.abs() internally (see accounts table's
+          // debt row above) — sign has to be added manually or a loss
+          // silently renders as an unsigned positive number.
+          const gainLossHtml=gainLoss!=null?`<span style="color:var(${gainLoss>=0?'--green':'--red'});font-size:11px;margin-left:6px">${gainLoss>=0?'+':'-'}${fmtM(gainLoss)}</span>`:'';
+          return`<div class="accounts-table-row">
+            <div class="accounts-table-name-col">
+              <div class="accounts-table-name">
+                <span>${h.ticker?`<b>${h.ticker}</b> — `:''}${h.name}</span>
+              </div>
+              <div class="acct-card-sub" style="font-size:11px;opacity:.6">${h.institution||''}${h.accountName?' · '+h.accountName:''}</div>
+            </div>
+            <div class="accounts-table-type">${h.quantity!=null?h.quantity.toLocaleString(undefined,{maximumFractionDigits:4}):''}</div>
+            <div class="accounts-table-bal">${fmtM(h.currentValue||0)}${gainLossHtml}</div>
+          </div>`;
+        }).join('')}
+        <div class="accounts-table-row" style="font-weight:600">
+          <div class="accounts-table-name-col"><div class="accounts-table-name">Total</div></div>
+          <div class="accounts-table-type"></div>
+          <div class="accounts-table-bal">${fmtM(totalValue)}</div>
+        </div>`;
+    }
+  }
+
   // ── Payday Bar ──────────────────────────────────────────────────
   const now=new Date();
   const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();

@@ -79,6 +79,19 @@ function buildContext(data) {
   const spent = Math.round(monthTxns.filter(t => t.type === 'out').reduce((s, t) => s + (t.amount || 0), 0));
   const projects = (data.userProjects || []).filter(p => !p.archived).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '🔨', stage: p.stage, nextAction: p.nextAction || '' }));
   const accounts = (data.accounts || []).map(a => ({ name: a.name, type: a.type, balance: a.balance }));
+  // Lightweight only — top holdings by value, not the full position list.
+  // Real per-position detail (cost basis, gain/loss, every holding) stays
+  // behind dashboard chat's get_investment_holdings tool, same "specific
+  // tool for specific depth" pattern as the rest of finance-tools.mjs;
+  // dumping everything into every context read here would bloat every
+  // message for data that's rarely relevant to what's being asked.
+  const investmentHoldings = data.investmentHoldings || [];
+  const investmentsSummary = investmentHoldings.length ? {
+    totalValue: Math.round(investmentHoldings.reduce((s, h) => s + (h.currentValue || 0), 0)),
+    holdingsCount: investmentHoldings.length,
+    topHoldings: [...investmentHoldings].sort((a, b) => (b.currentValue || 0) - (a.currentValue || 0)).slice(0, 5)
+      .map(h => ({ ticker: h.ticker, name: h.name, value: Math.round(h.currentValue || 0) })),
+  } : null;
   const goals = (data.goals || []).map(g => {
     const ids = g.linkedAccountIds || (g.linkedAccountId ? [g.linkedAccountId] : []);
     const current = ids.length
@@ -177,7 +190,7 @@ function buildContext(data) {
     budget, spent, projects, accounts, goals, profile, recentNotes,
     overdueTasks, weeklyHabitCounts, weeklySpend: { thisWeek: Math.round(thisWeekSpend), lastWeek: Math.round(lastWeekSpend) },
     spendingPatterns, spendingTrends, rdoToday, rdoTomorrow, packages,
-    nowPT, reminders,
+    nowPT, reminders, investmentsSummary,
   };
 }
 

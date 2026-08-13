@@ -157,11 +157,35 @@ describe('get_liabilities', () => {
 });
 
 describe('get_investment_holdings — does not fabricate data', () => {
-  test('returns account-level balance only, with an explicit unavailable-data note', async () => {
+  test('with no investmentHoldings data: empty holdings array, explicit unavailable-data note', async () => {
     const r = await executeTool('get_investment_holdings', {}, mockAppData());
     assert.equal(r.totalValue, 30000);
-    assert.ok(!('holdings' in r), 'must not invent a holdings array');
-    assert.match(r.note, /not linked|only tracks total/i);
+    assert.deepEqual(r.holdings, [], 'must be an empty array, not fabricated positions');
+    assert.match(r.note, /no individual holdings|not available/i);
+  });
+
+  test('with real investmentHoldings data: returns actual positions, flags which accounts have detail', async () => {
+    const data = {
+      ...mockAppData(),
+      accounts: [
+        ...mockAppData().accounts,
+        { id: 'a4', name: 'Schwab Brokerage', type: 'investment', balance: 12000, plaidAccountId: 'p9', source: 'plaid' },
+      ],
+      investmentHoldings: [{
+        id: 'h1', itemId: 'item1', institution: 'Charles Schwab', plaidAccountId: 'p9', accountName: 'Individual',
+        securityId: 'sec1', ticker: 'AAPL', name: 'Apple Inc.', securityType: 'equity',
+        quantity: 10, costBasis: 1500, currentPrice: 175.5, currentValue: 1755, currency: 'USD',
+      }],
+      investmentHoldingsSyncedAt: 1755000000000,
+    };
+    const r = await executeTool('get_investment_holdings', {}, data);
+    assert.equal(r.holdings.length, 1);
+    assert.equal(r.holdings[0].ticker, 'AAPL');
+    assert.equal(r.holdings[0].gainLoss, 255); // 1755 - 1500
+    const schwab = r.accounts.find((a) => a.name === 'Schwab Brokerage');
+    assert.equal(schwab.hasPositionDetail, true);
+    const vanguard = r.accounts.find((a) => a.name === 'Vanguard Brokerage');
+    assert.equal(vanguard.hasPositionDetail, false, 'manual account with no plaidAccountId must not claim position detail');
   });
 });
 

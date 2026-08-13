@@ -41,3 +41,9 @@
 # PLAID_CLIENT_ID / PLAID_SECRET are configured and a bank is linked.
 [functions."plaid-sync"]
   schedule = "0 */6 * * *"
+
+# Plaid Investments holdings — once daily is plenty (positions/prices don't
+# need intraday freshness for a personal dashboard). No-ops until an Item has
+# investmentsEnabled:true (see plaid-link.js).
+[functions."plaid-investments-sync"]
+  schedule = "0 12 * * *"

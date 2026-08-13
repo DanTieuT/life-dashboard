@@ -373,6 +373,19 @@
         </div>
       </div>
 
+      <!-- Investments (collapsible; only shown once real holdings data exists —
+           see plaid-investments-sync.js. Hidden entirely otherwise, not an
+           empty-state, since most accounts won't have this. -->
+      <div class="fin-collapsible" data-fin-id="investments" id="investmentsSection" style="display:none">
+        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Investments
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div id="investmentsRow"></div>
+        </div>
+      </div>
+
       <!-- Month nav + action buttons -->
       <div class="fin-header-row">
         <div class="month-nav" style="margin:0">
