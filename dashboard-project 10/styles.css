@@ -630,6 +630,13 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .holdings-cash-row .name{color:var(--sub)}
 .holdings-cash-row .amt{font-weight:600}
 .holdings-cash-total{display:flex;justify-content:space-between;align-items:center;padding-top:8px;margin-top:4px;border-top:.5px solid var(--divider);font-size:13px;font-weight:600}
+.holdings-total-row{display:flex;justify-content:space-between;gap:12px;padding:12px;margin-top:4px;border-top:1px solid var(--border)}
+.holdings-total-row>div{display:flex;flex-direction:column;gap:2px}
+.holdings-total-row>div:last-child{align-items:flex-end;text-align:right}
+.holdings-total-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.holdings-total-value{font-size:15px;font-weight:600}
+.holdings-total-value.green{color:var(--green)}
+.holdings-total-value.red{color:var(--red)}
 @media(max-width:768px){
   .accounts-table-head{grid-template-columns:1fr 80px}
   .accounts-table-row{grid-template-columns:1fr 80px}

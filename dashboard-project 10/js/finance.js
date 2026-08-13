@@ -164,6 +164,19 @@ function renderFinanceTab(){
         </div>`;
       };
 
+      // Total value sums every stock/crypto holding; total gain/loss only
+      // sums holdings that actually have a cost basis (real stocks always
+      // do — this guard is for the rare position Plaid doesn't report one
+      // for, so it doesn't get silently treated as $0 gain).
+      const totalValue=stockHoldings.reduce((s,h)=>s+(h.currentValue||0),0);
+      const withBasis=stockHoldings.filter(h=>h.costBasis!=null);
+      const totalCostBasis=withBasis.reduce((s,h)=>s+h.costBasis,0);
+      const totalCurrentOfBasis=withBasis.reduce((s,h)=>s+(h.currentValue||0),0);
+      const totalGain=withBasis.length?totalCurrentOfBasis-totalCostBasis:null;
+      const totalGainPct=totalGain!=null&&totalCostBasis!==0?totalGain/totalCostBasis*100:null;
+      const totalGainCls=totalGain==null?'muted':totalGain>=0?'green':'red';
+      const totalGainTxt=totalGain==null?'—':`${totalGain>=0?'+':'-'}${fmtPrice(Math.abs(totalGain))}${totalGainPct!=null?` (${totalGain>=0?'+':'-'}${Math.abs(totalGainPct).toFixed(1)}%)`:''}`;
+
       investRow.innerHTML=stockHoldings.length?`<div class="holdings-table-head">
           <span class="holdings-sort-btn" onclick="sortHoldingsBy('ticker')">Ticker${arrow('ticker')}</span>
           <span class="holdings-sort-btn" style="text-align:right" onclick="sortHoldingsBy('qty')">Qty${arrow('qty')}</span>
@@ -173,7 +186,11 @@ function renderFinanceTab(){
         </div>
         ${groupNames.map(name=>
           `<div class="holdings-group-label">${name}</div>${sortRows(groups[name]).map(rowHtml).join('')}`
-        ).join('')}` : '';
+        ).join('')}
+        <div class="holdings-total-row">
+          <div><span class="holdings-total-label">Total value</span><span class="holdings-total-value">${fmtPrice(totalValue)}</span></div>
+          <div><span class="holdings-total-label">Gain/loss</span><span class="holdings-total-value ${totalGainCls}">${totalGainTxt}</span></div>
+        </div>` : '';
     }
   }
 
