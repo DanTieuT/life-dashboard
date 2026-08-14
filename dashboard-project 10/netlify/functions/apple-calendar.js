@@ -104,7 +104,7 @@ function expandICALEvent(icalEvent, windowStart, windowEnd, calendarName) {
 
     const withLabels = (startMs, endMs) => ({
       ...base, start_at: startMs, end_at: endMs,
-      dateLabel: fmtEventDate(startMs),
+      dateLabel: fmtEventDate(startMs, allDay),
       startTime: fmtEventTime(startMs, allDay),
       endTime: allDay ? null : fmtEventTime(endMs, false),
     });
@@ -446,14 +446,21 @@ function fmtEventTime(tsMs, allDay) {
   if (allDay) return '[all day]';
   return new Date(tsMs).toLocaleTimeString('en-US', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false });
 }
-function fmtEventDate(tsMs) {
-  return new Date(tsMs).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric' });
+// All-day (VALUE=DATE) events have no timezone at all — ical.js's
+// toUnixTime() treats the bare date as UTC midnight (standard iCal
+// convention, true for every all-day event regardless of source, not just
+// ones this app created). Converting that to Pacific for display shifts it
+// back 7-8 hours, landing on the PREVIOUS Pacific calendar day — that's
+// what showed a real Aug 15 event as "Aug 14". Timed events still need real
+// Pacific conversion; all-day events need the UTC date read directly.
+function fmtEventDate(tsMs, allDay) {
+  return new Date(tsMs).toLocaleDateString('en-US', { timeZone: allDay ? 'UTC' : TZ, weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function eventsToBlock(events) {
   if (!events.length) return '  (none)';
   const byDate = {};
-  for (const e of events) (byDate[fmtEventDate(e.start_at)] ||= []).push(e);
+  for (const e of events) (byDate[fmtEventDate(e.start_at, e.all_day)] ||= []).push(e);
   return Object.entries(byDate).map(([date, evts]) => {
     const items = evts.map(e => {
       const time = e.all_day ? '[all day]' : `${fmtEventTime(e.start_at)}–${fmtEventTime(e.end_at)}`;
@@ -463,7 +470,17 @@ function eventsToBlock(events) {
       // answer "what's on my Stock Events calendar" specifically, even
       // though the data was always there per-event (calendarName).
       const cal = e.calendarName ? ` [${e.calendarName}]` : '';
-      return `    • ${e.title} ${time}${loc}${cal} [id:${e.uuid}]`;
+      // Multi-day all-day events (a trip, a conference) were only ever shown
+      // once, under their start date, indistinguishable from a single-day
+      // event — "sees only one day of the trip". DTEND on an all-day event
+      // is exclusive per iCal convention (see buildICS), so the real last
+      // day is end_at minus one day.
+      let range = '';
+      if (e.all_day) {
+        const lastDay = fmtEventDate(e.end_at - 86400000, true);
+        if (lastDay !== date) range = ` (through ${lastDay})`;
+      }
+      return `    • ${e.title}${range} ${time}${loc}${cal} [id:${e.uuid}]`;
     }).join('\n');
     return `  ${date}:\n${items}`;
   }).join('\n');
