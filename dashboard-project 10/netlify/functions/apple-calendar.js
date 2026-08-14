@@ -15,8 +15,12 @@ const TZ = 'America/Los_Angeles';
 // Julia's Calendar events are attributed to her by source calendar, not title guessing —
 // the rest can hold either person's events (or are Dan's by default), so those still
 // fall back to keywords.
-const READ_CALENDAR_NAMES = ['Shared D+J', 'Dan’s Calendar', 'Dan’s Work Calendar', 'Julia’s Calendar', 'Home', 'Work', 'Personal Private', 'Stock Events'];
-const JULIA_CALENDAR_NAME = 'Julia’s Calendar';
+const READ_CALENDAR_NAMES = ['Shared D+J', 'Dan’s Calendar', 'Dan’s Work Calendar', 'Julia’s Calendar', 'Home', 'Work', 'Personal Private', 'Stock Events', 'Julia Location', 'Julia’s Workouts'];
+// Every calendar that's unambiguously Julia's own, regardless of event
+// title — isDanEvent() trusts this before falling back to keyword
+// guessing, since a title-based guess only works when the title happens to
+// mention her (a location calendar's "events" might just be city names).
+const JULIA_CALENDAR_NAMES = new Set(['Julia’s Calendar', 'Julia Location', 'Julia’s Workouts']);
 // Where JARVIS writes new events (add_calendar_event) — override with APPLE_CALENDAR_NAME.
 const WRITE_CALENDAR_NAME = process.env.APPLE_CALENDAR_NAME || 'Shared D+J';
 
@@ -435,7 +439,7 @@ const DAN_TITLE_KEYWORDS = ['dan', 'office', 'timesheet', 'rdo'];
 const JULIA_TITLE_KEYWORDS = ['julia', 'nails', 'orthodontist', 'clinic', 'earrings', 'suki'];
 
 function isDanEvent(e) {
-  if (e.calendarName === JULIA_CALENDAR_NAME) return false;
+  if (JULIA_CALENDAR_NAMES.has(e.calendarName)) return false;
   const title = (e.title || '').toLowerCase();
   if (DAN_TITLE_KEYWORDS.some(k => title.includes(k))) return true;
   if (JULIA_TITLE_KEYWORDS.some(k => title.includes(k))) return false;
