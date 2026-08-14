@@ -36,13 +36,18 @@ exports.handler = async (event) => {
   try {
     initFirebase();
     const db = admin.firestore();
-    const [snap, calEvents] = await Promise.all([
+    const [snap, calEvents, readableCalendars] = await Promise.all([
       db.doc('users/aqzJe5gq4IVYdKmUIW0pNJGL2ML2/data/main').get(),
       calendarSvc.getUpcomingEvents(14).catch((e) => { console.error('[dashboard-context] calendar error:', e.message); return []; }),
+      calendarSvc.getReadableCalendarNames().catch((e) => { console.error('[dashboard-context] calendar list error:', e.message); return []; }),
     ]);
     const data = snap.exists ? snap.data() : {};
     const ctx = buildContext(data);
     ctx.calendarEvents = calendarSvc.formatForPrompt(calEvents);
+    // Authoritative answer to "what calendars can you see" — without this,
+    // an empty calendar (no events in the 14-day window) is indistinguishable
+    // from one that's genuinely inaccessible.
+    ctx.readableCalendars = readableCalendars;
 
     return {
       statusCode: 200,

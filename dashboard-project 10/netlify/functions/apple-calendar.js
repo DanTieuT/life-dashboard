@@ -77,6 +77,19 @@ async function getCalendars() {
   }));
 }
 
+// Authoritative "what can you actually see" — the live intersection of
+// READ_CALENDAR_NAMES and what actually exists on the account, not just the
+// static configured list (which could name a calendar that's since been
+// deleted or renamed). Feeds getDashboardContext's readableCalendars field
+// so "what calendars can you see" has a real answer instead of the model
+// inferring access from whether events happen to exist in the date window —
+// an empty calendar would otherwise look indistinguishable from an
+// inaccessible one.
+async function getReadableCalendarNames() {
+  await ensureAuth();
+  return _readCalendars.map(c => (typeof c.displayName === 'string' ? c.displayName : '')).filter(Boolean);
+}
+
 // ── ICS parsing/building ────────────────────────────────────────────
 function parseICS(icsText) {
   try {
@@ -308,8 +321,15 @@ async function createEvent({ title, date, time, endDate, endTime, allDay = false
     : localToUtcMs(date, time || '09:00', TZ);
   const endMs = allDay ? startMs : localToUtcMs(endDate || date, endTime || time || '10:00', TZ);
 
-  const target = (calendar && _readCalendars.find(c => (typeof c.displayName === 'string' ? c.displayName : '') === calendar))
-    || _writeCalendar;
+  // Silently falling back to the default calendar on a non-matching name
+  // was a real bug, not a safe default — Dan asked for a specific calendar,
+  // got no error, and the event landed somewhere else entirely with the
+  // response claiming success. Fail loudly instead.
+  let target = _writeCalendar;
+  if (calendar) {
+    target = _readCalendars.find(c => (typeof c.displayName === 'string' ? c.displayName : '') === calendar);
+    if (!target) throw new Error(`Unknown calendar "${calendar}" — not in the readable calendar list, event NOT created`);
+  }
 
   const ics = buildICS({ uid, title, startMs, endMs, allDay, location, note, recurrence });
   const res = await _client.createCalendarObject({ calendar: target, iCalString: ics, filename: `${uid}.ics` });
@@ -500,5 +520,5 @@ function formatForPrompt(events) {
 
 module.exports = {
   getUpcomingEvents, getEventsForRange, createEvent, updateEvent, deleteEvent,
-  getCalendars, formatForPrompt, isDanEvent, authenticate,
+  getCalendars, getReadableCalendarNames, formatForPrompt, isDanEvent, authenticate,
 };

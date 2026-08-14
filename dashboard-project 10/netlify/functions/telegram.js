@@ -363,7 +363,12 @@ function buildSystemPrompt(ctx) {
     const parts = ctx.calendarEvents.split("\n\nJulia's schedule:");
     const danPart = parts[0]; // "Dan's schedule:\n  ..."
     const juliaPart = parts[1] ? "Julia's schedule:" + parts[1] : '';
-    calBlock = `\nDAN'S CALENDAR (next 14 days — Dan's events only):\n${danPart}\n`;
+    // Explicit list, not inferred from whether events happen to exist in the
+    // 14-day window — an empty calendar otherwise looks identical to an
+    // inaccessible one when Dan asks "what calendars can you see".
+    const readableLine = (ctx.readableCalendars && ctx.readableCalendars.length)
+      ? `Calendars you can read: ${ctx.readableCalendars.join(', ')}.\n` : '';
+    calBlock = `\n${readableLine}DAN'S CALENDAR (next 14 days — Dan's events only):\n${danPart}\n`;
     if (juliaPart) juliaBlock = `\nJULIA'S CALENDAR (girlfriend Julia's events — always label these as Julia's when mentioning them):\n${juliaPart}\n`;
   }
 
@@ -686,14 +691,19 @@ exports.handler = async (event) => {
   }
 
   // Call Claude
-  const [weather, calEvents] = await Promise.all([
+  const [weather, calEvents, readableCalendars] = await Promise.all([
     fetchWeather(),
     calendarSvc.getUpcomingEvents(14).catch((e) => { console.error('[cal] getUpcomingEvents error:', e.message); return []; }),
+    calendarSvc.getReadableCalendarNames().catch((e) => { console.error('[cal] getReadableCalendarNames error:', e.message); return []; }),
   ]);
   console.log('[cal] events count:', calEvents.length, '| today sample:', calEvents.slice(0,3).map(e=>e.title).join(', '));
   const ctx = buildContext(appData);
   ctx.weather = weather;
   ctx.calendarEvents = calendarSvc.formatForPrompt(calEvents);
+  // Authoritative "what calendars can you see" — an empty calendar (no
+  // events in the 14-day window) would otherwise look indistinguishable
+  // from one that's genuinely inaccessible.
+  ctx.readableCalendars = readableCalendars;
   console.log('[cal] prompt block:\n', ctx.calendarEvents.slice(0, 400));
   const systemPrompt = buildSystemPrompt(ctx);
 
