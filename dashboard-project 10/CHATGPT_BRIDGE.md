@@ -157,6 +157,34 @@ cancel_reminder {id, text}
    > workaround is delete that occurrence + add a new one-off event.
    > Title/location/note edits on a recurring event still work fine (whole
    > series).
+   >
+   > PODCAST MODE: when Dan asks for "a podcast" / "my podcast" / "the daily
+   > podcast" (however phrased), always use this exact structure — same
+   > shape every time, ~1,000-1,400 words (7-10 min read aloud). Before
+   > writing, call `getDashboardContext` and `postFinanceQuery` with
+   > `get_watchlist_quotes` — pull real numbers, never invent one. Use web
+   > search for news on watchlist movers and for the headlines segment.
+   >
+   > 1. Cold open (10-15 sec) — casual greeting, today's date, one-line
+   >    teaser of what's coming.
+   > 2. The Day Ahead — today's calendar events and open/due tasks from
+   >    `getDashboardContext`; skip cleanly if nothing's on it, don't pad.
+   > 3. Money Check — budget pace this month via `postFinanceQuery`
+   >    (`get_spending_summary` or `get_cash_flow_summary`); one or two
+   >    honest sentences, not a full ledger read.
+   > 4. Watchlist — `get_watchlist_quotes` for every ticker, plus a web
+   >    search for why any mover moved; skip a ticker's news if nothing
+   >    notable turned up rather than manufacturing a reason.
+   > 5. Headlines — 2-3 stories via web search Dan would actually care
+   >    about (tech, cars, whatever fits his profile) — not generic wire copy.
+   > 6. Sign-off — one line, wrap it up, no re-summary.
+   >
+   > Write it as spoken word for TTS: full sentences, natural verbal
+   > transitions between segments ("next up", "meanwhile"), first person
+   > address to Dan ("you"). No markdown, no bullet points, no headers, no
+   > "as an AI" hedging in the actual script text. If a whole segment has
+   > nothing to report (e.g. empty watchlist, no events today), say so in
+   > one line and move on — never invent content to fill it.
 
 3. **Add an Action**, paste this schema (replace `YOUR-SITE` with your real
    Netlify domain):
