@@ -637,6 +637,25 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .holdings-total-value{font-size:15px;font-weight:600}
 .holdings-total-value.green{color:var(--green)}
 .holdings-total-value.red{color:var(--red)}
+/* Watchlist — tickers Dan's tracking, not owned positions (see Investments
+   above). Prices are fetched on demand, so rows render even with no price
+   yet (muted em-dash) rather than waiting on a network call to paint. */
+.watchlist-add-row{display:flex;gap:8px;margin-bottom:12px}
+.watchlist-add-row input{flex:1;min-width:0;background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:14px;color:var(--text)}
+.watchlist-add-row input:focus{outline:none;border-color:var(--blue)}
+.watchlist-empty{padding:16px 4px;font-size:13px;color:var(--muted);text-align:center}
+.watchlist-updated{font-size:11px;color:var(--muted);padding:0 4px 8px;text-align:right}
+.watchlist-refresh-link{color:var(--blue);cursor:pointer;font-weight:600}
+.watchlist-row-item{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:.5px solid var(--divider)}
+.watchlist-row-item:last-child{border-bottom:none}
+.watchlist-ticker{font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.watchlist-price{font-size:13px;color:var(--text);white-space:nowrap}
+.watchlist-price.muted{color:var(--muted)}
+.watchlist-change{font-size:12px;font-weight:600;min-width:58px;text-align:right}
+.watchlist-change.green{color:var(--green)}
+.watchlist-change.red{color:var(--red)}
+.watchlist-remove{background:none;border:none;color:var(--muted);font-size:14px;padding:4px 2px;line-height:1;cursor:pointer;flex-shrink:0}
+.watchlist-remove:active{color:var(--red)}
 @media(max-width:768px){
   .accounts-table-head{grid-template-columns:1fr 80px}
   .accounts-table-row{grid-template-columns:1fr 80px}

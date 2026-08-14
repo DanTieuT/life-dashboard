@@ -58,6 +58,7 @@ deliberately just top-5-by-value, no shares/cost-basis — see
 - `get_liabilities {}` — credit/debt balances (APR/due dates always null, not tracked)
 - `get_investment_holdings {}` — real positions (ticker, quantity, value, cost basis, gain/loss) for Schwab/Robinhood; balance-only for other investment accounts
 - `get_investment_transactions {}` — always empty, not tracked (Investments Transactions product not linked, on purpose — cost)
+- `get_watchlist_quotes {}` — live price/day-change for every ticker on the dashboard watchlist (tickers Dan's tracking, not owned positions — separate from `get_investment_holdings`). Real-time via Finnhub, not cached.
 - `get_net_worth_history {days?}`
 - `detect_transaction_anomalies {}` — statistical outliers, never asserts fraud
 
@@ -96,7 +97,7 @@ cancel_reminder {id, text}
    > `getDashboardContext` (read state — tasks, habits, calendar, budget,
    > projects, goals, notes, reminders, a lightweight investments summary),
    > `postDashboardActions` (write), `postFinanceQuery` (deep financial
-   > detail — 10 tool names listed in that Action's own schema).
+   > detail — 11 tool names listed in that Action's own schema).
    >
    > Call `getDashboardContext` for current state. Call `postFinanceQuery`
    > for anything beyond basic numbers — share counts, cost basis,
@@ -236,8 +237,8 @@ cancel_reminder {id, text}
                    "properties": {
                      "tool": {
                        "type": "string",
-                       "enum": ["get_accounts", "get_transactions", "get_spending_summary", "get_cash_flow_summary", "get_recurring_transactions", "get_liabilities", "get_investment_holdings", "get_investment_transactions", "get_net_worth_history", "detect_transaction_anomalies"],
-                       "description": "get_accounts: balances by type. get_transactions: individual charges in a date range. get_spending_summary: totals by category/merchant/account/week/month. get_cash_flow_summary: income vs spending. get_recurring_transactions: detected subscriptions. get_liabilities: credit/debt balances. get_investment_holdings: real positions — ticker, shares, cost basis, gain/loss. get_investment_transactions: always empty, not tracked. get_net_worth_history: net worth over time. detect_transaction_anomalies: statistically unusual charges."
+                       "enum": ["get_accounts", "get_transactions", "get_spending_summary", "get_cash_flow_summary", "get_recurring_transactions", "get_liabilities", "get_investment_holdings", "get_investment_transactions", "get_watchlist_quotes", "get_net_worth_history", "detect_transaction_anomalies"],
+                       "description": "get_accounts: balances by type. get_transactions: individual charges in a date range. get_spending_summary: totals by category/merchant/account/week/month. get_cash_flow_summary: income vs spending. get_recurring_transactions: detected subscriptions. get_liabilities: credit/debt balances. get_investment_holdings: real positions — ticker, shares, cost basis, gain/loss. get_investment_transactions: always empty, not tracked. get_watchlist_quotes: live price/day-change for tickers on Dan's watchlist (tracked, not owned — separate from get_investment_holdings). get_net_worth_history: net worth over time. detect_transaction_anomalies: statistically unusual charges."
                      },
                      "args": { "type": "object", "additionalProperties": true, "description": "Tool-specific filters, e.g. {startDate, endDate} for date-ranged tools. Omit for tools that take none." }
                    }

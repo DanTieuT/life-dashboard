@@ -15,6 +15,101 @@ function holdingDerived(h){
   return{buyPrice,gainPct};
 }
 
+// ── Stock Watchlist ─────────────────────────────────────────────
+// Tickers Dan's tracking, not owned positions — appData.stockWatchlist is
+// managed only from the dashboard (added/removed here via saveData(), same
+// as goals/accounts/etc). Live prices are a separate concern: fetched
+// on-demand from watchlist-quotes.js (Finnhub, server-side — the API key
+// can't live in browser JS) rather than on every render, so opening the
+// Finance tab never silently burns API quota. Quotes are kept in memory
+// only; they're never written back to Firestore.
+let watchlistQuotes={}; // ticker (uppercase) -> quote result from get_watchlist_quotes
+let watchlistQuotesAt=null;
+let watchlistLoading=false;
+
+function renderWatchlistSection(){
+  const row=document.getElementById('watchlistRow');
+  if(!row)return;
+  const list=appData.stockWatchlist||[];
+  if(!list.length){
+    row.innerHTML='<div class="watchlist-empty">No tickers yet — add one above.</div>';
+    return;
+  }
+  const fmtPrice=n=>n==null?'—':'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const refreshLabel=watchlistLoading?'Refreshing…':(watchlistQuotesAt?'Refresh':'Load live prices');
+  row.innerHTML=`
+    <div class="watchlist-updated">${watchlistQuotesAt?`Updated ${fmtTimeAgo(new Date(watchlistQuotesAt))} · `:''}<span class="watchlist-refresh-link" onclick="refreshWatchlistQuotes()">${refreshLabel}</span></div>
+    ${list.map(w=>{
+      const q=watchlistQuotes[(w.ticker||'').toUpperCase()];
+      let priceHtml='<span class="watchlist-price muted">—</span>';
+      if(q&&!q.error){
+        const chCls=q.changePercent>=0?'green':'red';
+        const chTxt=`${q.changePercent>=0?'+':''}${q.changePercent.toFixed(2)}%`;
+        priceHtml=`<span class="watchlist-price">${fmtPrice(q.currentPrice)}</span><span class="watchlist-change ${chCls}">${chTxt}</span>`;
+      } else if(q&&q.error){
+        priceHtml=`<span class="watchlist-price muted" title="${escHtml(q.error)}">—</span>`;
+      }
+      return`<div class="watchlist-row-item">
+        <span class="watchlist-ticker">${escHtml(w.ticker)}</span>
+        ${priceHtml}
+        <button class="watchlist-remove" onclick="removeWatchlistTicker('${w.id}')">✕</button>
+      </div>`;
+    }).join('')}`;
+}
+
+window.addWatchlistTicker=function(){
+  const input=document.getElementById('watchlistTickerInput');
+  if(!input)return;
+  const ticker=input.value.trim().toUpperCase().replace(/[^A-Z0-9.\-]/g,'');
+  if(!ticker)return;
+  appData.stockWatchlist=appData.stockWatchlist||[];
+  if(appData.stockWatchlist.some(w=>w.ticker===ticker)){
+    input.value='';
+    toast(`${ticker} is already on your watchlist`,'error');
+    return;
+  }
+  appData.stockWatchlist.push({id:uid(),ticker});
+  input.value='';
+  saveData();
+  renderWatchlistSection();
+};
+
+window.removeWatchlistTicker=function(id){
+  appData.stockWatchlist=(appData.stockWatchlist||[]).filter(w=>w.id!==id);
+  saveData();
+  renderWatchlistSection();
+};
+
+// Fetches live quotes for the current watchlist via the dashboard's own
+// Firebase-ID-token-authed endpoint (plaidFetch attaches the token; despite
+// the name it's a generic authed-fetch helper from js/plaid.js, not
+// Plaid-specific — watchlist-quotes.js needs the same auth, just not Plaid).
+window.refreshWatchlistQuotes=async function(){
+  if(watchlistLoading)return;
+  if(!(appData.stockWatchlist||[]).length)return;
+  watchlistLoading=true;
+  renderWatchlistSection();
+  try{
+    const res=await plaidFetch('/.netlify/functions/watchlist-quotes');
+    const data=await res.json();
+    if(res.ok&&data.quotes){
+      const map={};
+      data.quotes.forEach(q=>{map[(q.ticker||'').toUpperCase()]=q;});
+      watchlistQuotes=map;
+      watchlistQuotesAt=data.asOf||Date.now();
+      if(data.note)toast(data.note,'error');
+    } else {
+      toast(data.note||data.error||'Could not load watchlist prices','error');
+    }
+  }catch(e){
+    console.error('Watchlist quotes error',e);
+    toast('Could not load watchlist prices','error');
+  }finally{
+    watchlistLoading=false;
+    renderWatchlistSection();
+  }
+};
+
 // ── FINANCE RING (legacy, kept for any callers) ───────────────────
 function renderFinanceRing(){
   // All ring DOM elements were removed from the dashboard; this is a no-op
@@ -193,6 +288,8 @@ function renderFinanceTab(){
         </div>` : '';
     }
   }
+
+  renderWatchlistSection();
 
   // ── Payday Bar ──────────────────────────────────────────────────
   const now=new Date();

@@ -197,6 +197,28 @@ describe('get_investment_transactions — does not fabricate data', () => {
   });
 });
 
+describe('get_watchlist_quotes', () => {
+  // Only the non-network branches — this suite makes no live API calls
+  // (see AI_ASSISTANT.md's testing notes). The actual Finnhub fetch path
+  // was verified manually against the real API before shipping.
+  test('empty watchlist returns an empty array with a note, no fetch attempted', async () => {
+    const r = await executeTool('get_watchlist_quotes', {}, { ...mockAppData(), stockWatchlist: [] });
+    assert.deepEqual(r.quotes, []);
+    assert.match(r.note, /empty/i);
+  });
+  test('missing FINNHUB_API_KEY returns a clear note instead of a broken fetch', async () => {
+    const saved = process.env.FINNHUB_API_KEY;
+    delete process.env.FINNHUB_API_KEY;
+    try {
+      const r = await executeTool('get_watchlist_quotes', {}, { ...mockAppData(), stockWatchlist: [{ id: 'w1', ticker: 'AAPL' }] });
+      assert.deepEqual(r.quotes, []);
+      assert.match(r.note, /not configured/i);
+    } finally {
+      if (saved != null) process.env.FINNHUB_API_KEY = saved;
+    }
+  });
+});
+
 describe('get_net_worth_history', () => {
   test('computes change over the window', async () => {
     const r = await executeTool('get_net_worth_history', { days: 90 }, mockAppData());

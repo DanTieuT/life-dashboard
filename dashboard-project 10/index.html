@@ -387,6 +387,25 @@
         </div>
       </div>
 
+      <!-- Stock Watchlist — dashboard-managed list of tickers Dan's tracking
+           (separate from real Plaid holdings above). Prices are fetched live
+           on demand (watchlist-quotes.js → Finnhub), not on every render, so
+           this stays visible even when empty (unlike Investments) since
+           adding the first ticker is the point of the section. -->
+      <div class="fin-collapsible" data-fin-id="watchlist" id="watchlistSection">
+        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Watchlist
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="watchlist-add-row">
+            <input type="text" id="watchlistTickerInput" placeholder="Ticker (e.g. AAPL)" maxlength="10" autocapitalize="characters" onkeydown="if(event.key==='Enter')addWatchlistTicker()">
+            <button class="btn-new" onclick="addWatchlistTicker()">+ Add</button>
+          </div>
+          <div id="watchlistRow"></div>
+        </div>
+      </div>
+
       <!-- Month nav + action buttons -->
       <div class="fin-header-row">
         <div class="month-nav" style="margin:0">

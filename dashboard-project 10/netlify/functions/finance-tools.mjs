@@ -1,8 +1,10 @@
 // Read-only financial analysis tools for the JARVIS chat assistant (chat.mjs).
 // Every function here is a pure function over an already-loaded `appData`
-// object — no network calls, no writes, no DB access of its own. chat.mjs
-// fetches appData once per request and passes it to whichever tools the
-// model asks for.
+// object — no network calls, no writes, no DB access of its own — EXCEPT
+// get_watchlist_quotes, which genuinely needs a live price (watchlist
+// tickers aren't real Plaid holdings, there's no stored price to read).
+// chat.mjs fetches appData once per request and passes it to whichever
+// tools the model asks for.
 //
 // Design notes (see AI_ASSISTANT.md for the full writeup):
 // - Plaid-sourced transactions already exclude credit-card payments and
@@ -399,6 +401,45 @@ function get_investment_transactions() {
   };
 }
 
+// Live quotes for the watchlist (appData.stockWatchlist) — tickers Dan is
+// tracking but doesn't necessarily own, so there's no Plaid holding to read
+// a price off of. Real network call, deliberately isolated per-ticker so one
+// bad/delisted symbol can't fail the whole list — each entry either has real
+// data or its own `error` string, never a thrown exception up to executeTool.
+async function get_watchlist_quotes(appData) {
+  const watchlist = appData.stockWatchlist || [];
+  if (!watchlist.length) {
+    return { quotes: [], note: 'Watchlist is empty — add tickers from the dashboard.' };
+  }
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey) {
+    return { quotes: [], note: 'FINNHUB_API_KEY not configured — live quotes unavailable.' };
+  }
+  const quotes = await Promise.all(watchlist.map(async (w) => {
+    try {
+      const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(w.ticker)}&token=${apiKey}`);
+      if (!res.ok) return { ticker: w.ticker, error: `Quote request failed (HTTP ${res.status})` };
+      const d = await res.json();
+      // Finnhub returns all-zero fields for an unknown/delisted symbol
+      // instead of an HTTP error — catch that explicitly rather than
+      // reporting a fake $0.00 price.
+      if (d.c === 0 && d.pc === 0) return { ticker: w.ticker, error: 'No data — check the ticker is valid' };
+      return {
+        ticker: w.ticker,
+        currentPrice: d.c,
+        change: Math.round((d.d ?? 0) * 100) / 100,
+        changePercent: Math.round((d.dp ?? 0) * 100) / 100,
+        previousClose: d.pc,
+        dayHigh: d.h,
+        dayLow: d.l,
+      };
+    } catch (e) {
+      return { ticker: w.ticker, error: 'Could not fetch quote' };
+    }
+  }));
+  return { quotes, asOf: new Date().toISOString() };
+}
+
 function get_net_worth_history(appData, args = {}) {
   const days = Math.min(parseInt(args.days, 10) || 90, 3660);
   const hist = (appData.netWorthHistory || []).slice(-days);
@@ -476,6 +517,7 @@ export const TOOL_IMPLEMENTATIONS = {
   get_liabilities,
   get_investment_holdings,
   get_investment_transactions,
+  get_watchlist_quotes,
   get_net_worth_history,
   detect_transaction_anomalies,
 };
@@ -564,6 +606,11 @@ export const TOOL_SCHEMAS = [
   {
     name: 'get_investment_transactions',
     description: 'Investment activity (buys/sells/dividends). NOT tracked by this app — always returns empty with an explanation. Call this only if the user explicitly asks, so you can tell them accurately rather than guessing.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_watchlist_quotes',
+    description: 'Live price and day-change for every ticker on Dan\'s watchlist (stocks he\'s tracking, not necessarily owns — separate from get_investment_holdings\' real positions). Real-time data via a live API call, not cached. Use for "what\'s my watchlist doing" / "how\'s [ticker] moving today" when the ticker is on the watchlist rather than an actual holding.',
     input_schema: { type: 'object', properties: {} },
   },
   {

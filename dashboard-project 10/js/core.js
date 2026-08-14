@@ -289,6 +289,7 @@ async function loadData(){
         cardRewards:d.cardRewards||{},
         investmentHoldings:d.investmentHoldings||[],
         investmentHoldingsSyncedAt:d.investmentHoldingsSyncedAt||0,
+        stockWatchlist:d.stockWatchlist||[],
       };
     } else {
       // No document at this path. Almost always means we're authenticated as a
