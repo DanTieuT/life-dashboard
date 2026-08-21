@@ -189,6 +189,18 @@ function getGreeting(){
   if(h<12)return'Good morning';if(h<18)return'Good afternoon';return'Good evening';
 }
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
+// Transaction dates are plain "YYYY-MM-DD" calendar dates with no time or
+// timezone attached (Plaid's pt.date passed straight through in plaid.js,
+// same format the txnDate <input type=date> yields). `new Date("YYYY-MM-DD")`
+// parses that as UTC midnight, and .getMonth()/.getFullYear() then read it
+// back in the browser's local zone — anyone west of UTC gets every date
+// rolled back by a day, silently filing a transaction dated the 1st under
+// the previous month. Same bug class already fixed for calendar all-day
+// events; read the components directly instead of round-tripping through UTC.
+function txnLocalDate(dateStr){
+  const[y,m,d]=(dateStr||'').split('-').map(Number);
+  return new Date(y||1970,(m||1)-1,d||1);
+}
 // ── AUTH ──────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user=>{
   if(user){
@@ -791,7 +803,7 @@ function haptic(ms=40){
 
 // ── GLOBAL EXPORTS (inline handlers + cross-module refs resolve via window) ──
 Object.assign(window, {
-  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, escHtml,
+  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, escHtml,
   habitColors, calcStreak, migrateOldSavings, saveData, loadData, renderAll,
   updateThemeBtn, updateHideNumBtn, haptic, updateCompactSwitch, updateFontSizeBtns,
   updateLastBackupLabel,

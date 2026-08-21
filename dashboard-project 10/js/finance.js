@@ -118,7 +118,7 @@ function renderFinanceRing(){
   if(!arc)return;
   const budget=appData.budget.monthly||(appData.budget.income)||0;
   const mt=appData.transactions.filter(t=>{
-    const d=new Date(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;
+    const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;
   });
   const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
   if(!budget)return;
@@ -142,7 +142,7 @@ function renderFinanceTab(){
   const monthEl=document.getElementById('financeTabMonth');
   if(monthEl) monthEl.textContent=months[currentMonth]+' '+currentYear;
 
-  const mt=appData.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
+  const mt=appData.transactions.filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
   const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
   const budget=appData.budget.monthly||appData.budget.income||0;
   const accounts=appData.accounts||[];
@@ -1035,7 +1035,7 @@ function renderMonthlyTrend(){
   }
   const DONUT_COLORS=['#ff453a','#ff9f0a','#30d158','#bf5af2','#0a84ff','#64d2ff'];
   const data=months.map((mo,i)=>{
-    const txns=(appData.transactions||[]).filter(t=>{const d=new Date(t.date);return d.getMonth()===mo.m&&d.getFullYear()===mo.y;});
+    const txns=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===mo.m&&d.getFullYear()===mo.y;});
     const spent=txns.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
     const income=txns.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
     const isCurrent=mo.m===now.getMonth()&&mo.y===now.getFullYear();

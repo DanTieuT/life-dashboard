@@ -304,7 +304,7 @@ function renderStats(){
     const now=new Date();
     const bMonth=currentMonth,bYear=currentYear;
     const budgetAmt=appData.budget.monthly||appData.budget.income||0;
-    const bMt=(appData.transactions||[]).filter(t=>{const d=new Date(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
+    const bMt=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
     const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
     const daysInBMonth=new Date(bYear,bMonth+1,0).getDate();
 
@@ -705,18 +705,18 @@ function buildChatContext(weather){
   const budget=appData.budget?.monthly||appData.budget?.income||0;
   const now=new Date();
   const spent=Math.round((appData.transactions||[]).filter(t=>{
-    const d=new Date(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&t.type==='out';
+    const d=txnLocalDate(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&t.type==='out';
   }).reduce((s,t)=>s+t.amount,0));
   const projects=(appData.userProjects||[]).map(p=>({id:p.id,name:p.name,emoji:p.emoji||'🔨',stage:p.stage,nextAction:p.nextAction||''}));
   // #29: Budget alerts
   const income=Math.round((appData.transactions||[]).filter(t=>{
-    const d=new Date(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&t.type==='in';
+    const d=txnLocalDate(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&t.type==='in';
   }).reduce((s,t)=>s+t.amount,0));
   const pct=budget>0?Math.round(spent/budget*100):0;
   let budgetAlert=pct>=80?`Spending at ${pct}% of monthly budget ($${spent} of $${Math.round(budget)})`:'';
   const catBudgets=appData.categoryBudgets||{};
   const overBudgetCats=Object.entries(catBudgets).filter(([cat,limit])=>{
-    const catSpent=(appData.transactions||[]).filter(t=>{const d=new Date(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&t.type==='out'&&t.category===cat;}).reduce((s,t)=>s+t.amount,0);
+    const catSpent=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&t.type==='out'&&t.category===cat;}).reduce((s,t)=>s+t.amount,0);
     return catSpent>limit;
   }).map(([cat])=>cat);
   if(overBudgetCats.length)budgetAlert+=(budgetAlert?' · ':'')+`Over budget: ${overBudgetCats.join(', ')}`;
