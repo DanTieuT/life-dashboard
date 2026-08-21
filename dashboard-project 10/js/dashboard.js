@@ -720,7 +720,12 @@ function buildChatContext(weather){
     return catSpent>limit;
   }).map(([cat])=>cat);
   if(overBudgetCats.length)budgetAlert+=(budgetAlert?' · ':'')+`Over budget: ${overBudgetCats.join(', ')}`;
-  const savingsRate=income>0?Math.round((income-spent)/income*100):null;
+  // Same floor as renderSavingsRate in finance.js: below -200%, the income
+  // side is too small to be a real denominator yet (e.g. only a refund has
+  // posted, paycheck hasn't landed) rather than a genuine 20x overspend —
+  // null it out instead of handing JARVIS a nonsense number to repeat back.
+  const rawSavingsRate=income>0?Math.round((income-spent)/income*100):null;
+  const savingsRate=rawSavingsRate!=null&&rawSavingsRate<-200?null:rawSavingsRate;
   const nowTime=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
   const reminders=(appData.reminders||[]).filter(r=>!r.sent).sort((a,b)=>a.dueAt-b.dueAt).slice(0,10).map(r=>({
     id:r.id,text:r.text,recurrence:r.recurrence||'',when:fmtReminderWhen(r.dueAt),

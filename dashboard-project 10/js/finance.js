@@ -992,6 +992,17 @@ function renderSavingsRate(mt){
   const ratePct=document.getElementById('savingsRatePct');
   const fill=document.getElementById('savingsRateFill');
   const detail=document.getElementById('savingsRateDetail');
+  // A real month's rate realistically runs roughly -100% (spent double your
+  // income) to 100% (saved it all). Anything far past that floor means the
+  // income side is too small to be a real denominator yet — e.g. only a
+  // refund has posted and the paycheck hasn't landed — not that you
+  // actually overspent 20x. Say that plainly instead of a nonsense number.
+  if(rate<-200){
+    if(ratePct){ratePct.textContent='—';ratePct.style.color='var(--muted)';}
+    if(fill){fill.style.width='0%';}
+    if(detail)detail.textContent=`Not enough income posted yet this month (${fmtM(income)} in vs ${fmtM(expenses)} spent)`;
+    return;
+  }
   if(ratePct)ratePct.textContent=rate+'%';
   const color=rate>=20?'var(--green)':rate>=10?'var(--yellow)':'var(--red)';
   if(ratePct)ratePct.style.color=color;
