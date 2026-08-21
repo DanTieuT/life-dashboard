@@ -42,6 +42,25 @@ function initVapid() {
 
 const USER_UID = 'aqzJe5gq4IVYdKmUIW0pNJGL2ML2';
 
+// Same Firebase-ID-token pattern as watchlist-quotes.js/plaid-link.js. Only
+// `subscribe` and `send` need this — `vapid-key` just hands back a public
+// key, which is safe to expose unauthenticated by design.
+function parseBearerToken(authHeaderValue) {
+  const m = /^Bearer (.+)$/.exec(authHeaderValue || '');
+  return m ? m[1] : null;
+}
+async function verifyAuth(event) {
+  const token = parseBearerToken(event.headers?.authorization || event.headers?.Authorization);
+  if (!token) return null;
+  try {
+    initFirebase();
+    const decoded = await admin.auth().verifyIdToken(token);
+    return decoded.uid === USER_UID ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
 // Sends { title, body, url } to every stored subscription for the one user
 // this app serves. Prunes subscriptions that report 404/410 (expired/revoked).
 // Silently no-ops if VAPID keys aren't configured — callers wrap this in
@@ -101,6 +120,9 @@ exports.handler = async (event) => {
 
   // ── Store subscription ───────────────────────────────────────────
   if (action === 'subscribe') {
+    if (!(await verifyAuth(event))) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
+    }
     const { subscription } = body;
     if (!subscription || !subscription.endpoint) {
       return { statusCode: 400, body: JSON.stringify({ error: 'No subscription provided' }) };
@@ -128,6 +150,9 @@ exports.handler = async (event) => {
 
   // ── Send notification ────────────────────────────────────────────
   if (action === 'send') {
+    if (!(await verifyAuth(event))) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
+    }
     if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
       return {
         statusCode: 200,

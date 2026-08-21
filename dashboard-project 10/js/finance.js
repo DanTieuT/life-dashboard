@@ -26,6 +26,9 @@ function holdingDerived(h){
 let watchlistQuotes={}; // ticker (uppercase) -> quote result from get_watchlist_quotes
 let watchlistQuotesAt=null;
 let watchlistLoading=false;
+// Shared with the Investments render block below — one source of truth for
+// "$ with cents" formatting instead of two identical copies drifting apart.
+const fmtPrice=n=>n==null?'—':'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 
 function renderWatchlistSection(){
   const row=document.getElementById('watchlistRow');
@@ -35,7 +38,6 @@ function renderWatchlistSection(){
     row.innerHTML='<div class="watchlist-empty">No tickers yet — add one above.</div>';
     return;
   }
-  const fmtPrice=n=>n==null?'—':'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const refreshLabel=watchlistLoading?'Refreshing…':(watchlistQuotesAt?'Refresh':'Load live prices');
   row.innerHTML=`
     <div class="watchlist-updated">${watchlistQuotesAt?`Updated ${fmtTimeAgo(new Date(watchlistQuotesAt))} · `:''}<span class="watchlist-refresh-link" onclick="refreshWatchlistQuotes()">${refreshLabel}</span></div>
@@ -60,6 +62,17 @@ function renderWatchlistSection(){
 window.addWatchlistTicker=function(){
   const input=document.getElementById('watchlistTickerInput');
   if(!input)return;
+  // The watchlist section is deliberately left interactive before real data
+  // exists (unlike renderGoals/Investments, which gate on _dataLoaded) so
+  // adding the first ticker works right away. But an add that lands *before*
+  // the initial loadData() resolves gets silently discarded — loadData()
+  // wholesale-replaces appData from the server doc once it lands, and the
+  // debounced saveData() write (600ms) may not have committed yet. Block
+  // just the write, not the section, until the first load is in.
+  if(!window._dataLoaded){
+    toast('Still loading your data — try again in a moment','error');
+    return;
+  }
   const ticker=input.value.trim().toUpperCase().replace(/[^A-Z0-9.\-]/g,'');
   if(!ticker)return;
   appData.stockWatchlist=appData.stockWatchlist||[];
@@ -75,7 +88,12 @@ window.addWatchlistTicker=function(){
 };
 
 window.removeWatchlistTicker=function(id){
+  const removed=(appData.stockWatchlist||[]).find(w=>w.id===id);
   appData.stockWatchlist=(appData.stockWatchlist||[]).filter(w=>w.id!==id);
+  // Also drop its cached quote — otherwise re-adding the same ticker later
+  // in the session shows the old (possibly hours-stale) price immediately,
+  // next to an "Updated Xh ago" label that no longer describes it.
+  if(removed)delete watchlistQuotes[(removed.ticker||'').toUpperCase()];
   saveData();
   renderWatchlistSection();
 };
@@ -90,14 +108,25 @@ window.refreshWatchlistQuotes=async function(){
   watchlistLoading=true;
   renderWatchlistSection();
   try{
+    // watchlist-quotes.js reads appData straight from Firestore — flush any
+    // debounced add/remove first so a ticker changed seconds ago isn't
+    // missed (or a removed one still quoted) by that read.
+    if(typeof window.flushSaveNow==='function')await window.flushSaveNow();
     const res=await plaidFetch('/.netlify/functions/watchlist-quotes');
     const data=await res.json();
-    if(res.ok&&data.quotes){
+    // `quotes` is `[]` — a truthy array — both on real success AND on the
+    // "watchlist empty" / "API key not configured" responses, so `data.quotes`
+    // alone can't distinguish them. Only treat it as a successful refresh
+    // when the server actually sent a timestamp for it.
+    if(res.ok&&data.quotes&&data.asOf){
       const map={};
       data.quotes.forEach(q=>{map[(q.ticker||'').toUpperCase()]=q;});
       watchlistQuotes=map;
-      watchlistQuotesAt=data.asOf||Date.now();
-      if(data.note)toast(data.note,'error');
+      watchlistQuotesAt=data.asOf;
+    } else if(res.ok&&data.quotes&&data.note){
+      // Empty-but-OK response (empty watchlist / no API key) — surface the
+      // note, but don't stamp watchlistQuotesAt as if a real fetch happened.
+      toast(data.note,'error');
     } else {
       toast(data.note||data.error||'Could not load watchlist prices','error');
     }
@@ -192,8 +221,8 @@ function renderFinanceTab(){
       investSection.style.display='';
       // Compact numeric formatting for narrow columns — not fmtM() (that's
       // for whole-dollar account balances; positions need cents, and crypto
-      // quantities need more decimals than shares do).
-      const fmtPrice=n=>n==null?'—':'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+      // quantities need more decimals than shares do). fmtPrice is shared
+      // with the Watchlist section above.
       const fmtQty=n=>n==null?'—':n.toLocaleString(undefined,{maximumFractionDigits:Math.abs(n)<1?4:2});
       const groupKey=h=>`${h.institution||'Unknown'} · ${h.accountName||'Account'}${h.accountMask?` ••${h.accountMask}`:''}`;
 
@@ -350,7 +379,7 @@ function renderFinanceTab(){
       ?'<div class="empty-state" style="padding:30px">No transactions this month</div>'
       :sorted.map(t=>`<div class="txn-item">
         <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>
-        <div class="txn-name-col"><div class="txn-name">${t.name}</div><div class="txn-cat">${t.category||'Other'} · ${t.date}</div></div>
+        <div class="txn-name-col"><div class="txn-name">${escHtml(t.name)}</div><div class="txn-cat">${t.category||'Other'} · ${t.date}</div></div>
         <span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>
         <button class="txn-del" onclick="deleteTxn('${t.id}')">✕</button>
       </div>`).join('');
@@ -1207,7 +1236,7 @@ function renderTxnListFiltered(mt){
       return`<div class="txn-item" onclick="openEditTxnModal('${t.id}')">
       <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>
       <div class="txn-name-col">
-        <div class="txn-name">${t.name}${t.recurring?' <span style="font-size:10px;color:var(--blue)">↻</span>':''}</div>
+        <div class="txn-name">${escHtml(t.name)}${t.recurring?' <span style="font-size:10px;color:var(--blue)">↻</span>':''}</div>
         <div class="txn-cat">${t.category||'Other'} · ${t.date}${acctLabel?' · '+acctLabel:''}</div>
       </div>
       <span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>

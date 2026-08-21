@@ -25,8 +25,19 @@ function fmtTime(tsMs) {
   });
 }
 
-exports.handler = async () => {
+exports.handler = async (event) => {
   const headers = { 'Content-Type': 'application/json' };
+  // Same manual-trigger gate as rdo-nudge.js/weekly-review.js: Netlify's
+  // scheduled invocation has no queryStringParameters, so that path is
+  // always allowed through; any other HTTP call must present CRON_SECRET.
+  // Without this, anyone who requests this URL gets Dan's (and Julia's)
+  // full 60-day calendar — titles, locations, times — in the response body.
+  const secret = process.env.CRON_SECRET;
+  const provided = (event && event.queryStringParameters && event.queryStringParameters.secret) || '';
+  const isScheduled = !event || !event.queryStringParameters;
+  if (!isScheduled && secret && provided !== secret) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Forbidden' }) };
+  }
   try {
     initFirebase();
 

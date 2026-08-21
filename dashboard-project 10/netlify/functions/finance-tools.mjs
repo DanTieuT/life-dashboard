@@ -407,7 +407,11 @@ function get_investment_transactions() {
 // bad/delisted symbol can't fail the whole list — each entry either has real
 // data or its own `error` string, never a thrown exception up to executeTool.
 async function get_watchlist_quotes(appData) {
-  const watchlist = appData.stockWatchlist || [];
+  // Guard against a malformed field (e.g. hand-edited Firestore doc) rather
+  // than letting `.map` throw below — this is the one async tool in the
+  // registry, and a throw here becomes a rejected promise that executeTool's
+  // try/catch can't observe (see the note on executeTool).
+  const watchlist = Array.isArray(appData.stockWatchlist) ? appData.stockWatchlist : [];
   if (!watchlist.length) {
     return { quotes: [], note: 'Watchlist is empty — add tickers from the dashboard.' };
   }
@@ -422,13 +426,24 @@ async function get_watchlist_quotes(appData) {
       const d = await res.json();
       // Finnhub returns all-zero fields for an unknown/delisted symbol
       // instead of an HTTP error — catch that explicitly rather than
-      // reporting a fake $0.00 price.
-      if (d.c === 0 && d.pc === 0) return { ticker: w.ticker, error: 'No data — check the ticker is valid' };
+      // reporting a fake $0.00 price. A current price of exactly 0 is never
+      // a real quote to show either way (a halted/not-yet-traded symbol
+      // reports c:0 with a real nonzero previousClose — treating that as a
+      // literal $0.00, -100% move would be worse than just saying no data).
+      if (d.c === 0) {
+        return {
+          ticker: w.ticker,
+          error: d.pc === 0 ? 'No data — check the ticker is valid' : 'No current price (may be halted)',
+        };
+      }
       return {
         ticker: w.ticker,
         currentPrice: d.c,
-        change: Math.round((d.d ?? 0) * 100) / 100,
-        changePercent: Math.round((d.dp ?? 0) * 100) / 100,
+        // `|| 0` also normalizes -0 (e.g. Math.round(-0.1)/100 === -0), which
+        // otherwise passes `>= 0` checks on the client and renders a barely-
+        // down ticker as green with a "+" sign.
+        change: (Math.round((d.d ?? 0) * 100) / 100) || 0,
+        changePercent: (Math.round((d.dp ?? 0) * 100) / 100) || 0,
         previousClose: d.pc,
         dayHigh: d.h,
         dayLow: d.l,
@@ -642,7 +657,12 @@ export async function executeTool(name, args, appData) {
   const impl = TOOL_IMPLEMENTATIONS[name];
   if (!impl) return { error: `Unknown tool "${name}"` };
   try {
-    return impl(appData, args && typeof args === 'object' ? args : {});
+    // `return await`, not `return` — most tools here are plain synchronous
+    // functions, but get_watchlist_quotes (and any future network-calling
+    // tool) is async, and a bare `return impl(...)` hands back the promise
+    // without this try/catch ever seeing it reject. Awaiting it here is what
+    // actually makes the catch below apply to async tools too.
+    return await impl(appData, args && typeof args === 'object' ? args : {});
   } catch (e) {
     return { error: `Tool "${name}" failed: ${e.message}` };
   }

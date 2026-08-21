@@ -505,7 +505,7 @@ function renderTodaySchedule(){
     return `<div class="evt-row">
       <div class="evt-bar" style="background:${barColor}"></div>
       <div class="evt-body">
-        <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${e.name}${calBadge}${delBtn}</div>
+        <div class="evt-name${isBold?' bold':cls==='done'?' muted':''}">${escHtml(e.name)}${calBadge}${delBtn}</div>
         <div class="evt-time">${e.allDay||!e.time?'All day':fmtTime12(e.time)}</div>
       </div>
     </div>`;

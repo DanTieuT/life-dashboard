@@ -52,7 +52,14 @@ async function verifyAuth(event) {
 
 let executeToolPromise;
 function getExecuteTool() {
-  if (!executeToolPromise) executeToolPromise = import('./finance-tools.mjs').then(m => m.executeTool);
+  if (!executeToolPromise) {
+    // If the import ever rejects (transient cold-start hiccup), don't cache
+    // the rejection forever — a warm container would otherwise 500 on every
+    // request from then on, since a settled-rejected promise is still
+    // truthy and skips the `if (!executeToolPromise)` re-fetch.
+    executeToolPromise = import('./finance-tools.mjs').then(m => m.executeTool)
+      .catch(e => { executeToolPromise = null; throw e; });
+  }
   return executeToolPromise;
 }
 
@@ -61,13 +68,16 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
   if (event.httpMethod && event.httpMethod !== 'GET') {
-    return { statusCode: 405, body: 'Method not allowed' };
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   try {
     initFirebase();
     const db = admin.firestore();
-    const snap = await db.doc(`users/${USER_UID}/data/main`).get();
+    // Field-masked read — get_watchlist_quotes only needs stockWatchlist,
+    // not the rest of appData (transactions, budgets, goals, ...), so don't
+    // pay for reading/transferring the whole document on every refresh.
+    const [snap] = await db.getAll(db.doc(`users/${USER_UID}/data/main`), { fieldMask: ['stockWatchlist'] });
     const appData = snap.exists ? snap.data() : {};
     const executeTool = await getExecuteTool();
     const result = await executeTool('get_watchlist_quotes', {}, appData);

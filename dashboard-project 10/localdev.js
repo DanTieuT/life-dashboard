@@ -148,9 +148,25 @@ const server = http.createServer(async (req,res)=>{
     return;
   }
 
-  // Static files
-  let filePath='.'+req.url.split('?')[0];
-  if(filePath==='./') filePath='./index.html';
+  // Static files — resolve + confirm the path stays inside the project root
+  // (blocks ../ traversal) and refuse dotfiles (.env, .git/…) and anything
+  // under netlify/functions/ (service-account.json, function source with
+  // require()'d secrets). This server has no auth and used to bind on all
+  // interfaces, so anyone on the same network as `node localdev.js` could
+  // otherwise just GET /.env or /netlify/functions/service-account.json.
+  const root=path.resolve('.');
+  let urlPath=req.url.split('?')[0];
+  if(urlPath==='/') urlPath='/index.html';
+  const filePath=path.resolve(root,'.'+urlPath);
+  const rel=path.relative(root,filePath);
+  const blocked=rel.startsWith('..')||path.isAbsolute(rel)
+    ||rel.split(path.sep).some(seg=>seg.startsWith('.'))
+    ||rel.startsWith('netlify'+path.sep+'functions'+path.sep)||rel==='package-lock.json';
+  if(blocked){
+    res.writeHead(403,{'Content-Type':'text/plain'});
+    res.end('Forbidden');
+    return;
+  }
   const ext=path.extname(filePath);
   fs.readFile(filePath,(err,content)=>{
     if(err){
@@ -165,7 +181,7 @@ const server = http.createServer(async (req,res)=>{
   });
 });
 
-server.listen(PORT,()=>{
+server.listen(PORT,'127.0.0.1',()=>{
   const anthropicKey=process.env.ANTHROPIC_API_KEY;
   const openaiKey=process.env.OPENAI_API_KEY;
   console.log('\n✓ Dev server running at http://localhost:'+PORT);

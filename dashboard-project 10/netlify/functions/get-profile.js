@@ -21,9 +21,10 @@ function initFirebase() {
 }
 
 exports.handler = async (event) => {
-  // Simple key check so this isn't fully public
+  // Simple key check so this isn't fully public. Fails CLOSED: if
+  // PROFILE_KEY isn't set, deny rather than silently going fully open.
   const key = event.queryStringParameters?.key || event.headers?.['x-profile-key'];
-  if (key !== process.env.PROFILE_KEY && process.env.PROFILE_KEY) {
+  if (!process.env.PROFILE_KEY || key !== process.env.PROFILE_KEY) {
     return { statusCode: 401, body: 'Unauthorized' };
   }
 

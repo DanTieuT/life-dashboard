@@ -158,7 +158,7 @@ function renderCalSelectedDay(){
     return `<div class="cal-selected-evt-row" data-id="${e.id}" data-source="${e.source}">
       <div class="cal-selected-evt-time">${e.time?fmtTime12(e.time):'All day'}</div>
       <div class="cal-selected-evt-bar" style="background:${c.bg}"></div>
-      <div class="cal-selected-evt-name">${e.name}</div>
+      <div class="cal-selected-evt-name">${escHtml(e.name)}</div>
     </div>`;
   }).join('');
   el.innerHTML=`

@@ -351,34 +351,47 @@ async function flushPendingSave(){
 }
 window.addEventListener('online',()=>{flushPendingSave();});
 
+async function _doSave(){
+  if(!userRef)return;
+  appData.updatedAt=Date.now();
+  // Compute dirty top-level keys (arrays are written wholesale — that's fine,
+  // Firestore replaces arrays on update, so deletions persist too)
+  const dirty={updatedAt:appData.updatedAt};
+  for(const k of Object.keys(appData)){
+    if(k==='updatedAt')continue;
+    const j=JSON.stringify(appData[k]);
+    if(_lastSavedJSON[k]!==j)dirty[k]=appData[k];
+  }
+  try{
+    // merge:true so keys we don't send are never wiped
+    await setDoc(userRef,dirty,{merge:true});
+    _snapshotSavedState();
+    localStorage.removeItem('pendingSave');
+  }catch(e){
+    console.error('Save error',e);
+    _queuePendingSave();
+  }
+}
+
 function saveData(){
   // Log goal balance history daily before saving
   (appData.goals||[]).forEach(g=>logGoalBalanceHistory(g));
   // Track net worth history daily (#25)
   if(typeof trackNetWorthHistory==='function')trackNetWorthHistory();
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(async()=>{
-    if(!userRef)return;
-    appData.updatedAt=Date.now();
-    // Compute dirty top-level keys (arrays are written wholesale — that's fine,
-    // Firestore replaces arrays on update, so deletions persist too)
-    const dirty={updatedAt:appData.updatedAt};
-    for(const k of Object.keys(appData)){
-      if(k==='updatedAt')continue;
-      const j=JSON.stringify(appData[k]);
-      if(_lastSavedJSON[k]!==j)dirty[k]=appData[k];
-    }
-    try{
-      // merge:true so keys we don't send are never wiped
-      await setDoc(userRef,dirty,{merge:true});
-      _snapshotSavedState();
-      localStorage.removeItem('pendingSave');
-    }catch(e){
-      console.error('Save error',e);
-      _queuePendingSave();
-    }
-  },600);
+  saveTimer=setTimeout(_doSave,600);
 }
+
+// For callers that need the write to actually be on the server before they
+// proceed (e.g. watchlist-quotes.js reads appData fresh from Firestore —
+// racing the 600ms debounce above would silently drop a just-added/removed
+// ticker from that read). No-op if nothing is pending.
+window.flushSaveNow=async function(){
+  if(!saveTimer)return;
+  clearTimeout(saveTimer);
+  saveTimer=null;
+  await _doSave();
+};
 
 // ── RENDER ALL ────────────────────────────────────────────────────
 // Each widget renders independently — a bug in one (bad data shape, edge
@@ -571,8 +584,8 @@ async function enablePushNotifications(){
       userVisibleOnly:true,
       applicationServerKey:urlBase64ToUint8Array(keyData.publicKey),
     });
-    // Send subscription to server
-    await fetch('/.netlify/functions/push-notify?action=subscribe',{
+    // Send subscription to server (auth-required — see push-notify.js)
+    await plaidFetch('/.netlify/functions/push-notify?action=subscribe',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({subscription:sub.toJSON()}),
     });

@@ -217,6 +217,62 @@ describe('get_watchlist_quotes', () => {
       if (saved != null) process.env.FINNHUB_API_KEY = saved;
     }
   });
+
+  // The fetch-dependent branches below stub global.fetch (Node's native
+  // fetch is a mutable global) rather than hitting Finnhub for real.
+  async function withMockFetch(mockResponseJson, fn) {
+    const savedFetch = global.fetch;
+    const savedKey = process.env.FINNHUB_API_KEY;
+    process.env.FINNHUB_API_KEY = 'test-key';
+    global.fetch = async () => ({ ok: true, json: async () => mockResponseJson });
+    try {
+      return await fn();
+    } finally {
+      global.fetch = savedFetch;
+      if (savedKey != null) process.env.FINNHUB_API_KEY = savedKey; else delete process.env.FINNHUB_API_KEY;
+    }
+  }
+
+  test('halted ticker (c:0, real previousClose) reports "may be halted", not a fake -100%', async () => {
+    await withMockFetch({ c: 0, pc: 185.4, d: 0, dp: 0, h: 0, l: 0 }, async () => {
+      const r = await executeTool('get_watchlist_quotes', {}, { ...mockAppData(), stockWatchlist: [{ id: 'w1', ticker: 'HALT' }] });
+      assert.match(r.quotes[0].error, /halted/i);
+      assert.equal(r.quotes[0].currentPrice, undefined);
+    });
+  });
+
+  test('truly unknown ticker (c:0 and previousClose:0) still reports "check the ticker"', async () => {
+    await withMockFetch({ c: 0, pc: 0, d: 0, dp: 0, h: 0, l: 0 }, async () => {
+      const r = await executeTool('get_watchlist_quotes', {}, { ...mockAppData(), stockWatchlist: [{ id: 'w1', ticker: 'FAKE' }] });
+      assert.match(r.quotes[0].error, /check the ticker/i);
+    });
+  });
+
+  test('a tiny negative move that rounds to -0 is normalized to plain 0, not -0', async () => {
+    await withMockFetch({ c: 100, pc: 100.003, d: -0.003, dp: -0.003, h: 101, l: 99 }, async () => {
+      const r = await executeTool('get_watchlist_quotes', {}, { ...mockAppData(), stockWatchlist: [{ id: 'w1', ticker: 'ZERO' }] });
+      assert.equal(Object.is(r.quotes[0].changePercent, -0), false);
+      assert.equal(r.quotes[0].changePercent, 0);
+    });
+  });
+
+  test('a non-array stockWatchlist (corrupted data) is treated as empty, not a crash', async () => {
+    const r = await executeTool('get_watchlist_quotes', {}, { ...mockAppData(), stockWatchlist: 'AAPL' });
+    assert.deepEqual(r.quotes, []);
+    assert.match(r.note, /empty/i);
+  });
+});
+
+describe('executeTool — async tool implementations', () => {
+  test('awaits async tools, so a rejection is caught as a structured error, not thrown', async () => {
+    TOOL_IMPLEMENTATIONS.__test_async_throw = async () => { throw new Error('boom'); };
+    try {
+      const r = await executeTool('__test_async_throw', {}, mockAppData());
+      assert.match(r.error, /boom/);
+    } finally {
+      delete TOOL_IMPLEMENTATIONS.__test_async_throw;
+    }
+  });
 });
 
 describe('get_net_worth_history', () => {
