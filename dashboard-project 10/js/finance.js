@@ -989,20 +989,35 @@ function renderCatBarChart(mt){
   }
   const catBudgets=appData.categoryBudgets||{};
   if(!cats.length){el.innerHTML='<div style="color:var(--muted);font-size:13px">No spending this month</div>';return;}
+  // Pace tick — same day-of-month/days-in-month fraction as the overall
+  // spending bar above this chart, only meaningful for the month in
+  // progress (matches spendingPaceTick's isCurrentMonth guard).
+  const now=new Date();
+  const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
+  const isCurrentMonth=currentMonth===now.getMonth()&&currentYear===now.getFullYear();
+  const pacePct=isCurrentMonth?Math.min(now.getDate()/daysInMonth,1)*100:null;
   el.innerHTML=cats.map(([cat,amt],i)=>{
-    const pct=Math.round(amt/total*100);
-    const barW=Math.round(amt/total*100);
     const color=DONUT_COLORS[i%DONUT_COLORS.length];
     const limit=catBudgets[cat]||0;
-    const limitMarker=limit>0?`<div class="cat-bar-limit" style="left:${Math.min(limit/total*100,100).toFixed(1)}%"></div>`:'';
     const overBudget=limit>0&&amt>limit;
+    let barW,paceTick='',amtLabel=fmtM(amt);
+    if(limit>0){
+      // Bar's full width IS the category's limit — 100% is the budget, not
+      // a share of total spend — so going over always reads as a full red
+      // bar instead of shrinking relative to unrelated categories.
+      barW=Math.min(Math.round(amt/limit*100),100);
+      if(pacePct!=null)paceTick=`<div class="cat-bar-pace" style="left:${pacePct.toFixed(1)}%" title="On-pace for today"></div>`;
+      amtLabel=`${fmtM(amt)}<span class="cat-bar-limit-txt">/${fmtM(limit)}</span>`;
+    }else{
+      barW=Math.round(amt/total*100);
+    }
     return`<div class="cat-bar-row">
       <span class="cat-bar-label" title="${cat}">${CATS_EMOJI[cat]||''} ${cat}</span>
       <div class="cat-bar-track">
-        <div class="cat-bar-fill" style="width:${barW}%;background:${overBudget?'var(--red)':color}">${limitMarker}</div>
+        <div class="cat-bar-fill" style="width:${barW}%;background:${overBudget?'var(--red)':color}"></div>
+        ${paceTick}
       </div>
-      <span class="cat-bar-amt" style="color:${overBudget?'var(--red)':'var(--text)'}">${fmtM(amt)}</span>
-      <span class="cat-bar-pct">${pct}%</span>
+      <span class="cat-bar-amt" style="color:${overBudget?'var(--red)':'var(--text)'}">${amtLabel}</span>
     </div>`;
   }).join('');
 }
