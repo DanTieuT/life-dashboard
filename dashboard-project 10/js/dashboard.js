@@ -708,10 +708,11 @@ function buildChatContext(weather){
     const d=txnLocalDate(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&t.type==='out';
   }).reduce((s,t)=>s+t.amount,0));
   const projects=(appData.userProjects||[]).map(p=>({id:p.id,name:p.name,emoji:p.emoji||'🔨',stage:p.stage,nextAction:p.nextAction||''}));
-  // #29: Budget alerts
-  const income=Math.round((appData.transactions||[]).filter(t=>{
-    const d=txnLocalDate(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&t.type==='in';
-  }).reduce((s,t)=>s+t.amount,0));
+  // #29: Budget alerts. monthlyIncome() (not a plain type==='in' filter)
+  // shifts an end-of-month paycheck into the month it actually funds —
+  // see its comment in core.js — so this matches what the Savings Rate
+  // card shows instead of quoting a different income figure.
+  const income=Math.round(monthlyIncome(appData.transactions||[],now.getMonth(),now.getFullYear()));
   const pct=budget>0?Math.round(spent/budget*100):0;
   let budgetAlert=pct>=80?`Spending at ${pct}% of monthly budget ($${spent} of $${Math.round(budget)})`:'';
   const catBudgets=appData.categoryBudgets||{};

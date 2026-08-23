@@ -984,7 +984,11 @@ function _attachNWScrub(svg,card){
 function renderSavingsRate(mt){
   const card=document.getElementById('savingsRateCard');
   if(!card)return;
-  const income=mt.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
+  // Income uses monthlyIncome() rather than mt directly — mt buckets purely
+  // by posted date, which would count an end-of-month paycheck (and its
+  // ~$5.5k) toward the month it happened to post in instead of the month
+  // it actually funds. See monthlyIncome()'s comment in core.js.
+  const income=monthlyIncome(appData.transactions,currentMonth,currentYear);
   const expenses=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
   if(income<=0){card.style.display='none';return;}
   card.style.display='';

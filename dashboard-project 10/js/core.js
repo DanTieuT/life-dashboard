@@ -201,6 +201,32 @@ function txnLocalDate(dateStr){
   const[y,m,d]=(dateStr||'').split('-').map(Number);
   return new Date(y||1970,(m||1)-1,d||1);
 }
+// A paycheck that posts on the last business day of a month (common for
+// monthly/government payroll) funds the month ahead, not the month it's
+// dated in — one dated Jul 31 is money for August, not July. For monthly-
+// income purposes only (savings rate, JARVIS's budget context — never for
+// the transaction ledger itself, which always shows the real posted date),
+// shift a paycheck-looking deposit posted in the back half of the month
+// (day >= 25, leaving room for weekend/holiday processing drift) into the
+// month it follows. Ordinary income (e.g. a refund) still counts toward
+// whatever month it's actually dated in.
+function isPaycheckLike(name){
+  return/payroll|salary|paycheck/i.test(name||'');
+}
+function monthlyIncome(transactions,month,year){
+  let total=0;
+  (transactions||[]).forEach(t=>{
+    if(t.type!=='in')return;
+    const d=txnLocalDate(t.date);
+    let effMonth=d.getMonth(),effYear=d.getFullYear();
+    if(isPaycheckLike(t.name)&&d.getDate()>=25){
+      const shifted=new Date(effYear,effMonth+1,1);
+      effMonth=shifted.getMonth();effYear=shifted.getFullYear();
+    }
+    if(effMonth===month&&effYear===year)total+=t.amount;
+  });
+  return total;
+}
 // ── AUTH ──────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user=>{
   if(user){
@@ -816,7 +842,7 @@ function haptic(ms=40){
 
 // ── GLOBAL EXPORTS (inline handlers + cross-module refs resolve via window) ──
 Object.assign(window, {
-  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, escHtml,
+  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, escHtml,
   habitColors, calcStreak, migrateOldSavings, saveData, loadData, renderAll,
   updateThemeBtn, updateHideNumBtn, haptic, updateCompactSwitch, updateFontSizeBtns,
   updateLastBackupLabel,
