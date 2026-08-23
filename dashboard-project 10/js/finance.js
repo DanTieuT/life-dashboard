@@ -189,15 +189,12 @@ function renderFinanceTab(){
           const meta=ACCT_TYPE_META[a.type]||{label:a.type,color:'#888'};
           const isDebt=a.type==='debt';
           const mask=a.mask||'';
-          const creditLimit=a.creditLimit||0;
-          const barPct=isDebt&&creditLimit>0?Math.min(a.balance/creditLimit*100,100):0;
           return`<div class="accounts-table-row" onclick="openAccountModal('${a.id}')">
             <div class="accounts-table-name-col">
               <div class="accounts-table-name">
                 <span class="accounts-table-dot" style="background:${meta.color}"></span>
                 <span>${a.name}${mask?` <span class="accounts-table-mask">••${mask}</span>`:''}${a.source==='plaid'?` <span class="accounts-table-synced" title="Synced via Plaid">${a.updatedAt?fmtTimeAgo(new Date(a.updatedAt)):'Synced'}</span>`:''}</span>
               </div>
-              ${isDebt&&creditLimit>0?`<div class="acct-card-bar"><div class="acct-card-bar-fill" style="width:${barPct}%;background:${meta.color}"></div></div>`:''}
             </div>
             <div class="accounts-table-type">${meta.label}</div>
             <div class="accounts-table-bal${isDebt?' red':''}">${isDebt?'-':''}${fmtM(a.balance)}</div>
