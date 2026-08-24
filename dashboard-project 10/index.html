@@ -349,66 +349,6 @@
         </div>
       </div>
 
-      <!-- ── Goals (folded into Finance; kept near the top per Dan's request;
-           collapsible like Accounts/Investments/Watchlist below) ── -->
-      <div class="fin-collapsible" data-fin-id="goals">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Goals
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="goals-body-hdr">
-            <div class="section-sub" id="goalsSub">Track what you're building toward.</div>
-            <button class="btn-new" onclick="openGoalModal()">+ New Goal</button>
-          </div>
-          <div id="goalsGrid"></div>
-        </div>
-      </div>
-
-      <!-- Accounts Table (collapsible) -->
-      <div class="fin-collapsible" data-fin-id="accounts">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Accounts
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div id="acctCardsRow"></div>
-        </div>
-      </div>
-
-      <!-- Investments (collapsible; only shown once real holdings data exists —
-           see plaid-investments-sync.js. Hidden entirely otherwise, not an
-           empty-state, since most accounts won't have this. -->
-      <div class="fin-collapsible" data-fin-id="investments" id="investmentsSection" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Investments
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div id="investmentsCashRow" style="margin-bottom:12px"></div>
-          <div id="investmentsRow"></div>
-        </div>
-      </div>
-
-      <!-- Stock Watchlist — dashboard-managed list of tickers Dan's tracking
-           (separate from real Plaid holdings above). Prices are fetched live
-           on demand (watchlist-quotes.js → Finnhub), not on every render, so
-           this stays visible even when empty (unlike Investments) since
-           adding the first ticker is the point of the section. -->
-      <div class="fin-collapsible" data-fin-id="watchlist" id="watchlistSection">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Watchlist
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="watchlist-add-row">
-            <input type="text" id="watchlistTickerInput" placeholder="Ticker (e.g. AAPL)" maxlength="10" autocapitalize="characters" onkeydown="if(event.key==='Enter')addWatchlistTicker()">
-            <button class="btn-new" onclick="addWatchlistTicker()">+ Add</button>
-          </div>
-          <div id="watchlistRow"></div>
-        </div>
-      </div>
-
       <!-- Month nav + action buttons -->
       <div class="fin-header-row">
         <div class="month-nav" style="margin:0">
@@ -462,27 +402,98 @@
         <div id="catBarChart" style="margin-top:14px"></div>
       </div>
 
-      <!-- Savings Rate (#30) — radial gauge; this number only moves once a
-           month so it earns a heavier treatment than a flat progress bar. -->
-      <div class="fin-card" id="savingsRateCard" style="display:none">
-        <div class="fin-section-title">Savings Rate</div>
-        <div class="savings-rate-wrap">
-          <div class="savings-rate-gauge">
-            <svg width="88" height="88" viewBox="0 0 88 88">
-              <circle class="savings-rate-gauge-track" cx="44" cy="44" r="36"/>
-              <circle class="savings-rate-gauge-fill" id="savingsRateFill" cx="44" cy="44" r="36"/>
-            </svg>
-            <span id="savingsRatePct">—</span>
+      <!-- ── Goals (folded into Finance; kept near the top per Dan's request;
+           collapsible like Accounts/Investments/Watchlist below) ── -->
+      <div class="fin-collapsible" data-fin-id="goals">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Goals
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="goals-body-hdr">
+            <div class="section-sub" id="goalsSub">Track what you're building toward.</div>
+            <button class="btn-new" onclick="openGoalModal()">+ New Goal</button>
           </div>
-          <div class="savings-rate-detail">of income saved this month<br><span id="savingsRateDetail"></span></div>
+          <div id="goalsGrid"></div>
         </div>
       </div>
 
-      <!-- 6-Month Trend (#22) -->
-      <div class="fin-card" id="trendCard">
-        <div class="fin-section-title">6-Month Trend</div>
-        <div class="trend-chart" id="trendChart"></div>
-        <div style="display:flex;justify-content:space-around" id="trendLabels"></div>
+      <!-- Stock Watchlist — dashboard-managed list of tickers Dan's tracking
+           (separate from real Plaid holdings above). Prices are fetched live
+           on demand (watchlist-quotes.js → Finnhub), not on every render, so
+           this stays visible even when empty (unlike Investments) since
+           adding the first ticker is the point of the section. -->
+      <div class="fin-collapsible" data-fin-id="watchlist" id="watchlistSection">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Watchlist
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="watchlist-add-row">
+            <input type="text" id="watchlistTickerInput" placeholder="Ticker (e.g. AAPL)" maxlength="10" autocapitalize="characters" onkeydown="if(event.key==='Enter')addWatchlistTicker()">
+            <button class="btn-new" onclick="addWatchlistTicker()">+ Add</button>
+          </div>
+          <div id="watchlistRow"></div>
+        </div>
+      </div>
+
+      <!-- Investments (collapsible; only shown once real holdings data exists —
+           see plaid-investments-sync.js. Hidden entirely otherwise, not an
+           empty-state, since most accounts won't have this. -->
+      <div class="fin-collapsible" data-fin-id="investments" id="investmentsSection" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Investments
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div id="investmentsCashRow" style="margin-bottom:12px"></div>
+          <div id="investmentsRow"></div>
+        </div>
+      </div>
+
+      <!-- Accounts Table (collapsible) -->
+      <div class="fin-collapsible" data-fin-id="accounts">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Accounts
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div id="acctCardsRow"></div>
+        </div>
+      </div>
+
+      <!-- Savings Rate (#30) — radial gauge; this number only moves once a
+           month so it earns a heavier treatment than a flat progress bar.
+           Collapsible like the other Finance sections. -->
+      <div class="fin-collapsible" id="savingsRateCard" data-fin-id="savingsrate" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Savings Rate
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="savings-rate-wrap">
+            <div class="savings-rate-gauge">
+              <svg width="88" height="88" viewBox="0 0 88 88">
+                <circle class="savings-rate-gauge-track" cx="44" cy="44" r="36"/>
+                <circle class="savings-rate-gauge-fill" id="savingsRateFill" cx="44" cy="44" r="36"/>
+              </svg>
+              <span id="savingsRatePct">—</span>
+            </div>
+            <div class="savings-rate-detail">of income saved this month<br><span id="savingsRateDetail"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-Month Trend (#22) — collapsible like the other Finance sections. -->
+      <div class="fin-collapsible" id="trendCard" data-fin-id="trend">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          6-Month Trend
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="trend-chart" id="trendChart"></div>
+          <div style="display:flex;justify-content:space-around" id="trendLabels"></div>
+        </div>
       </div>
 
       <!-- Best Card lookup (collapsible, hidden until rewards are configured) -->
