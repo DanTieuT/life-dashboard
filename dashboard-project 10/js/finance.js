@@ -1112,8 +1112,14 @@ function renderCatBarChart(mt){
     <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${barW}%;background:${overBudget?'var(--red)':color}"></div></div>
     <span class="cat-bar-amt" style="color:${overBudget?'var(--red)':'var(--text)'}">${amtLabel}</span>`;
   }).join('');
-  const paceLine=pacePct!=null?`<div class="cat-bar-pace-line" style="left:${pacePct.toFixed(1)}%" title="On-pace for today"></div>`:'';
-  el.innerHTML=`<div class="cat-bar-grid" style="grid-template-rows:repeat(${cats.length},auto)">${paceLine}${rows}</div>`;
+  // Position in plain calc() math (label column + gap, then a fraction of the
+  // remaining track width) rather than a bare "%", which would resolve
+  // against the whole grid row's width, not just the track column — see the
+  // .cat-bar-pace-line comment in styles.css for why. Keep these px values
+  // (90 label + 10 gap + 82 amount + 10 gap = 192) in sync with
+  // .cat-bar-grid's grid-template-columns.
+  const paceLine=pacePct!=null?`<div class="cat-bar-pace-line" style="left:calc(100px + (100% - 192px) * ${(pacePct/100).toFixed(4)})" title="On-pace for today"></div>`:'';
+  el.innerHTML=`<div class="cat-bar-grid">${paceLine}${rows}</div>`;
 }
 
 // ── #22: 6-month trend ────────────────────────────────────────────

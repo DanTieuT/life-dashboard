@@ -918,15 +918,21 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .fin-collapsible.collapsed [data-role="finChevron"]{transform:rotate(180deg)}
 [data-role="finBody"]{padding:14px 16px 16px}
 /* Category bar chart (#21) — grid so label/track/amt line up across rows,
-   and one shared pace-line (grid-row:1/-1) can span the whole track column
-   instead of repeating a tick on every row. */
+   and one shared pace-line spans the whole track column instead of
+   repeating a tick on every row. The line is deliberately NOT a grid item
+   scoped to column 2 (grid-column + abspos) — Safari doesn't reliably scope
+   an absolutely-positioned child's containing block to a spanned grid area,
+   so `left:%` there resolves against the whole grid instead of just the
+   track column and the line lands off to the right. Plain abspos relative
+   to .cat-bar-grid + calc() math (label width + gap, baked in via JS to
+   match grid-template-columns below) works identically everywhere. */
 .cat-bar-grid{display:grid;grid-template-columns:90px 1fr 82px;column-gap:10px;row-gap:10px;position:relative}
 .cat-bar-label{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center}
 .cat-bar-track{height:8px;background:var(--track);border-radius:4px;position:relative;align-self:center}
 .cat-bar-fill{height:100%;border-radius:4px;transition:width .4s}
 .cat-bar-amt{font-size:12px;font-weight:600;text-align:right;white-space:nowrap;align-self:center}
 .cat-bar-limit-txt{font-weight:400;color:var(--muted)}
-.cat-bar-pace-line{position:absolute;grid-column:2;grid-row:1/-1;top:2px;bottom:2px;width:1px;background:var(--text);opacity:.16;transform:translateX(-50%);pointer-events:none}
+.cat-bar-pace-line{position:absolute;top:2px;bottom:2px;width:1px;background:var(--text);opacity:.16;transform:translateX(-50%);pointer-events:none}
 /* 6-month trend (#22) */
 .trend-chart{height:80px;display:flex;align-items:flex-end;gap:8px;margin-bottom:8px}
 .trend-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
