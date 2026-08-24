@@ -622,10 +622,10 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 /* Holdings table — 5 numeric-heavy columns, sized for iPhone width, so it
    gets its own grid instead of reusing accounts-table's 3-column layout
    (which also hides its middle column below 768px — wrong tradeoff here). */
-.holdings-table-head{display:grid;grid-template-columns:1fr 48px 58px 58px 52px;gap:6px;padding:8px 12px;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.holdings-table-head{display:grid;grid-template-columns:1fr 44px 54px 54px 54px;gap:12px;padding:8px 12px;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border)}
 .holdings-sort-btn{cursor:pointer;user-select:none;white-space:nowrap}
 .holdings-sort-btn:active{color:var(--text)}
-.holdings-table-row{display:grid;grid-template-columns:1fr 48px 58px 58px 52px;gap:6px;padding:9px 12px;border-bottom:.5px solid var(--divider);align-items:center}
+.holdings-table-row{display:grid;grid-template-columns:1fr 44px 54px 54px 54px;gap:12px;padding:9px 12px;border-bottom:.5px solid var(--divider);align-items:center}
 .holdings-table-row:last-child{border-bottom:none}
 .holdings-table-ticker{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .holdings-table-cell{font-size:12px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
