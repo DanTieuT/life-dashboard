@@ -760,29 +760,34 @@ function renderGoals(){
     let monthlyHtml='';
     if(monthAgo!==null){
       const diff=current-monthAgo;
-      if(diff>0) monthlyHtml=`<div class="goal-monthly-change">+ ${fmt(diff)} this month</div>`;
-      else if(diff<0) monthlyHtml=`<div class="goal-monthly-change" style="color:var(--red)">- ${fmt(Math.abs(diff))} this month</div>`;
-      else monthlyHtml=`<div class="goal-monthly-change none">no change this month</div>`;
+      const mColor=diff>0?'var(--green)':diff<0?'var(--red)':'var(--sub)';
+      const mText=diff>0?`+ ${fmt(diff)} this month`:diff<0?`- ${fmt(Math.abs(diff))} this month`:'no change this month';
+      monthlyHtml=`<span class="goal-monthly-change" style="color:${mColor}">${mText}</span>`;
     }
     // Linked account names
     const ids=g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[]);
     const linkedNames=ids.map(id=>(appData.accounts||[]).find(a=>a.id===id)?.name).filter(Boolean);
     const linkedSub=linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'';
-    const footText=done?'🎉 Goal reached!':`${Math.round(pct)}% · of ${fmtM(target)}`;
+    const pctText=done?'🎉 Goal reached!':`${Math.round(pct)}% · ${fmtM(target-current)} to go`;
     return `<div class="goal-card">
       <div class="goal-top">
         <button class="goal-icon" style="background:${color}22;color:${color}" onclick="openGoalModal('${g.id}')" title="Edit ${escHtml(g.name)}">${g.emoji||'🎯'}</button>
-        <div class="goal-name">${g.name}</div>
+        <div style="flex:1">
+          <div class="goal-name">${g.name}</div>
+          ${linkedSub}
+        </div>
       </div>
-      ${linkedSub}
-      <div class="goal-current" style="color:${color}">${fmtM(current)}</div>
+      <div class="goal-amounts">
+        <div class="goal-current" style="color:${color}">${fmtM(current)}</div>
+        <div class="goal-target">of ${fmtM(target)}</div>
+      </div>
       <div class="goal-bar-track">
         <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
       </div>
       <div class="goal-foot-row">
-        <div class="goal-target">${footText}</div>
+        <span class="goal-pct">${pctText}</span>
+        ${monthlyHtml}
       </div>
-      ${monthlyHtml}
     </div>`;
   }).join('');
 }

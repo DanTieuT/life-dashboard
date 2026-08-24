@@ -349,21 +349,23 @@ input,select,textarea{font-family:inherit}
 .hide-num-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--sub);font-size:13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
 .hide-num-btn:hover{color:var(--text);border-color:var(--text)}
 
-/* ── GOALS (dense grid — 2-up stat tiles, matches Accounts/Investments) ── */
-#goalsGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.goal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 17px}
-.goal-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.goal-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:none;cursor:pointer;transition:transform 120ms cubic-bezier(.2,.8,.2,1)}
+/* ── GOALS (refined — single column, icon doubles as the edit button) ── */
+#goalsGrid{display:flex;flex-direction:column;gap:10px}
+.goal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.goal-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.goal-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:none;cursor:pointer;transition:transform 120ms cubic-bezier(.2,.8,.2,1)}
 .goal-icon:active{transform:scale(.9)}
-.goal-name{font-size:14px;font-weight:600;color:var(--text)}
-.goal-sub{font-size:11px;color:var(--muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.goal-current{font-size:20px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-bottom:10px}
+.goal-name{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.goal-sub{font-size:11.5px;color:var(--sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-amounts{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.goal-current{font-size:20px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.goal-target{font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums}
 .goal-bar-track{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin-bottom:7px}
 .goal-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
-.goal-foot-row{display:flex;justify-content:space-between;align-items:center}
-.goal-target{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.goals-empty{grid-column:1/-1;color:var(--muted);font-size:13px;padding:32px;text-align:center;background:var(--card);border:1px dashed var(--border);border-radius:var(--radius)}
-@media(max-width:768px){#goalsGrid{grid-template-columns:1fr}}
+.goal-foot-row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--sub);gap:8px}
+.goal-pct{white-space:nowrap}
+.goal-monthly-change{font-weight:600;white-space:nowrap;text-align:right}
+.goals-empty{color:var(--muted);font-size:13px;padding:32px;text-align:center;background:var(--card);border:1px dashed var(--border);border-radius:var(--radius)}
 
 /* ── WEEKLY REVIEW ───────────────────────────────────────────────── */
 .review-section{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)}
