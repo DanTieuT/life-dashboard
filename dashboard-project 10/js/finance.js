@@ -377,20 +377,17 @@ function renderFinanceTab(){
     totalFillEl.style.width=pct+'%';
     totalFillEl.style.background=!budget?'var(--green)':spent>budget?'var(--red)':spent>budget*.8?'var(--yellow)':'var(--green)';
   }
-  // Pace tick — where spend "should" be today if it tracked evenly across
+  // Pace arrow — where spend "should" be today if it tracked evenly across
   // the month (same idea as the home page's budget pace tick). Only
   // meaningful for the month actually in progress.
   const paceTickEl=document.getElementById('spendingPaceTick');
-  const paceCaptionEl=document.getElementById('spendingPaceCaption');
-  if(paceTickEl&&paceCaptionEl){
+  if(paceTickEl){
     if(isCurrentMonth&&budget>0){
       const pacePct=Math.min(100,(now.getDate()/daysInMonth)*100);
       paceTickEl.style.left=pacePct+'%';
       paceTickEl.style.display='';
-      paceCaptionEl.style.display='';
     } else {
       paceTickEl.style.display='none';
-      paceCaptionEl.style.display='none';
     }
   }
 
@@ -1086,37 +1083,37 @@ function renderCatBarChart(mt){
   }
   const catBudgets=appData.categoryBudgets||{};
   if(!cats.length){el.innerHTML='<div style="color:var(--muted);font-size:13px">No spending this month</div>';return;}
-  // Pace tick — same day-of-month/days-in-month fraction as the overall
-  // spending bar above this chart, only meaningful for the month in
-  // progress (matches spendingPaceTick's isCurrentMonth guard).
+  // Pace — same day-of-month/days-in-month fraction as the overall spending
+  // bar above this chart, only meaningful for the month in progress (matches
+  // spendingPaceTick's isCurrentMonth guard). Shown as one shared reference
+  // line through the whole track column (see cat-bar-pace-line below)
+  // instead of a tick repeated on every row — a per-row identical mark read
+  // as noisy; one shared axis still lets each bar's fill vs. the line tell
+  // you that category's own pace.
   const now=new Date();
   const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
   const isCurrentMonth=currentMonth===now.getMonth()&&currentYear===now.getFullYear();
   const pacePct=isCurrentMonth?Math.min(now.getDate()/daysInMonth,1)*100:null;
-  el.innerHTML=cats.map(([cat,amt],i)=>{
+  const rows=cats.map(([cat,amt],i)=>{
     const color=DONUT_COLORS[i%DONUT_COLORS.length];
     const limit=catBudgets[cat]||0;
     const overBudget=limit>0&&amt>limit;
-    let barW,paceTick='',amtLabel=fmtM(amt);
+    let barW,amtLabel=fmtM(amt);
     if(limit>0){
       // Bar's full width IS the category's limit — 100% is the budget, not
       // a share of total spend — so going over always reads as a full red
       // bar instead of shrinking relative to unrelated categories.
       barW=Math.min(Math.round(amt/limit*100),100);
-      if(pacePct!=null)paceTick=`<div class="cat-bar-pace" style="left:${pacePct.toFixed(1)}%" title="On-pace for today"></div>`;
       amtLabel=`${fmtM(amt)}<span class="cat-bar-limit-txt">/${fmtM(limit)}</span>`;
     }else{
       barW=Math.round(amt/total*100);
     }
-    return`<div class="cat-bar-row">
-      <span class="cat-bar-label" title="${cat}">${CATS_EMOJI[cat]||''} ${cat}</span>
-      <div class="cat-bar-track">
-        <div class="cat-bar-fill" style="width:${barW}%;background:${overBudget?'var(--red)':color}"></div>
-        ${paceTick}
-      </div>
-      <span class="cat-bar-amt" style="color:${overBudget?'var(--red)':'var(--text)'}">${amtLabel}</span>
-    </div>`;
+    return`<span class="cat-bar-label" title="${cat}">${cat}</span>
+    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${barW}%;background:${overBudget?'var(--red)':color}"></div></div>
+    <span class="cat-bar-amt" style="color:${overBudget?'var(--red)':'var(--text)'}">${amtLabel}</span>`;
   }).join('');
+  const paceLine=pacePct!=null?`<div class="cat-bar-pace-line" style="left:${pacePct.toFixed(1)}%" title="On-pace for today"></div>`:'';
+  el.innerHTML=`<div class="cat-bar-grid" style="grid-template-rows:repeat(${cats.length},auto)">${paceLine}${rows}</div>`;
 }
 
 // ── #22: 6-month trend ────────────────────────────────────────────

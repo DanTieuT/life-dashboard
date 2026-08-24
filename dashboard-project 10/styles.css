@@ -704,9 +704,12 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .spend-total-row{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}
 .spend-total-num{font-size:26px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
 .spend-total-of{font-size:13px;color:var(--sub)}
-.spend-total-track-wrap{position:relative}
+.spend-total-track-wrap{position:relative;padding-top:7px}
 .spend-total-track{height:6px;background:var(--track);border-radius:3px;overflow:hidden}
 .spend-total-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
+/* Pace arrow — sits once above the total bar; no bottom twin, no caption
+   (the arrow shape is self-explanatory without a legend). */
+.spend-pace-arrow{position:absolute;top:-1px;width:0;height:0;opacity:.6;transform:translateX(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--text);pointer-events:none;transition:left .4s}
 /* ── RING STAT CARDS ─────────────────────────────────────────────── */
 .ring-stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center}
 .ring-stat-title{font-size:13px;font-weight:600;letter-spacing:.3px;color:var(--sub);margin-bottom:10px;text-transform:uppercase;align-self:flex-start}
@@ -914,14 +917,16 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .fin-collapsible.collapsed [data-role="finBody"]{display:none}
 .fin-collapsible.collapsed [data-role="finChevron"]{transform:rotate(180deg)}
 [data-role="finBody"]{padding:14px 16px 16px}
-/* Category bar chart (#21) */
-.cat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.cat-bar-label{font-size:12px;color:var(--sub);width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cat-bar-track{flex:1;height:8px;background:var(--track);border-radius:4px;overflow:visible;position:relative}
+/* Category bar chart (#21) — grid so label/track/amt line up across rows,
+   and one shared pace-line (grid-row:1/-1) can span the whole track column
+   instead of repeating a tick on every row. */
+.cat-bar-grid{display:grid;grid-template-columns:90px 1fr 82px;column-gap:10px;row-gap:10px;position:relative}
+.cat-bar-label{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center}
+.cat-bar-track{height:8px;background:var(--track);border-radius:4px;position:relative;align-self:center}
 .cat-bar-fill{height:100%;border-radius:4px;transition:width .4s}
-.cat-bar-pace{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--text);opacity:.4;border-radius:1px}
-.cat-bar-amt{font-size:12px;font-weight:600;width:82px;text-align:right;flex-shrink:0;white-space:nowrap}
+.cat-bar-amt{font-size:12px;font-weight:600;text-align:right;white-space:nowrap;align-self:center}
 .cat-bar-limit-txt{font-weight:400;color:var(--muted)}
+.cat-bar-pace-line{position:absolute;grid-column:2;grid-row:1/-1;top:2px;bottom:2px;width:1px;background:var(--text);opacity:.16;transform:translateX(-50%);pointer-events:none}
 /* 6-month trend (#22) */
 .trend-chart{height:80px;display:flex;align-items:flex-end;gap:8px;margin-bottom:8px}
 .trend-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
