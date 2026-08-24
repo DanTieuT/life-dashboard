@@ -349,18 +349,21 @@
         </div>
       </div>
 
-      <!-- ── Goals (folded into Finance; kept near the top per Dan's request) ── -->
-      <div class="section-hdr">
-        <div>
-          <div class="section-title">Goals</div>
-          <div class="section-sub" id="goalsSub">Track what you're building toward.</div>
+      <!-- ── Goals (folded into Finance; kept near the top per Dan's request;
+           collapsible like Accounts/Investments/Watchlist below) ── -->
+      <div class="fin-collapsible" data-fin-id="goals">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Goals
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-new" onclick="openWeeklyReview()" style="background:var(--card2);color:var(--text);border:1px solid var(--border)">📊 Weekly Review</button>
-          <button class="btn-new" onclick="openGoalModal()">+ New Goal</button>
+        <div data-role="finBody">
+          <div class="goals-body-hdr">
+            <div class="section-sub" id="goalsSub">Track what you're building toward.</div>
+            <button class="btn-new" onclick="openGoalModal()">+ New Goal</button>
+          </div>
+          <div id="goalsGrid"></div>
         </div>
       </div>
-      <div id="goalsGrid" style="margin-bottom:20px"></div>
 
       <!-- Accounts Table (collapsible) -->
       <div class="fin-collapsible" data-fin-id="accounts">

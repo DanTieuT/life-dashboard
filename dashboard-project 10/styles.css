@@ -350,6 +350,7 @@ input,select,textarea{font-family:inherit}
 .hide-num-btn:hover{color:var(--text);border-color:var(--text)}
 
 /* ── GOALS (refined — single column, icon doubles as the edit button) ── */
+.goals-body-hdr{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
 #goalsGrid{display:flex;flex-direction:column;gap:10px}
 .goal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
 .goal-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
