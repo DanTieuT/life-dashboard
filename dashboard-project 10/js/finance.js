@@ -768,23 +768,19 @@ function renderGoals(){
     const ids=g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[]);
     const linkedNames=ids.map(id=>(appData.accounts||[]).find(a=>a.id===id)?.name).filter(Boolean);
     const linkedSub=linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'';
+    const footText=done?'🎉 Goal reached!':`${Math.round(pct)}% · of ${fmtM(target)}`;
     return `<div class="goal-card">
       <div class="goal-top">
-        <div class="goal-icon" style="background:${color}22;color:${color}">${g.emoji||'🎯'}</div>
-        <div class="goal-pct-badge" style="color:${done?'var(--green)':color}">${done?'🎉':Math.round(pct)+'%'}</div>
+        <button class="goal-icon" style="background:${color}22;color:${color}" onclick="openGoalModal('${g.id}')" title="Edit ${escHtml(g.name)}">${g.emoji||'🎯'}</button>
+        <div class="goal-name">${g.name}</div>
       </div>
-      <div class="goal-name">${g.name}</div>
       ${linkedSub}
       <div class="goal-current" style="color:${color}">${fmtM(current)}</div>
       <div class="goal-bar-track">
         <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
       </div>
       <div class="goal-foot-row">
-        <div class="goal-target">${done?'Goal reached — of '+fmtM(target):'of '+fmtM(target)}</div>
-        <div class="goal-actions">
-          <button class="goal-action-btn" onclick="openGoalModal('${g.id}')">✏️</button>
-          <button class="goal-action-btn" onclick="deleteGoal('${g.id}')" style="color:var(--red)">✕</button>
-        </div>
+        <div class="goal-target">${footText}</div>
       </div>
       ${monthlyHtml}
     </div>`;
@@ -799,6 +795,7 @@ window.openGoalModal=function(id){
   document.getElementById('goalEmoji').value=g?g.emoji:'🎯';
   document.getElementById('goalTarget').value=g?g.target:'';
   document.getElementById('goalCurrent').value=g?g.current:'';
+  document.getElementById('goalDeleteBtn').style.display=g?'':'none';
   // Populate multi-select linked accounts
   const wrap=document.getElementById('goalLinkedAccountsWrap');
   const selectedIds=g?(g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[])):[];
@@ -847,8 +844,19 @@ window.saveGoal=function(){
   saveData();closeModal('goalModal');renderGoals();toast('✓ Goal saved');
 };
 window.deleteGoal=function(id){
-  appData.goals=(appData.goals||[]).filter(g=>g.id!==id);
+  const g=(appData.goals||[]).find(x=>x.id===id);
+  if(!g)return;
+  if(!confirm(`Remove "${g.name}"?`))return;
+  appData.goals=(appData.goals||[]).filter(x=>x.id!==id);
   saveData();renderGoals();toast('Goal removed');
+};
+window.deleteGoalFromModal=function(){
+  const id=document.getElementById('goalEditId').value;
+  const g=(appData.goals||[]).find(x=>x.id===id);
+  if(!g)return;
+  if(!confirm(`Remove "${g.name}"?`))return;
+  appData.goals=(appData.goals||[]).filter(x=>x.id!==id);
+  saveData();closeModal('goalModal');renderGoals();toast('Goal removed');
 };
 // ── #25: Net worth history ────────────────────────────────────────
 function trackNetWorthHistory(){
