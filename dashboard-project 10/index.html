@@ -364,7 +364,7 @@
 
       <!-- Accounts Table (collapsible) -->
       <div class="fin-collapsible" data-fin-id="accounts">
-        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
           Accounts
           <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
@@ -377,7 +377,7 @@
            see plaid-investments-sync.js. Hidden entirely otherwise, not an
            empty-state, since most accounts won't have this. -->
       <div class="fin-collapsible" data-fin-id="investments" id="investmentsSection" style="display:none">
-        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
           Investments
           <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
@@ -393,7 +393,7 @@
            this stays visible even when empty (unlike Investments) since
            adding the first ticker is the point of the section. -->
       <div class="fin-collapsible" data-fin-id="watchlist" id="watchlistSection">
-        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
           Watchlist
           <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
@@ -484,8 +484,8 @@
       </div>
 
       <!-- Best Card lookup (collapsible, hidden until rewards are configured) -->
-      <div class="fin-card fin-collapsible" id="bestCardCard" data-fin-id="bestcard" style="display:none">
-        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+      <div class="fin-collapsible" id="bestCardCard" data-fin-id="bestcard" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
           <span>Best Card For</span>
           <span style="display:flex;align-items:center;gap:8px">
             <button onclick="event.stopPropagation();openCardRewardsModal()" style="background:none;border:none;color:var(--green);font-size:13px;cursor:pointer;font-family:inherit">Edit rewards</button>
@@ -499,8 +499,8 @@
       </div>
 
       <!-- Missed rewards report (collapsible, hidden until there's data) -->
-      <div class="fin-card fin-collapsible" id="missedRewardsCard" data-fin-id="missedrewards" style="display:none">
-        <div class="fin-section-title fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+      <div class="fin-collapsible" id="missedRewardsCard" data-fin-id="missedrewards" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
           <span>Missed Rewards</span>
           <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>

@@ -605,8 +605,8 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .brain-dump-del:hover{color:var(--red);opacity:1}
 .brain-dump-empty{color:var(--muted);font-size:13px;padding:16px 0;text-align:center}
 /* ── ACCOUNTS TABLE ──────────────────────────────────────────────── */
-.accounts-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px}
-#acctCardsRow{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
+.accounts-empty{padding:16px 0;text-align:center;color:var(--muted);font-size:13px}
+#acctCardsRow{margin:0 -16px}
 .accounts-table-row{display:grid;grid-template-columns:1fr 100px 110px;gap:12px;padding:10px 16px;border-bottom:.5px solid var(--divider);align-items:center;cursor:pointer;transition:background .08s}
 .accounts-table-row:last-child{border-bottom:none}
 .accounts-table-row:hover,.accounts-table-row:active{background:var(--card2)}
@@ -622,10 +622,10 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 /* Holdings table — 5 numeric-heavy columns, sized for iPhone width, so it
    gets its own grid instead of reusing accounts-table's 3-column layout
    (which also hides its middle column below 768px — wrong tradeoff here). */
-.holdings-table-head{display:grid;grid-template-columns:1fr 44px 54px 54px 54px;gap:12px;padding:8px 12px;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.holdings-table-head{display:grid;grid-template-columns:1fr 44px 54px 54px 54px;gap:12px;padding:0 0 8px;margin-bottom:2px;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border)}
 .holdings-sort-btn{cursor:pointer;user-select:none;white-space:nowrap}
 .holdings-sort-btn:active{color:var(--text)}
-.holdings-table-row{display:grid;grid-template-columns:1fr 44px 54px 54px 54px;gap:12px;padding:9px 12px;border-bottom:.5px solid var(--divider);align-items:center}
+.holdings-table-row{display:grid;grid-template-columns:1fr 44px 54px 54px 54px;gap:12px;padding:9px 0;border-bottom:.5px solid var(--divider);align-items:center}
 .holdings-table-row:last-child{border-bottom:none}
 .holdings-table-ticker{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .holdings-table-cell{font-size:12px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
@@ -634,15 +634,15 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .holdings-table-gain .arrow{font-size:9px}
 .holdings-table-gain.red{color:var(--red)}
 .holdings-table-gain.green{color:var(--green)}
-.holdings-group-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;padding:12px 12px 4px}
-.holdings-group-label:first-child{padding-top:4px}
-.holdings-cash-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.holdings-group-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;padding:12px 0 4px}
+.holdings-group-label:first-child{padding-top:8px}
+.holdings-cash-card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
 .holdings-cash-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
 .holdings-cash-row .name{color:var(--sub)}
 .holdings-cash-row .amt{font-weight:600;font-variant-numeric:tabular-nums}
 .holdings-cash-total{display:flex;justify-content:space-between;align-items:center;padding-top:8px;margin-top:4px;border-top:.5px solid var(--divider);font-size:13px;font-weight:600}
 .holdings-cash-total span:last-child{font-variant-numeric:tabular-nums}
-.holdings-total-row{display:flex;justify-content:space-between;gap:12px;padding:12px;margin-top:4px;border-top:1px solid var(--border)}
+.holdings-total-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0 0;margin-top:8px;border-top:1px solid var(--border)}
 .holdings-total-row>div{display:flex;flex-direction:column;gap:2px}
 .holdings-total-row>div:last-child{align-items:flex-end;text-align:right}
 .holdings-total-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
@@ -656,10 +656,14 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .watchlist-add-row input{flex:1;min-width:0;background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:14px;color:var(--text)}
 .watchlist-add-row input:focus{outline:none;border-color:var(--blue)}
 .watchlist-empty{padding:16px 4px;font-size:13px;color:var(--muted);text-align:center}
-.watchlist-updated{font-size:11px;color:var(--muted);padding:0 4px 8px;text-align:right}
+.watchlist-updated{font-size:11px;color:var(--muted);padding:0 0 8px;text-align:right}
 .watchlist-refresh-link{color:var(--blue);cursor:pointer;font-weight:600}
-.watchlist-row-item{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:.5px solid var(--divider)}
+.watchlist-row-item{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-bottom:.5px solid var(--divider)}
 .watchlist-row-item:last-child{border-bottom:none}
+.watchlist-row-main{display:flex;align-items:center;gap:10px}
+.watchlist-since{font-size:11px;color:var(--muted);padding-left:2px;font-variant-numeric:tabular-nums}
+.watchlist-since.green{color:var(--green)}
+.watchlist-since.red{color:var(--red)}
 .watchlist-ticker{font-size:14px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .watchlist-price{font-size:13px;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
 .watchlist-price.muted{color:var(--muted)}
@@ -745,9 +749,9 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 input,select,textarea,button{transition:background-color .3s ease,color .3s ease,border-color .3s ease}
 
 /* ── Card shadow (design sync — Apple HIG soft elevation) ─────────── */
-.stat-card,.focus-card,.today-card,.finance-card,.fin-card,.goal-card,.habit-card,
+.stat-card,.focus-card,.today-card,.finance-card,.fin-card,.fin-collapsible,.goal-card,.habit-card,
 .proj-card,.pkg-card,.nw-chart-card,.spending-card,.payday-card,.dash-proj-wrap,
-.ring-stat-card,.jarvis-history-wrap,#acctCardsRow,.tasks-section-body,
+.ring-stat-card,.jarvis-history-wrap,.tasks-section-body,
 .week-cal,.month-cal{box-shadow:var(--card-shadow)}
 
 /* ── COMPACT MODE (#72) ───────────────────────────────────────────── */
@@ -892,20 +896,22 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 /* ── FINANCE BATCH 3 ─────────────────────────────────────────────── */
 .fin-section-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--sub);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .fin-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:16px}
-/* ── Collapsible finance sections (Accounts / Investments / Best Card For /
-   Missed Rewards) — the header used to be plain uppercase text with a tiny
-   13px chevron and no boundary at all on Accounts/Investments specifically
-   (Best Card/Missed Rewards happened to also carry .fin-card, which gave
-   them a background; these two didn't), so the fact they were tappable
-   collapse controls wasn't visually obvious. Header is now its own card-like
-   bar regardless of which other classes the section has. ── */
-.fin-collapsible{margin-bottom:24px}
-.fin-collapse-hdr{cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;transition:background .1s}
+/* ── Collapsible finance sections (Accounts / Investments / Watchlist /
+   Best Card For / Missed Rewards) — header and body render as one card
+   (shared background/border/radius, overflow:hidden so hover/active states
+   still clip to the rounded corners) with a divider line under the header
+   when expanded, instead of the header being its own bordered pill sitting
+   above a second bordered box — that read as two stacked cards. Header
+   padding is deliberately tight: it's a tap target carrying one label, not
+   a content row, so it shouldn't cost as much height as one. ── */
+.fin-collapsible{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:24px;overflow:hidden}
+.fin-collapse-hdr{cursor:pointer;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--sub);transition:background .1s}
 .fin-collapse-hdr:active{background:var(--card2)}
-.fin-collapse-btn{background:none;border:none;color:var(--text);width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;transition:transform .15s}
+.fin-collapsible:not(.collapsed) .fin-collapse-hdr{border-bottom:1px solid var(--border)}
+.fin-collapse-btn{background:none;border:none;color:var(--muted);width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;transition:transform .15s}
 .fin-collapsible.collapsed [data-role="finBody"]{display:none}
 .fin-collapsible.collapsed [data-role="finChevron"]{transform:rotate(180deg)}
-.fin-collapsible.collapsed .fin-collapse-hdr{margin-bottom:0}
+[data-role="finBody"]{padding:14px 16px 16px}
 /* Category bar chart (#21) */
 .cat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .cat-bar-label{font-size:12px;color:var(--sub);width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
