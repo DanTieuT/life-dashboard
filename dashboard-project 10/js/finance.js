@@ -272,7 +272,7 @@ function renderFinanceTab(){
       const rowHtml=h=>{
         const{buyPrice,gainPct}=holdingDerived(h);
         const gainCls=gainPct==null?'muted':gainPct>=0?'green':'red';
-        const gainTxt=gainPct==null?'—':`${gainPct>=0?'▲':'▼'} ${Math.abs(gainPct).toFixed(1)}%`;
+        const gainTxt=gainPct==null?'—':`<span class="arrow">${gainPct>=0?'▲':'▼'}</span>${Math.abs(gainPct).toFixed(1)}%`;
         return`<div class="holdings-table-row">
           <div class="holdings-table-ticker" title="${h.name||''}">${h.ticker||h.name||'—'}</div>
           <div class="holdings-table-cell">${fmtQty(h.quantity)}</div>
