@@ -51,10 +51,28 @@ function renderWatchlistSection(){
       } else if(q&&q.error){
         priceHtml=`<span class="watchlist-price muted" title="${escHtml(q.error)}">—</span>`;
       }
+      // w.addedPrice is stamped the first time a live quote comes back for
+      // this ticker (see refreshWatchlistQuotes) — not at add time, since
+      // adding is deliberately quote-free. Until that first refresh lands
+      // there's nothing to show a "since added" line for.
+      let sinceHtml='';
+      if(w.addedPrice!=null){
+        if(q&&!q.error){
+          const sincePct=(q.currentPrice-w.addedPrice)/w.addedPrice*100;
+          const sinceCls=sincePct>=0?'green':'red';
+          const sinceTxt=`${sincePct>=0?'▲':'▼'} ${Math.abs(sincePct).toFixed(2)}% since`;
+          sinceHtml=`<div class="watchlist-since ${sinceCls}">Added at ${fmtPrice(w.addedPrice)} · ${sinceTxt}</div>`;
+        } else {
+          sinceHtml=`<div class="watchlist-since">Added at ${fmtPrice(w.addedPrice)}</div>`;
+        }
+      }
       return`<div class="watchlist-row-item">
-        <span class="watchlist-ticker">${escHtml(w.ticker)}</span>
-        ${priceHtml}
-        <button class="watchlist-remove" onclick="removeWatchlistTicker('${w.id}')">✕</button>
+        <div class="watchlist-row-main">
+          <span class="watchlist-ticker">${escHtml(w.ticker)}</span>
+          ${priceHtml}
+          <button class="watchlist-remove" onclick="removeWatchlistTicker('${w.id}')">✕</button>
+        </div>
+        ${sinceHtml}
       </div>`;
     }).join('')}`;
 }
@@ -123,6 +141,19 @@ window.refreshWatchlistQuotes=async function(){
       data.quotes.forEach(q=>{map[(q.ticker||'').toUpperCase()]=q;});
       watchlistQuotes=map;
       watchlistQuotesAt=data.asOf;
+      // First live quote for a ticker becomes its "added at" baseline — see
+      // the comment on watchlistQuotes above for why this isn't fetched
+      // eagerly at add time. Only stamp once; later refreshes shouldn't
+      // move the baseline just because an earlier one happened to fail.
+      let baselinesChanged=false;
+      (appData.stockWatchlist||[]).forEach(w=>{
+        const q=map[(w.ticker||'').toUpperCase()];
+        if(q&&!q.error&&w.addedPrice==null){
+          w.addedPrice=q.currentPrice;
+          baselinesChanged=true;
+        }
+      });
+      if(baselinesChanged)saveData();
     } else if(res.ok&&data.quotes&&data.note){
       // Empty-but-OK response (empty watchlist / no API key) — surface the
       // note, but don't stamp watchlistQuotesAt as if a real fetch happened.
@@ -693,13 +724,13 @@ function logGoalBalanceHistory(g){
   }
 }
 
-// Get balance from 7 days ago for weekly change calc
-function goalBalanceWeekAgo(g){
+// Get balance from 30 days ago for monthly change calc
+function goalBalanceMonthAgo(g){
   if(!g.balanceHistory||!g.balanceHistory.length)return null;
-  const sevenAgo=new Date();sevenAgo.setDate(sevenAgo.getDate()-7);
-  const sevenAgoStr=sevenAgo.toLocaleDateString('en-CA');
-  // Find closest entry at or before 7 days ago
-  const older=g.balanceHistory.filter(h=>h.date<=sevenAgoStr);
+  const monthAgo=new Date();monthAgo.setDate(monthAgo.getDate()-30);
+  const monthAgoStr=monthAgo.toLocaleDateString('en-CA');
+  // Find closest entry at or before 30 days ago
+  const older=g.balanceHistory.filter(h=>h.date<=monthAgoStr);
   if(!older.length)return null;
   return older[older.length-1].balance;
 }
@@ -724,40 +755,38 @@ function renderGoals(){
     const target=g.target||1;
     const pct=Math.min(current/target*100,100);
     const done=pct>=100;
-    // Weekly change
-    const weekAgo=goalBalanceWeekAgo(g);
-    let weeklyHtml='';
-    if(weekAgo!==null){
-      const diff=current-weekAgo;
-      if(diff>0) weeklyHtml=`<div class="goal-weekly-change">+ ${fmt(diff)} this week</div>`;
-      else if(diff<0) weeklyHtml=`<div class="goal-weekly-change" style="color:var(--red)">- ${fmt(Math.abs(diff))} this week</div>`;
-      else weeklyHtml=`<div class="goal-weekly-change none">no change this week</div>`;
+    // Monthly change
+    const monthAgo=goalBalanceMonthAgo(g);
+    let monthlyHtml='';
+    if(monthAgo!==null){
+      const diff=current-monthAgo;
+      if(diff>0) monthlyHtml=`<div class="goal-monthly-change">+ ${fmt(diff)} this month</div>`;
+      else if(diff<0) monthlyHtml=`<div class="goal-monthly-change" style="color:var(--red)">- ${fmt(Math.abs(diff))} this month</div>`;
+      else monthlyHtml=`<div class="goal-monthly-change none">no change this month</div>`;
     }
     // Linked account names
     const ids=g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[]);
     const linkedNames=ids.map(id=>(appData.accounts||[]).find(a=>a.id===id)?.name).filter(Boolean);
-    const linkedSub=linkedNames.length?`<div class="goal-sub">Linked: ${linkedNames.join(', ')}</div>`:'';
+    const linkedSub=linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'';
     return `<div class="goal-card">
       <div class="goal-top">
         <div class="goal-icon" style="background:${color}22;color:${color}">${g.emoji||'🎯'}</div>
-        <div style="flex:1">
-          <div class="goal-name">${g.name}</div>
-          ${linkedSub}
-        </div>
+        <div class="goal-pct-badge" style="color:${done?'var(--green)':color}">${done?'🎉':Math.round(pct)+'%'}</div>
+      </div>
+      <div class="goal-name">${g.name}</div>
+      ${linkedSub}
+      <div class="goal-current" style="color:${color}">${fmtM(current)}</div>
+      <div class="goal-bar-track">
+        <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
+      </div>
+      <div class="goal-foot-row">
+        <div class="goal-target">${done?'Goal reached — of '+fmtM(target):'of '+fmtM(target)}</div>
         <div class="goal-actions">
           <button class="goal-action-btn" onclick="openGoalModal('${g.id}')">✏️</button>
           <button class="goal-action-btn" onclick="deleteGoal('${g.id}')" style="color:var(--red)">✕</button>
         </div>
       </div>
-      <div class="goal-amounts">
-        <div class="goal-current" style="color:${color}">${fmtM(current)}</div>
-        <div class="goal-target">of ${fmtM(target)}</div>
-      </div>
-      <div class="goal-bar-track">
-        <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
-      </div>
-      <div class="goal-pct">${done?'🎉 Goal reached!':Math.round(pct)+'% · '+fmtM(target-current)+' to go'}</div>
-      ${weeklyHtml}
+      ${monthlyHtml}
     </div>`;
   }).join('');
 }
