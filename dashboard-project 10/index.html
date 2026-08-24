@@ -460,16 +460,19 @@
         <div id="catBarChart" style="margin-top:14px"></div>
       </div>
 
-      <!-- Savings Rate (#30) -->
+      <!-- Savings Rate (#30) — radial gauge; this number only moves once a
+           month so it earns a heavier treatment than a flat progress bar. -->
       <div class="fin-card" id="savingsRateCard" style="display:none">
         <div class="fin-section-title">Savings Rate</div>
-        <div style="display:flex;align-items:baseline;gap:8px">
-          <span style="font-size:28px;font-weight:700" id="savingsRatePct">—</span>
-          <span style="font-size:13px;color:var(--sub)">of income saved</span>
-        </div>
-        <div class="savings-rate-bar">
-          <div class="savings-rate-track"><div class="savings-rate-fill" id="savingsRateFill"></div></div>
-          <span style="font-size:12px;color:var(--sub)" id="savingsRateDetail"></span>
+        <div class="savings-rate-wrap">
+          <div class="savings-rate-gauge">
+            <svg width="88" height="88" viewBox="0 0 88 88">
+              <circle class="savings-rate-gauge-track" cx="44" cy="44" r="36"/>
+              <circle class="savings-rate-gauge-fill" id="savingsRateFill" cx="44" cy="44" r="36"/>
+            </svg>
+            <span id="savingsRatePct">—</span>
+          </div>
+          <div class="savings-rate-detail">of income saved this month<br><span id="savingsRateDetail"></span></div>
         </div>
       </div>
 

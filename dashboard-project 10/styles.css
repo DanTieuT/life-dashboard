@@ -324,7 +324,7 @@ input,select,textarea{font-family:inherit}
 .txn-name-col{flex:1;min-width:0}
 .txn-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .txn-cat{font-size:12px;color:var(--muted);margin-top:2px}
-.txn-amount{font-size:14px;font-weight:600;flex-shrink:0}
+.txn-amount{font-size:14px;font-weight:650;flex-shrink:0;letter-spacing:-.1px;font-variant-numeric:tabular-nums}
 .txn-amount.out{color:var(--red)}
 .txn-amount.in{color:var(--green)}
 .txn-del{background:none;border:none;color:var(--muted);font-size:15px;padding:4px}
@@ -607,7 +607,6 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 /* ── ACCOUNTS TABLE ──────────────────────────────────────────────── */
 .accounts-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px}
 #acctCardsRow{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
-.accounts-table-head{display:grid;grid-template-columns:1fr 100px 110px;gap:12px;padding:10px 16px;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
 .accounts-table-row{display:grid;grid-template-columns:1fr 100px 110px;gap:12px;padding:10px 16px;border-bottom:.5px solid var(--divider);align-items:center;cursor:pointer;transition:background .08s}
 .accounts-table-row:last-child{border-bottom:none}
 .accounts-table-row:hover,.accounts-table-row:active{background:var(--card2)}
@@ -618,7 +617,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .accounts-table-mask{color:var(--muted);font-weight:400;font-size:12px;letter-spacing:.3px}
 .accounts-table-synced{font-size:10px;font-weight:600;color:var(--green);background:var(--green-dim);padding:1px 6px;border-radius:5px;margin-left:4px;vertical-align:middle}
 .accounts-table-type{font-size:12px;color:var(--sub)}
-.accounts-table-bal{font-size:14px;font-weight:600;text-align:right}
+.accounts-table-bal{font-size:14.5px;font-weight:650;text-align:right;letter-spacing:-.2px;font-variant-numeric:tabular-nums}
 .accounts-table-bal.red{color:var(--red)}
 /* Holdings table — 5 numeric-heavy columns, sized for iPhone width, so it
    gets its own grid instead of reusing accounts-table's 3-column layout
@@ -629,9 +628,9 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .holdings-table-row{display:grid;grid-template-columns:1fr 48px 58px 58px 52px;gap:6px;padding:9px 12px;border-bottom:.5px solid var(--divider);align-items:center}
 .holdings-table-row:last-child{border-bottom:none}
 .holdings-table-ticker{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.holdings-table-cell{font-size:12px;text-align:right;color:var(--text)}
+.holdings-table-cell{font-size:12px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
 .holdings-table-cell.muted{color:var(--muted)}
-.holdings-table-gain{font-size:12px;font-weight:600;text-align:right}
+.holdings-table-gain{font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
 .holdings-table-gain.red{color:var(--red)}
 .holdings-table-gain.green{color:var(--green)}
 .holdings-group-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;padding:12px 12px 4px}
@@ -639,13 +638,14 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .holdings-cash-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
 .holdings-cash-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
 .holdings-cash-row .name{color:var(--sub)}
-.holdings-cash-row .amt{font-weight:600}
+.holdings-cash-row .amt{font-weight:600;font-variant-numeric:tabular-nums}
 .holdings-cash-total{display:flex;justify-content:space-between;align-items:center;padding-top:8px;margin-top:4px;border-top:.5px solid var(--divider);font-size:13px;font-weight:600}
+.holdings-cash-total span:last-child{font-variant-numeric:tabular-nums}
 .holdings-total-row{display:flex;justify-content:space-between;gap:12px;padding:12px;margin-top:4px;border-top:1px solid var(--border)}
 .holdings-total-row>div{display:flex;flex-direction:column;gap:2px}
 .holdings-total-row>div:last-child{align-items:flex-end;text-align:right}
 .holdings-total-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
-.holdings-total-value{font-size:15px;font-weight:600}
+.holdings-total-value{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
 .holdings-total-value.green{color:var(--green)}
 .holdings-total-value.red{color:var(--red)}
 /* Watchlist — tickers Dan's tracking, not owned positions (see Investments
@@ -659,22 +659,29 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .watchlist-refresh-link{color:var(--blue);cursor:pointer;font-weight:600}
 .watchlist-row-item{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:.5px solid var(--divider)}
 .watchlist-row-item:last-child{border-bottom:none}
-.watchlist-ticker{font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.watchlist-price{font-size:13px;color:var(--text);white-space:nowrap}
+.watchlist-ticker{font-size:14px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.watchlist-price{font-size:13px;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
 .watchlist-price.muted{color:var(--muted)}
-.watchlist-change{font-size:12px;font-weight:600;min-width:58px;text-align:right}
-.watchlist-change.green{color:var(--green)}
-.watchlist-change.red{color:var(--red)}
+/* A filled chip, not plain colored text — the direction (up/down) reads as
+   a shape before you read the number, same trick as a semantic status pill. */
+.watchlist-change{font-size:11.5px;font-weight:700;min-width:60px;text-align:center;padding:3px 8px;border-radius:8px;font-variant-numeric:tabular-nums}
+.watchlist-change.green{color:var(--green);background:var(--green-dim)}
+.watchlist-change.red{color:var(--red);background:var(--red-dim)}
 .watchlist-remove{background:none;border:none;color:var(--muted);font-size:14px;padding:4px 2px;line-height:1;cursor:pointer;flex-shrink:0}
 .watchlist-remove:active{color:var(--red)}
 @media(max-width:768px){
-  .accounts-table-head{grid-template-columns:1fr 80px}
   .accounts-table-row{grid-template-columns:1fr 80px}
-  .accounts-table-head span:nth-child(2){display:none}
   .accounts-table-type{display:none}
 }
 /* ── PAYDAY BAR ──────────────────────────────────────────────────── */
-.payday-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:20px}
+/* Soft radial wash marks this as a daily-glance hero, distinct from the
+   flat list-style cards around it — same idea as iOS widgets that get one
+   tinted "important" surface per screen instead of competing everywhere. */
+.payday-card{
+  background:radial-gradient(120% 140% at 0% 0%, var(--green-dim), transparent 60%), var(--card);
+  border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:16px;
+  display:flex;align-items:center;gap:20px;box-shadow:var(--card-shadow);
+}
 .payday-left{min-width:110px;flex-shrink:0}
 .payday-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 .payday-days-line{display:flex;align-items:baseline;gap:5px;margin-bottom:2px}
@@ -684,7 +691,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .payday-right{flex:1}
 .payday-dates-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px}
 .payday-track{height:6px;background:var(--track);border-radius:3px;overflow:hidden;margin-bottom:4px}
-.payday-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
+.payday-fill{height:100%;background:linear-gradient(90deg,var(--green),#5fe085);border-radius:3px;transition:width .4s}
 .payday-pct-label{font-size:11px;color:var(--sub);text-align:right}
 /* ── SPENDING CARD ───────────────────────────────────────────────── */
 .spend-total-row{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}
@@ -916,11 +923,23 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .recur-txn-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .recur-txn-row:last-child{border-bottom:none}
 .recur-freq-badge{font-size:10px;font-weight:600;background:var(--blue-dim);color:var(--blue);padding:2px 8px;border-radius:6px;flex-shrink:0}
-/* Savings rate (#30) */
-#savingsRatePct{letter-spacing:-.3px;font-variant-numeric:tabular-nums}
-.savings-rate-bar{display:flex;align-items:center;gap:10px;margin-top:8px}
-.savings-rate-track{flex:1;height:6px;background:var(--track);border-radius:3px;overflow:hidden}
-.savings-rate-fill{height:100%;border-radius:3px;transition:width .4s}
+/* Letter-avatar in place of a category emoji — a fixed, deterministic color
+   per merchant name (see hashColor() in finance.js) gives every subscription
+   a stable visual anchor, the same trick as the colored dots on Accounts. */
+.sub-avatar{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:750;color:#fff;flex-shrink:0}
+.sub-hero{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.sub-hero-num{font-size:22px;font-weight:750;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+.sub-hero-count{font-size:12.5px;color:var(--sub)}
+/* Savings rate (#30) — radial gauge instead of a flat bar. This number only
+   moves once a month, so it earns a heavier treatment than a progress bar
+   buried among a dozen others on the page. */
+.savings-rate-wrap{display:flex;align-items:center;gap:20px;margin-top:4px}
+.savings-rate-gauge{width:88px;height:88px;flex-shrink:0;position:relative}
+.savings-rate-gauge svg{transform:rotate(-90deg)}
+.savings-rate-gauge-track{fill:none;stroke:var(--track);stroke-width:9}
+.savings-rate-gauge-fill{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .5s ease-out,stroke .3s}
+#savingsRatePct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:750;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+.savings-rate-detail{font-size:13px;color:var(--sub);line-height:1.5}
 /* Net worth sparkline (#25) */
 .nw-sparkline{margin-top:8px}
 /* Transaction search (#26) */

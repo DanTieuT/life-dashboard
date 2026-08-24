@@ -46,7 +46,7 @@ function renderWatchlistSection(){
       let priceHtml='<span class="watchlist-price muted">—</span>';
       if(q&&!q.error){
         const chCls=q.changePercent>=0?'green':'red';
-        const chTxt=`${q.changePercent>=0?'+':''}${q.changePercent.toFixed(2)}%`;
+        const chTxt=`${q.changePercent>=0?'▲':'▼'} ${Math.abs(q.changePercent).toFixed(2)}%`;
         priceHtml=`<span class="watchlist-price">${fmtPrice(q.currentPrice)}</span><span class="watchlist-change ${chCls}">${chTxt}</span>`;
       } else if(q&&q.error){
         priceHtml=`<span class="watchlist-price muted" title="${escHtml(q.error)}">—</span>`;
@@ -182,10 +182,7 @@ function renderFinanceTab(){
     if(!accounts.length){
       acctRow.innerHTML=`<div class="accounts-empty">No accounts yet — click <b>+ Account</b> to add one.</div>`;
     } else {
-      acctRow.innerHTML=`<div class="accounts-table-head">
-          <span>Account</span><span>Type</span><span style="text-align:right">Balance</span>
-        </div>
-        ${accounts.map(a=>{
+      acctRow.innerHTML=`${accounts.map(a=>{
           const meta=ACCT_TYPE_META[a.type]||{label:a.type,color:'#888'};
           const isDebt=a.type==='debt';
           const mask=a.mask||'';
@@ -275,7 +272,7 @@ function renderFinanceTab(){
       const rowHtml=h=>{
         const{buyPrice,gainPct}=holdingDerived(h);
         const gainCls=gainPct==null?'muted':gainPct>=0?'green':'red';
-        const gainTxt=gainPct==null?'—':`${gainPct>=0?'+':'-'}${Math.abs(gainPct).toFixed(1)}%`;
+        const gainTxt=gainPct==null?'—':`${gainPct>=0?'▲':'▼'} ${Math.abs(gainPct).toFixed(1)}%`;
         return`<div class="holdings-table-row">
           <div class="holdings-table-ticker" title="${h.name||''}">${h.ticker||h.name||'—'}</div>
           <div class="holdings-table-cell">${fmtQty(h.quantity)}</div>
@@ -296,7 +293,7 @@ function renderFinanceTab(){
       const totalGain=withBasis.length?totalCurrentOfBasis-totalCostBasis:null;
       const totalGainPct=totalGain!=null&&totalCostBasis!==0?totalGain/totalCostBasis*100:null;
       const totalGainCls=totalGain==null?'muted':totalGain>=0?'green':'red';
-      const totalGainTxt=totalGain==null?'—':`${totalGain>=0?'+':'-'}${fmtPrice(Math.abs(totalGain))}${totalGainPct!=null?` (${totalGain>=0?'+':'-'}${Math.abs(totalGainPct).toFixed(1)}%)`:''}`;
+      const totalGainTxt=totalGain==null?'—':`${totalGain>=0?'▲':'▼'} ${fmtPrice(Math.abs(totalGain))}${totalGainPct!=null?` (${Math.abs(totalGainPct).toFixed(1)}%)`:''}`;
 
       investRow.innerHTML=stockHoldings.length?`<div class="holdings-table-head">
           <span class="holdings-sort-btn" onclick="sortHoldingsBy('ticker')">Ticker${arrow('ticker')}</span>
@@ -993,6 +990,16 @@ function renderSavingsRate(mt){
   const ratePct=document.getElementById('savingsRatePct');
   const fill=document.getElementById('savingsRateFill');
   const detail=document.getElementById('savingsRateDetail');
+  // Radial gauge: circumference for the SVG circle's r=36 (see index.html).
+  // stroke-dashoffset counts down from the full circumference (empty) to 0
+  // (full loop) as the percentage climbs — same math as the mockup's gauge.
+  const GAUGE_C=2*Math.PI*36;
+  const setGauge=(pctClamped,color)=>{
+    if(!fill)return;
+    fill.style.strokeDasharray=GAUGE_C;
+    fill.style.strokeDashoffset=GAUGE_C*(1-pctClamped/100);
+    fill.style.stroke=color;
+  };
   // A real month's rate realistically runs roughly -100% (spent double your
   // income) to 100% (saved it all). Anything far past that floor means the
   // income side is too small to be a real denominator yet — e.g. only a
@@ -1000,14 +1007,14 @@ function renderSavingsRate(mt){
   // actually overspent 20x. Say that plainly instead of a nonsense number.
   if(rate<-200){
     if(ratePct){ratePct.textContent='—';ratePct.style.color='var(--muted)';}
-    if(fill){fill.style.width='0%';}
+    setGauge(0,'var(--track)');
     if(detail)detail.textContent=`Not enough income posted yet this month (${fmtM(income)} in vs ${fmtM(expenses)} spent)`;
     return;
   }
   if(ratePct)ratePct.textContent=rate+'%';
   const color=rate>=20?'var(--green)':rate>=10?'var(--yellow)':'var(--red)';
   if(ratePct)ratePct.style.color=color;
-  if(fill){fill.style.width=Math.max(0,Math.min(rate,100))+'%';fill.style.background=color;}
+  setGauge(Math.max(0,Math.min(rate,100)),color);
   if(detail)detail.textContent=`${fmtM(income)} income · ${fmtM(expenses)} expenses`;
 }
 
@@ -1204,6 +1211,14 @@ function detectSubscriptions(){
   });
   return results.sort((a,b)=>b.monthlyEquivalent-a.monthlyEquivalent);
 }
+// Deterministic color per merchant name — same string always maps to the
+// same hue, so a subscription's avatar stays visually stable across
+// renders without needing a hand-maintained brand-color lookup table.
+function hashColor(str){
+  let h=0;
+  for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;
+  return `hsl(${h%360},58%,46%)`;
+}
 function renderRecurringTxns(){
   const card=document.getElementById('recurringTxnCard');
   const list=document.getElementById('recurringTxnList');
@@ -1213,9 +1228,12 @@ function renderRecurringTxns(){
   card.style.display='';
   const totalMonthly=subs.reduce((s,x)=>s+x.monthlyEquivalent,0);
   const totalEl=document.getElementById('subTotalLine');
-  if(totalEl)totalEl.textContent=`~${fmtM(totalMonthly)}/mo across ${subs.length} subscription${subs.length!==1?'s':''}`;
+  if(totalEl)totalEl.innerHTML=`<div class="sub-hero">
+    <span class="sub-hero-num">${fmtM(totalMonthly)}/mo</span>
+    <span class="sub-hero-count">${subs.length} subscription${subs.length!==1?'s':''}</span>
+  </div>`;
   list.innerHTML=subs.map(s=>`<div class="recur-txn-row">
-    <div class="txn-icon">${CATS_EMOJI[s.category]||'📦'}</div>
+    <div class="sub-avatar" style="background:${hashColor(s.name)}">${escHtml((s.name||'?').charAt(0).toUpperCase())}</div>
     <div style="flex:1;min-width:0">
       <div class="txn-name">${s.name}</div>
       <div class="txn-cat">${s.accountName?s.accountName+' · ':''}${s.nextDate?'next '+fmtNWDate(s.nextDate):'seen once'}</div>
