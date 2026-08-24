@@ -724,13 +724,20 @@ function logGoalBalanceHistory(g){
   }
 }
 
-// Get balance from 30 days ago for monthly change calc
+// Get balance from ~30 days ago for monthly change calc
 function goalBalanceMonthAgo(g){
   if(!g.balanceHistory||!g.balanceHistory.length)return null;
   const monthAgo=new Date();monthAgo.setDate(monthAgo.getDate()-30);
   const monthAgoStr=monthAgo.toLocaleDateString('en-CA');
-  // Find closest entry at or before 30 days ago
-  const older=g.balanceHistory.filter(h=>h.date<=monthAgoStr);
+  // Only trust a reference point that's actually close to 30 days back (within
+  // a 15-day buffer). Without this bound, a goal with sparse history — e.g. one
+  // logged entry from creation day, then nothing until an account got linked —
+  // would fall back to that old one-off snapshot and report a huge, misleading
+  // "change" that's really just "current balance minus whatever the goal
+  // happened to start at." No qualifying entry means we say nothing instead.
+  const minDate=new Date();minDate.setDate(minDate.getDate()-45);
+  const minDateStr=minDate.toLocaleDateString('en-CA');
+  const older=g.balanceHistory.filter(h=>h.date<=monthAgoStr&&h.date>=minDateStr);
   if(!older.length)return null;
   return older[older.length-1].balance;
 }
