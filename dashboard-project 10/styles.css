@@ -982,6 +982,7 @@ input,select,textarea,button{transition:background-color .3s ease,color .3s ease
 .savings-rate-gauge-fill{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .5s ease-out,stroke .3s}
 #savingsRatePct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:750;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
 .savings-rate-detail{font-size:13px;color:var(--sub);line-height:1.5}
+.savings-rate-excess{font-size:18px;font-weight:700;color:var(--text);margin-bottom:2px}
 /* Net worth sparkline (#25) */
 .nw-sparkline{margin-top:8px}
 /* Transaction search (#26) */

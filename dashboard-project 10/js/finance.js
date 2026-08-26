@@ -206,14 +206,17 @@ function renderFinanceTab(){
   const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
   // Extra income this period — real deposits beyond the recognized paycheck
   // (isPaycheckLike, same test monthlyIncome() uses), so a bonus, side gig,
-  // refund, or reimbursement landing this month. Also shown on its own on
-  // the payday card below.
+  // refund, or reimbursement landing this month. Shown on its own on the
+  // payday card below — NOT added into the budget denominator below,
+  // because monthlyIncome() already includes every 'in' transaction this
+  // month (paycheck-shaped ones just get date-shifted; everything else
+  // counts as-is). Adding extraIncome on top of that double-counted it.
   const extraIncome=mt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
-  // "of $X" auto-pulls this month's real income (recognized paycheck +
-  // any extra deposits) rather than requiring a manual Budget Settings
-  // figure — falls back to that manual figure only if no income has
-  // posted yet this period (e.g. early in the month, before payday).
-  const autoIncome=monthlyIncome(appData.transactions,currentMonth,currentYear)+extraIncome;
+  // "of $X" auto-pulls this month's real total income rather than
+  // requiring a manual Budget Settings figure — falls back to that manual
+  // figure only if no income has posted yet this period (e.g. early in
+  // the month, before payday).
+  const autoIncome=monthlyIncome(appData.transactions,currentMonth,currentYear);
   const budget=autoIncome>0?autoIncome:(appData.budget.monthly||appData.budget.income||0);
   const accounts=appData.accounts||[];
 
@@ -1182,6 +1185,7 @@ function renderSavingsRate(mt){
   const ratePct=document.getElementById('savingsRatePct');
   const fill=document.getElementById('savingsRateFill');
   const detail=document.getElementById('savingsRateDetail');
+  const excessEl=document.getElementById('savingsRateExcess');
   // Radial gauge: circumference for the SVG circle's r=36 (see index.html).
   // stroke-dashoffset counts down from the full circumference (empty) to 0
   // (full loop) as the percentage climbs — same math as the mockup's gauge.
@@ -1200,6 +1204,7 @@ function renderSavingsRate(mt){
   if(rate<-200){
     if(ratePct){ratePct.textContent='—';ratePct.style.color='var(--muted)';}
     setGauge(0,'var(--track)');
+    if(excessEl)excessEl.textContent='';
     if(detail)detail.textContent=`Not enough income posted yet this month (${fmtM(income)} in vs ${fmtM(expenses)} spent)`;
     return;
   }
@@ -1207,6 +1212,11 @@ function renderSavingsRate(mt){
   const color=rate>=20?'var(--green)':rate>=10?'var(--yellow)':'var(--red)';
   if(ratePct)ratePct.style.color=color;
   setGauge(Math.max(0,Math.min(rate,100)),color);
+  const excess=income-expenses;
+  if(excessEl){
+    excessEl.textContent=excess>=0?`${fmtM(excess)} left over`:`${fmtM(Math.abs(excess))} over`;
+    excessEl.style.color=excess>=0?'var(--text)':'var(--red)';
+  }
   if(detail)detail.textContent=`${fmtM(income)} income · ${fmtM(expenses)} expenses`;
 }
 

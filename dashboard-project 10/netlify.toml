@@ -2,6 +2,11 @@
   base = "dashboard-project 10"
   publish = "."
   functions = "netlify/functions"
+  # No-op — this is a static HTML/JS app, nothing to build. Explicit so
+  # Netlify's framework auto-detection never runs (it scans the resolved
+  # repo root for config files and can misfire — e.g. an unrelated
+  # config.yaml sitting in ~/Downloads got detected as a Hugo project).
+  command = "true"
 
 [dev]
   publish = "."

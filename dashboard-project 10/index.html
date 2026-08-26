@@ -354,6 +354,31 @@
         <div id="catBarChart" style="margin-top:14px"></div>
       </div>
 
+      <!-- Savings Rate (#30) — radial gauge; this number only moves once a
+           month so it earns a heavier treatment than a flat progress bar.
+           Collapsible like the other Finance sections. -->
+      <div class="fin-collapsible" id="savingsRateCard" data-fin-id="savingsrate" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Savings Rate
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="savings-rate-wrap">
+            <div class="savings-rate-gauge">
+              <svg width="88" height="88" viewBox="0 0 88 88">
+                <circle class="savings-rate-gauge-track" cx="44" cy="44" r="36"/>
+                <circle class="savings-rate-gauge-fill" id="savingsRateFill" cx="44" cy="44" r="36"/>
+              </svg>
+              <span id="savingsRatePct">—</span>
+            </div>
+            <div class="savings-rate-detail">
+              <div class="savings-rate-excess" id="savingsRateExcess"></div>
+              of income saved this month<br><span id="savingsRateDetail"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Goals (folded into Finance; kept near the top per Dan's request;
            collapsible like Accounts/Investments/Watchlist below) ── -->
       <div class="fin-collapsible" data-fin-id="goals">
@@ -411,28 +436,6 @@
         </div>
         <div data-role="finBody">
           <div id="acctCardsRow"></div>
-        </div>
-      </div>
-
-      <!-- Savings Rate (#30) — radial gauge; this number only moves once a
-           month so it earns a heavier treatment than a flat progress bar.
-           Collapsible like the other Finance sections. -->
-      <div class="fin-collapsible" id="savingsRateCard" data-fin-id="savingsrate" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Savings Rate
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="savings-rate-wrap">
-            <div class="savings-rate-gauge">
-              <svg width="88" height="88" viewBox="0 0 88 88">
-                <circle class="savings-rate-gauge-track" cx="44" cy="44" r="36"/>
-                <circle class="savings-rate-gauge-fill" id="savingsRateFill" cx="44" cy="44" r="36"/>
-              </svg>
-              <span id="savingsRatePct">—</span>
-            </div>
-            <div class="savings-rate-detail">of income saved this month<br><span id="savingsRateDetail"></span></div>
-          </div>
         </div>
       </div>
 

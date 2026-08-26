@@ -306,10 +306,11 @@ function renderStats(){
     const bMt=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
     const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
     // Mirrors the Finance tab's spending card — "of $X" auto-pulls this
-    // month's real income (paycheck + extra deposits), falling back to
-    // the manual Budget Settings figure only if none has posted yet.
-    const bExtraIncome=bMt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
-    const bAutoIncome=monthlyIncome(appData.transactions,bMonth,bYear)+bExtraIncome;
+    // month's real total income (monthlyIncome() already includes every
+    // 'in' transaction, not just the paycheck — see finance.js for why it
+    // isn't added to extraIncome again), falling back to the manual
+    // Budget Settings figure only if none has posted yet.
+    const bAutoIncome=monthlyIncome(appData.transactions,bMonth,bYear);
     const budgetAmt=bAutoIncome>0?bAutoIncome:(appData.budget.monthly||appData.budget.income||0);
     const daysInBMonth=new Date(bYear,bMonth+1,0).getDate();
 
