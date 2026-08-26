@@ -852,7 +852,7 @@ function haptic(ms=40){
 
 // ── GLOBAL EXPORTS (inline handlers + cross-module refs resolve via window) ──
 Object.assign(window, {
-  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, escHtml,
+  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, isPaycheckLike, escHtml,
   habitColors, calcStreak, migrateOldSavings, saveData, loadData, renderAll,
   updateThemeBtn, updateHideNumBtn, haptic, updateCompactSwitch, updateFontSizeBtns,
   updateLastBackupLabel,

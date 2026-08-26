@@ -710,6 +710,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .payday-track{height:6px;background:var(--track);border-radius:3px;overflow:hidden;margin-bottom:4px}
 .payday-fill{height:100%;background:linear-gradient(90deg,var(--green),#5fe085);border-radius:3px;transition:width .4s}
 .payday-pct-label{font-size:11px;color:var(--sub);text-align:right}
+.payday-extra{font-size:11px;color:var(--green);text-align:right;margin-top:4px;font-weight:600}
 /* ── SPENDING CARD ───────────────────────────────────────────────── */
 .spend-total-row{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}
 .spend-total-num{font-size:26px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}

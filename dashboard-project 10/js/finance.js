@@ -367,6 +367,21 @@ function renderFinanceTab(){
   if(pEl('paydayEnd')) pEl('paydayEnd').textContent=endLabel+' '+currentYear;
   if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
   if(pEl('paydayPct')) pEl('paydayPct').textContent=pct+'% through pay period';
+  // Extra income this period — real deposits beyond the recognized paycheck
+  // (isPaycheckLike, same test monthlyIncome() uses), so a bonus, side gig,
+  // refund, or reimbursement landing this month shows up here without
+  // muddying the paycheck-driven payday math above. Hidden at $0 so an
+  // empty period doesn't read as "you made nothing extra" noise.
+  const extraIncome=mt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
+  const extraEl=pEl('paydayExtra');
+  if(extraEl){
+    if(extraIncome>0){
+      extraEl.textContent=`+${fmtM(extraIncome)} extra income this period`;
+      extraEl.style.display='';
+    } else {
+      extraEl.style.display='none';
+    }
+  }
 
   // ── Spending total + progress (category breakdown renders via #21 below) ──
   const spendingHdr=document.getElementById('spendingCardHdr');
