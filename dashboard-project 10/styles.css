@@ -268,9 +268,20 @@ input,select,textarea{font-family:inherit}
 .tasks-section{margin-bottom:18px}
 .tasks-section-body{background:none;border-radius:0;padding:0;box-shadow:none}
 .tasks-section-label{font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:.5px solid var(--divider);padding-bottom:5px;margin-bottom:2px}
-.task-row{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:.5px solid var(--divider);transition:background .1s}
-.task-row:last-child{border-bottom:none}
-.task-row:hover{background:rgba(255,255,255,.02)}
+/* Wraps each row so the swipe-reveal panels (edit/delete) sit clipped
+   behind it; the row is opaque and slides over them on swipe. */
+.task-swipe-wrap{position:relative;overflow:hidden}
+.tasks-section-body>.task-swipe-wrap:last-child .task-row{border-bottom:none}
+/* Hidden except mid-swipe — a done/faded row's own opacity would otherwise
+   let these bleed through at the edges even at rest. */
+.task-swipe-action{position:absolute;top:0;bottom:0;width:84px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#fff;padding:0 16px;opacity:0;transition:opacity .1s}
+.task-swipe-wrap.task-swipe-active .task-swipe-action{opacity:1}
+.task-swipe-edit{left:0;background:var(--blue);justify-content:flex-start}
+.task-swipe-delete{right:0;background:var(--red);justify-content:flex-end}
+.task-swipe-icon{font-size:14px;display:inline-block;transition:transform .15s ease}
+.task-swipe-action.armed .task-swipe-icon{transform:scale(1.3)}
+.task-row{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:.5px solid var(--divider);background:var(--bg);position:relative;transition:background .1s}
+.task-row:hover{background:var(--card2)}
 .task-row.done-row{opacity:.4}
 .task-row.recent-done-row{opacity:.65}
 /* Small tap-friendly button with a tiny dot drawn via ::before — keeps a

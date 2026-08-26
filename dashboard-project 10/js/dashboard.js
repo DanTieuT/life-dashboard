@@ -303,12 +303,15 @@ function renderStats(){
   if(budgetNumEl){
     const now=new Date();
     const bMonth=currentMonth,bYear=currentYear;
-    // Mirrors the Finance tab's spending card — "of $X" is this month's
-    // actual income when there's real data, falling back to the manual
-    // Budget Settings figure otherwise (see finance.js renderFinanceTab).
-    const budgetAmt=monthlyIncome(appData.transactions,bMonth,bYear)||appData.budget.monthly||appData.budget.income||0;
     const bMt=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
     const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+    // Mirrors the Finance tab's spending card — "of $X" is the spending
+    // limit set in Budget Settings plus any extra (non-paycheck) income
+    // this period, not this month's total income (see finance.js
+    // renderFinanceTab for why plain income was reverted here).
+    const bExtraIncome=bMt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
+    const bBaseBudget=appData.budget.monthly||appData.budget.income||0;
+    const budgetAmt=bBaseBudget>0?bBaseBudget+bExtraIncome:0;
     const daysInBMonth=new Date(bYear,bMonth+1,0).getDate();
 
     budgetNumEl.textContent=fmtM(bSpent);

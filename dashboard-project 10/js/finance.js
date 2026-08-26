@@ -204,11 +204,19 @@ function renderFinanceTab(){
 
   const mt=appData.transactions.filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
   const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-  // "of $X" tracks this month's actual income (real deposits, via
-  // monthlyIncome()) instead of the fixed number typed into Budget
-  // Settings — falls back to that manual figure only when no real income
-  // has posted yet (e.g. no bank linked, or early in the month).
-  const budget=monthlyIncome(appData.transactions,currentMonth,currentYear)||appData.budget.monthly||appData.budget.income||0;
+  // Extra income this period — real deposits beyond the recognized paycheck
+  // (isPaycheckLike, same test monthlyIncome() uses), so a bonus, side gig,
+  // refund, or reimbursement landing this month. Also shown on its own on
+  // the payday card below.
+  const extraIncome=mt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
+  // "of $X" is the spending limit set in Budget Settings plus any extra
+  // income this period — a real cap Dan defines that flexes up with bonus
+  // money, not this month's total income (income tends to track close to
+  // spend once transfers count as spend too, which made "of $X" mirror the
+  // spent total and hide genuine overspending). Stays 0 (hidden) with no
+  // budget set — extra income alone isn't a limit.
+  const baseBudget=appData.budget.monthly||appData.budget.income||0;
+  const budget=baseBudget>0?baseBudget+extraIncome:0;
   const accounts=appData.accounts||[];
 
   // ── Account Table ───────────────────────────────────────────────
@@ -367,12 +375,8 @@ function renderFinanceTab(){
   if(pEl('paydayEnd')) pEl('paydayEnd').textContent=endLabel+' '+currentYear;
   if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
   if(pEl('paydayPct')) pEl('paydayPct').textContent=pct+'% through pay period';
-  // Extra income this period — real deposits beyond the recognized paycheck
-  // (isPaycheckLike, same test monthlyIncome() uses), so a bonus, side gig,
-  // refund, or reimbursement landing this month shows up here without
-  // muddying the paycheck-driven payday math above. Hidden at $0 so an
-  // empty period doesn't read as "you made nothing extra" noise.
-  const extraIncome=mt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
+  // extraIncome computed above (feeds the spending budget denominator too).
+  // Hidden at $0 so an empty period doesn't read as "you made nothing extra".
   const extraEl=pEl('paydayExtra');
   if(extraEl){
     if(extraIncome>0){
@@ -390,7 +394,11 @@ function renderFinanceTab(){
   const ofEl=document.getElementById('spendingOf');
   const totalFillEl=document.getElementById('spendingTotalFill');
   if(totalEl) totalEl.textContent=fmtM(spent);
-  if(ofEl) ofEl.textContent='of '+fmtM(budget||spent||1);
+  // Was falling back to `spent` when no real budget is set, which made an
+  // over-budget month silently render as "$X of $X" — mirroring spend back
+  // at you instead of showing there's no limit configured. Match the home
+  // page's budget card: only show "of $Y" when there's an actual budget.
+  if(ofEl) ofEl.textContent=budget>0?'of '+fmtM(budget):'';
   if(totalFillEl){
     const pct=budget>0?Math.min(spent/budget,1)*100:(spent>0?100:0);
     totalFillEl.style.width=pct+'%';
@@ -1239,6 +1247,11 @@ function renderCatBarChart(mt){
     const color=DONUT_COLORS[i%DONUT_COLORS.length];
     const limit=catBudgets[cat]||0;
     const overBudget=limit>0&&amt>limit;
+    // Savings is the one category where going over the budgeted amount is
+    // good news (you saved more than planned) — flip the over-budget color
+    // to green instead of the red every other category gets.
+    const overIsGood=overBudget&&cat==='Savings';
+    const overColor=overIsGood?'var(--green)':'var(--red)';
     let barW,amtLabel=fmtM(amt);
     if(limit>0){
       // Bar's full width IS the category's limit — 100% is the budget, not
@@ -1250,8 +1263,8 @@ function renderCatBarChart(mt){
       barW=Math.round(amt/total*100);
     }
     return`<span class="cat-bar-label" title="${cat}">${cat}</span>
-    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${barW}%;background:${overBudget?'var(--red)':color}"></div></div>
-    <span class="cat-bar-amt" style="color:${overBudget?'var(--red)':'var(--text)'}">${amtLabel}</span>`;
+    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${barW}%;background:${overBudget?overColor:color}"></div></div>
+    <span class="cat-bar-amt" style="color:${overBudget?overColor:'var(--text)'}">${amtLabel}</span>`;
   }).join('');
   // Position in plain calc() math (label column + gap, then a fraction of the
   // remaining track width) rather than a bare "%", which would resolve

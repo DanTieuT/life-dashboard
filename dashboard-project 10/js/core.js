@@ -819,15 +819,13 @@ function haptic(ms=40){
     },150);
   });
 })();
-// ── Mobile swipe navigation ────────────────────────────────────────
+// ── Mobile swipe navigation (week calendar only) ────────────────────
+// Page-to-page swipe (left/right between tabs) was removed — it fired on
+// any horizontal swipe anywhere, including on top of task-row swipe-to
+// -edit/delete, which fought with it. Week-calendar swipe nav is unrelated
+// (scoped to .week-cal-wrap) and stays.
 (function(){
-  const TAB_ORDER=['dashboard','tasks','finance','projects','calendar'];
   let _sx=0,_sy=0;
-  function curTabIdx(){
-    const el=document.querySelector('.page.active');
-    if(!el)return 0;
-    return Math.max(0,TAB_ORDER.indexOf(el.id.replace('page-','')));
-  }
   let _swipeOnWeekCal=false;
   document.addEventListener('touchstart',e=>{
     _sx=e.touches[0].clientX;
@@ -835,18 +833,12 @@ function haptic(ms=40){
     _swipeOnWeekCal=!!e.target.closest('.week-cal-wrap');
   },{passive:true});
   document.addEventListener('touchend',e=>{
+    if(!_swipeOnWeekCal||_calView!=='week')return;
     const dx=e.changedTouches[0].clientX-_sx;
     const dy=Math.abs(e.changedTouches[0].clientY-_sy);
     if(Math.abs(dx)<55||dy>Math.abs(dx)*0.8)return;
     if(e.target.closest('.modal,.chat-panel,.bottom-nav'))return;
-    // Swipe on week calendar → navigate weeks
-    if(_swipeOnWeekCal&&_calView==='week'){
-      weekCalNav(dx<0?1:-1);
-      return;
-    }
-    const i=curTabIdx();
-    if(dx<0&&i<TAB_ORDER.length-1)switchTab(TAB_ORDER[i+1]);
-    else if(dx>0&&i>0)switchTab(TAB_ORDER[i-1]);
+    weekCalNav(dx<0?1:-1);
   },{passive:true});
 })();
 

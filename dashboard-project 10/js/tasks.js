@@ -34,16 +34,23 @@ function taskRowHTML(t){
   // both as hover-revealed icons.
   const editBtn=_isTouchDevice?'':`<button class="task-row-edit" onclick="openEditTaskModal('${t.id}')" title="Edit">✎</button>`;
   const delBtn=_isTouchDevice?'':`<button class="task-row-del" onclick="deleteTask('${t.id}')">✕</button>`;
-  return`<div class="task-row${rowCls?' '+rowCls:''}${hasExpand?' has-notes':''}" data-task-id="${t.id}"${_isTouchDevice?'':' draggable="true"'}>
-    <span class="task-drag-handle" title="Drag to reorder">⠿</span>
-    <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')" title="${t.done?'Mark not done':'Mark done'}"></button>
-    ${recurBadge}
-    <span class="task-label${t.done?' done-text':''}" onclick="toggleTask('${t.id}')" style="cursor:pointer;flex:1">${t.name}</span>
-    ${subChip}
-    ${notesBadge}
-    ${duePill}
-    ${editBtn}
-    ${delBtn}
+  // Swipe reveal panels sit behind the row (clipped by .task-swipe-wrap's
+  // overflow:hidden) — the row itself is opaque and slides over them.
+  // Desktop never triggers the JS that moves the row, so these stay hidden.
+  return`<div class="task-swipe-wrap">
+    <div class="task-swipe-action task-swipe-edit"><span class="task-swipe-icon">✎</span>Edit</div>
+    <div class="task-swipe-action task-swipe-delete">Delete<span class="task-swipe-icon">🗑</span></div>
+    <div class="task-row${rowCls?' '+rowCls:''}${hasExpand?' has-notes':''}" data-task-id="${t.id}"${_isTouchDevice?'':' draggable="true"'}>
+      <span class="task-drag-handle" title="Drag to reorder">⠿</span>
+      <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')" title="${t.done?'Mark not done':'Mark done'}"></button>
+      ${recurBadge}
+      <span class="task-label${t.done?' done-text':''}" onclick="toggleTask('${t.id}')" style="cursor:pointer;flex:1">${t.name}</span>
+      ${subChip}
+      ${notesBadge}
+      ${duePill}
+      ${editBtn}
+      ${delBtn}
+    </div>
   </div>${expandRow}`;
 }
 
@@ -507,7 +514,15 @@ function attachTaskTouchGestures(row,sectionBodyEl){
     row.classList.remove('task-dragging');
     document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('task-drag-over'));
   }
-  function resetSwipe(){row.style.transform='';row.style.background='';}
+  const wrap=row.parentElement;
+  const editPanel=wrap&&wrap.querySelector('.task-swipe-edit');
+  const delPanel=wrap&&wrap.querySelector('.task-swipe-delete');
+  function resetSwipe(){
+    row.style.transform='';
+    if(wrap)wrap.classList.remove('task-swipe-active');
+    if(editPanel)editPanel.classList.remove('armed');
+    if(delPanel)delPanel.classList.remove('armed');
+  }
 
   row.addEventListener('touchstart',e=>{
     if(onButton(e.target))return; // let the tapped button do its thing
@@ -525,7 +540,15 @@ function attachTaskTouchGestures(row,sectionBodyEl){
     }
     if(state==='swipe'){
       moved=true;e.preventDefault();
-      if(Math.abs(dx)<120){row.style.transition='none';row.style.transform=`translateX(${dx}px)`;}
+      if(Math.abs(dx)<120){
+        row.style.transition='none';
+        row.style.transform=`translateX(${dx}px)`;
+        if(wrap)wrap.classList.add('task-swipe-active');
+        // "Armed" nudge on the icon once past the commit threshold — hints
+        // that letting go now will fire the action (§8 of apple-design).
+        if(delPanel)delPanel.classList.toggle('armed',dx<-SWIPE_THRESHOLD);
+        if(editPanel)editPanel.classList.toggle('armed',dx>SWIPE_THRESHOLD);
+      }
     } else if(state==='drag'){
       e.preventDefault();
       if(clone)clone.style.top=(e.touches[0].clientY-clone.offsetHeight/2)+'px';
@@ -543,7 +566,7 @@ function attachTaskTouchGestures(row,sectionBodyEl){
       if(dx<-SWIPE_THRESHOLD){
         haptic(25);
         row.style.transform='translateX(-80px)';
-        row.style.background='linear-gradient(to left, var(--red) 80px, var(--card) 80px)';
+        if(delPanel)delPanel.classList.add('armed');
         const r=()=>{resetSwipe();document.removeEventListener('touchstart',r);};
         setTimeout(r,2000);
         document.addEventListener('touchstart',r,{once:true,passive:true});
@@ -551,7 +574,7 @@ function attachTaskTouchGestures(row,sectionBodyEl){
       } else if(dx>SWIPE_THRESHOLD){
         haptic(25);
         row.style.transform='translateX(80px)';
-        row.style.background='linear-gradient(to right, var(--blue) 80px, var(--card) 80px)';
+        if(editPanel)editPanel.classList.add('armed');
         const r=()=>{resetSwipe();document.removeEventListener('touchstart',r);};
         setTimeout(r,2000);
         document.addEventListener('touchstart',r,{once:true,passive:true});
