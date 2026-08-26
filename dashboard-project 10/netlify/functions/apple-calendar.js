@@ -24,6 +24,15 @@ const JULIA_CALENDAR_NAMES = new Set(['Julia’s Calendar', 'Julia Location', 'J
 // Where JARVIS writes new events (add_calendar_event) — override with APPLE_CALENDAR_NAME.
 const WRITE_CALENDAR_NAME = process.env.APPLE_CALENDAR_NAME || 'Shared D+J';
 
+// Every calendar name here that has a possessive uses a curly apostrophe
+// (U+2019) because that's the literal display name on the iCloud account —
+// but LLMs (Telegram JARVIS, the ChatGPT bridge) type a plain ASCII
+// apostrophe (U+0027) by default when they echo a name back in an action's
+// `calendar` field. Normalizing both sides before comparing means that
+// near-universal LLM habit doesn't turn into a silent "Unknown calendar"
+// failure.
+const normalizeApos = (s) => s.replace(/[‘’ʼ]/g, "'");
+
 // Module-level session cache (survives warm invocations)
 let _client = null;
 let _writeCalendar = null;
@@ -327,7 +336,8 @@ async function createEvent({ title, date, time, endDate, endTime, allDay = false
   // response claiming success. Fail loudly instead.
   let target = _writeCalendar;
   if (calendar) {
-    target = _readCalendars.find(c => (typeof c.displayName === 'string' ? c.displayName : '') === calendar);
+    const wanted = normalizeApos(calendar);
+    target = _readCalendars.find(c => normalizeApos(typeof c.displayName === 'string' ? c.displayName : '') === wanted);
     if (!target) throw new Error(`Unknown calendar "${calendar}" — not in the readable calendar list, event NOT created`);
   }
 

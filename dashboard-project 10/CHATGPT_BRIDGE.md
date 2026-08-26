@@ -51,7 +51,7 @@ deliberately just top-5-by-value, no shares/cost-basis — see
 `dashboard-lib.js`'s comment on why). Available tools:
 
 - `get_accounts {type?, institution?, includeClosed?}`
-- `get_transactions {startDate?, endDate?, category?, account?, limit?}`
+- `get_transactions {startDate?, endDate?, category?, merchant?, accountIds?, limit?}` — `accountIds` takes account `id` values from `get_accounts`, not a name; `merchant` is a case-insensitive substring match on the transaction name and is usually the fastest way to isolate one institution's activity without worrying about the default 50 / max 200 result cap.
 - `get_spending_summary {startDate?, endDate?, groupBy?}` — category/merchant/account/week/month totals
 - `get_cash_flow_summary {startDate?, endDate?}`
 - `get_recurring_transactions {}` — detected subscriptions/bills
@@ -86,7 +86,21 @@ update_profile {text}
 add_note {text}
 add_reminder {text, date, time, recurrence}
 cancel_reminder {id, text}
+log_contribution {goalId, name, amount, date}
 ```
+
+`log_contribution` is for money moved into something tracked as a goal that
+Plaid can't see — Roth IRA / brokerage transfers, an envelope-style savings
+goal, anything where the goal card is marked "contribution-tracked" in
+`dashboard-context`'s response (`trackContributions: true`) rather than
+linked to a live account balance. It appends `{amount, date}` to that goal's
+`contributions` array; the goal's `current` is then the sum of contributions
+in the current calendar year (resets to 0 every Jan 1 automatically — no
+action needed). Never use `add_transaction` for this — a transfer into a
+retirement/brokerage account isn't spending, and it's exactly the category
+Plaid drops at ingestion (see the "Known gap" investigated 2026-08-25 in
+memory — the reason this action exists at all). Match the goal by `goalId`
+from `dashboard-context`'s `goals` list, or by `name` if no id is given.
 
 ## Setting up the Custom GPT (do this in the ChatGPT app)
 
@@ -135,15 +149,36 @@ cancel_reminder {id, text}
    > add_note {text}
    > add_reminder {text, date, time, recurrence}
    > cancel_reminder {id, text}
+   > log_contribution {goalId, name, amount, date}
    > ```
    > If `applied` is empty or has a "Warning:" entry, the action failed —
    > say so, don't report success.
    >
+   > add_event vs add_calendar_event: **always use add_calendar_event** for
+   > anything Dan wants "on the calendar" — it's the one that actually writes
+   > to his Apple Calendar and it's what triggers the WHICH CALENDAR question
+   > below. add_event is a legacy dashboard-only stub with no calendar field
+   > — it never touches Apple Calendar and never asks which calendar, so
+   > using it silently skips that question. Don't use it.
+   >
+   > CONTRIBUTIONS: when Dan says he contributed/deposited/put money toward a
+   > goal ("log $793 to my Roth"), use log_contribution against the matching
+   > goal from getDashboardContext's goals list — never add_transaction.
+   > Only works for goals marked contribution-tracked (trackContributions:
+   > true); those track logged amounts, not a linked account balance, and
+   > reset to $0 every Jan 1 on their own. If nothing matches, say so and
+   > suggest Dan create the goal on the dashboard first.
+   >
    > WHICH CALENDAR (ask, don't guess): `calendar` must be exactly one of
    > Shared D+J, Dan's Calendar, Dan's Work Calendar, Julia's Calendar, Home,
-   > Work, Personal Private, Stock Events. Use it if Dan said/implied one;
-   > otherwise ask a lettered list (A-H, same order) before creating. Skip →
-   > defaults to Shared D+J.
+   > Work, Personal Private, Stock Events. Only skip the question if Dan
+   > named one of those eight explicitly (or said something that maps to
+   > exactly one, like "work calendar" or "Julia's calendar") — generic
+   > phrasing like "my calendar," "the calendar," or "add an event" is NOT a
+   > named calendar, even though "Dan's Calendar" is also one of the eight;
+   > treat those as unspecified and ask. Ask as a lettered list (A-H, same
+   > order) before creating. Skip (Dan doesn't answer) → defaults to Shared
+   > D+J.
    >
    > DELETING a calendar event: confirm "Want me to delete [event]?" first —
    > destructive. Every other action type executes immediately.

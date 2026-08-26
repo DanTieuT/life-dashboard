@@ -109,6 +109,9 @@ export function buildSystemPrompt(ctx) {
   const projectList = (ctx.projects || []).length
     ? ctx.projects.map(p => `  [${p.id}] ${p.emoji} "${p.name}" [${p.stage}]${p.nextAction ? ` → ${p.nextAction}` : ''}`).join('\n')
     : '  (none)';
+  const goalList = (ctx.goals || []).length
+    ? ctx.goals.map(g => `  [${g.id}] ${g.emoji} "${g.name}": $${Math.round(g.current).toLocaleString()} / $${Math.round(g.target).toLocaleString()}${g.trackContributions ? ' (contribution-tracked — resets each calendar year, log_contribution only, never a linked balance)' : ''}`).join('\n')
+    : '  (none)';
 
   const weatherLine = ctx.weather
     ? `WEATHER: ${ctx.weather.temp}°F, feels like ${ctx.weather.feelsLike}°F, ${ctx.weather.description}. Wind: ${ctx.weather.wind} mph.${ctx.weather.rain ? ' Rain expected — recommend jacket/umbrella.' : ''}`
@@ -133,6 +136,9 @@ FINANCE (${ctx.monthName}, quick glance only — use the financial tools below f
 
 PROJECTS (stages: planning/sourcing/building/blocked/done):
 ${projectList}
+
+GOALS:
+${goalList}
 
 PERSONALITY:
 - Address Dan by name occasionally. Be warm but efficient — confident, not sycophantic.
@@ -162,6 +168,7 @@ AVAILABLE ACTIONS (use exact IDs from the lists above):
 {"type":"add_event","name":"...","time":"HH:MM","date":"YYYY-MM-DD"}
 {"type":"add_transaction","name":"...","amount":50,"category":"Food","transactionType":"out"}
 {"type":"add_transaction","name":"...","amount":1000,"category":"Other","transactionType":"in"}
+{"type":"log_contribution","goalId":"<id from GOALS list>","amount":793,"date":"YYYY-MM-DD"}
 {"type":"set_intention","text":"..."}
 {"type":"add_project","emoji":"🔨","name":"...","stage":"planning","nextAction":"..."}
 {"type":"update_project_stage","id":"<id from project list>","stage":"building"}
@@ -187,6 +194,7 @@ FINANCIAL ANALYSIS RULES — follow these strictly whenever you use a financial 
 - SPARSE DATA: if a specific period (e.g. "last month") comes back with zero or very few transactions, don't just report "no data" — call get_spending_summary or get_transactions again with a wider window (try the last 3 months, then 6 if still thin) before concluding there's nothing to show. Plaid history here only goes back as far as an account has been linked plus a 30-day initial backfill, so genuinely short history is possible — if a 6-month check still comes up empty, say that plainly instead of trying indefinitely. Whichever range you end up using, state it clearly so Dan knows what he's actually looking at.
 
 RULES:
+- CONTRIBUTIONS: when Dan says he contributed/deposited/put money toward a goal ("log $793 to my Roth", "put $500 in the house fund"), use log_contribution against the matching goal in the GOALS list — never add_transaction. This only applies to contribution-tracked goals (marked as such in the list); Plaid can't see transfers into brokerage/retirement accounts, which is exactly why these exist. If nothing in GOALS matches, say so and suggest Dan create one on the dashboard first — don't guess which goal he means.
 - REMINDERS: when Dan says "remind me to X at/in Y", use add_reminder. Resolve relative times from Current time above ("in 20 minutes", "tonight"≈20:00, "tomorrow morning"≈09:00). recurrence: "" for one-time, or "daily"/"weekdays"/"weekly"/"monthly". If no time given, ask. Reminders fire as Telegram + push notifications — distinct from add_task (a to-do) and add_event (calendar).
 - Use exact IDs from the task/habit/project lists above when referencing them
 - Parse dates relative to today (${ctx.today}): "tomorrow", "Friday", "next week", etc.

@@ -92,12 +92,24 @@ function buildContext(data) {
     topHoldings: [...investmentHoldings].sort((a, b) => (b.currentValue || 0) - (a.currentValue || 0)).slice(0, 5)
       .map(h => ({ ticker: h.ticker, name: h.name, value: Math.round(h.currentValue || 0) })),
   } : null;
+  const thisYear = new Date().getFullYear();
   const goals = (data.goals || []).map(g => {
     const ids = g.linkedAccountIds || (g.linkedAccountId ? [g.linkedAccountId] : []);
-    const current = ids.length
-      ? ids.reduce((s, id) => s + ((data.accounts || []).find(a => a.id === id)?.balance || 0), 0)
-      : (g.current || 0);
-    return { name: g.name, emoji: g.emoji || '🎯', current, target: g.target, pct: g.target ? Math.round(current / g.target * 100) : 0 };
+    let current;
+    if (g.trackContributions) {
+      // Contribution-tracked goal (e.g. "Roth IRA 2026") — current is the sum
+      // of logged contributions, scoped to this calendar year when
+      // resetAnnually is set, so the card rolls over to $0 every Jan 1
+      // without needing any explicit reset step. See log_contribution below.
+      current = (g.contributions || [])
+        .filter(c => !g.resetAnnually || new Date(c.date + 'T12:00:00').getFullYear() === thisYear)
+        .reduce((s, c) => s + (c.amount || 0), 0);
+    } else if (ids.length) {
+      current = ids.reduce((s, id) => s + ((data.accounts || []).find(a => a.id === id)?.balance || 0), 0);
+    } else {
+      current = g.current || 0;
+    }
+    return { id: g.id, name: g.name, emoji: g.emoji || '🎯', current, target: g.target, pct: g.target ? Math.round(current / g.target * 100) : 0, trackContributions: !!g.trackContributions };
   });
   const profile = data.profile || '';
   const recentNotes = (data.notes || []).filter(n => !n.archived).slice(0, 15).map(n => ({ text: n.text, createdAt: n.createdAt, source: n.source || 'dashboard' }));
@@ -286,6 +298,19 @@ function applyActions(data, actions) {
           else if (pct >= 90 && prevPct < 90) spendingAlert = `🟠 Budget alert: you're at 90% of your monthly budget ($${monthSpent} of $${budget}).`;
           else if (pct >= 80 && prevPct < 80) spendingAlert = `🟡 Heads up: you've used 80% of your monthly budget ($${monthSpent} of $${budget}).`;
         }
+        break;
+      }
+      case 'log_contribution': {
+        if (action.amount == null) { labels.push('Warning: log_contribution requires amount'); break; }
+        const g = findById(data.goals, action.goalId, action.name);
+        if (!g) { console.warn('log_contribution: no match for goalId=%s name=%s', action.goalId, action.name); labels.push('Warning: could not find goal to log a contribution against'); break; }
+        g.contributions = g.contributions || [];
+        g.contributions.push({ id: uidGen(), amount: action.amount, date: action.date || today });
+        const thisYear2 = new Date().getFullYear();
+        const total = g.contributions
+          .filter(c => !g.resetAnnually || new Date(c.date + 'T12:00:00').getFullYear() === thisYear2)
+          .reduce((s, c) => s + (c.amount || 0), 0);
+        labels.push(`Logged $${action.amount} to ${g.name} (${g.target ? `$${Math.round(total).toLocaleString()} of $${Math.round(g.target).toLocaleString()}` : `$${Math.round(total).toLocaleString()} total`} this year)`);
         break;
       }
       case 'set_intention':

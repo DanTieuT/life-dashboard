@@ -695,8 +695,22 @@ window.deleteAccount=async function(id){
 // ── GOALS ─────────────────────────────────────────────────────────
 const GOAL_COLORS=['#30d158','#0a84ff','#ff9f0a','#bf5af2','#ff453a','#64d2ff','#ff6eb4','#30d158'];
 
-// Get current balance for a goal (supports multiple linked accounts)
+// Sum of a contribution-tracked goal's logged contributions, scoped to the
+// current calendar year when resetAnnually is set (the default — the whole
+// point is a Roth/brokerage-style annual limit that rolls back to $0 every
+// Jan 1 with no manual reset step).
+function goalContributionTotal(g){
+  const year=new Date().getFullYear();
+  return (g.contributions||[])
+    .filter(c=>!g.resetAnnually||new Date(c.date+'T12:00:00').getFullYear()===year)
+    .reduce((s,c)=>s+(c.amount||0),0);
+}
+
+// Get current balance for a goal — contribution-tracked, linked-account, or
+// plain manual, in that priority order (mirrors dashboard-lib.js's
+// server-side copy of this logic for Telegram/ChatGPT JARVIS).
 function goalCurrentBalance(g){
+  if(g.trackContributions)return goalContributionTotal(g);
   const ids=g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[]);
   if(ids.length){
     const accounts=appData.accounts||[];
@@ -768,11 +782,17 @@ function renderGoals(){
       const mText=diff>0?`+ ${fmt(diff)} this month`:diff<0?`- ${fmt(Math.abs(diff))} this month`:'no change this month';
       monthlyHtml=`<span class="goal-monthly-change" style="color:${mColor}">${mText}</span>`;
     }
-    // Linked account names
+    // Linked account names (balance-linked goals) or contribution count
+    // (contribution-tracked goals) — mutually exclusive by design.
     const ids=g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[]);
     const linkedNames=ids.map(id=>(appData.accounts||[]).find(a=>a.id===id)?.name).filter(Boolean);
-    const linkedSub=linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'';
+    const year=new Date().getFullYear();
+    const yearContribs=(g.contributions||[]).filter(c=>!g.resetAnnually||new Date(c.date+'T12:00:00').getFullYear()===year);
+    const linkedSub=g.trackContributions
+      ?`<div class="goal-sub">${yearContribs.length?`${yearContribs.length} contribution${yearContribs.length!==1?'s':''} in ${year}`:`No contributions logged in ${year} yet`}</div>`
+      :(linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'');
     const pctText=done?'🎉 Goal reached!':`${Math.round(pct)}% · ${fmtM(target-current)} to go`;
+    const logBtn=g.trackContributions?`<button class="goal-pct" style="border:none;background:none;color:${color};cursor:pointer;font-weight:600;padding:0" onclick="openContributionModal('${g.id}')">+ Log contribution</button>`:'';
     return `<div class="goal-card">
       <div class="goal-top">
         <button class="goal-icon" style="background:${color}22;color:${color}" onclick="openGoalModal('${g.id}')" title="Edit ${escHtml(g.name)}">${g.emoji||'🎯'}</button>
@@ -790,6 +810,7 @@ function renderGoals(){
       </div>
       <div class="goal-foot-row">
         <span class="goal-pct">${pctText}</span>
+        ${logBtn}
         ${monthlyHtml}
       </div>
     </div>`;
@@ -805,6 +826,8 @@ window.openGoalModal=function(id){
   document.getElementById('goalTarget').value=g?g.target:'';
   document.getElementById('goalCurrent').value=g?g.current:'';
   document.getElementById('goalDeleteBtn').style.display=g?'':'none';
+  document.getElementById('goalTrackContributions').checked=!!(g&&g.trackContributions);
+  document.getElementById('goalAutoMatchKeyword').value=g?(g.autoMatchKeyword||''):'';
   // Populate multi-select linked accounts
   const wrap=document.getElementById('goalLinkedAccountsWrap');
   const selectedIds=g?(g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[])):[];
@@ -817,8 +840,34 @@ window.openGoalModal=function(id){
   // If any linked account checked, disable current field
   const anyChecked=selectedIds.length>0;
   document.getElementById('goalCurrent').disabled=anyChecked;
+  renderGoalContributionsList(g);
+  toggleGoalTrackMode();
   openModal('goalModal');
 };
+
+// Toggles between "linked account / manual current" mode and "logged
+// contributions" mode in the goal modal — mutually exclusive.
+window.toggleGoalTrackMode=function(){
+  const tracking=document.getElementById('goalTrackContributions').checked;
+  document.getElementById('goalCurrentGroup').style.display=tracking?'none':'';
+  document.getElementById('goalLinkedGroup').style.display=tracking?'none':'';
+  document.getElementById('goalAutoMatchGroup').style.display=tracking?'':'none';
+  document.getElementById('goalContributionsGroup').style.display=tracking?'':'none';
+  const hasId=!!document.getElementById('goalEditId').value;
+  document.getElementById('goalLogContribBtn').style.display=hasId?'':'none';
+  document.getElementById('goalLogContribHint').style.display=hasId?'none':'';
+};
+
+function renderGoalContributionsList(g){
+  const el=document.getElementById('goalContributionsList');
+  const contribs=(g&&g.contributions||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  el.innerHTML=contribs.length
+    ?contribs.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+        <span>${c.date} — ${fmt(c.amount)}${c.plaidTxnId?' <span style="color:var(--muted);font-size:11px">· auto</span>':''}</span>
+        <button onclick="deleteContribution('${g.id}','${c.id}')" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:16px;line-height:1;padding:0 4px" title="Remove">×</button>
+      </div>`).join('')
+    :'<div style="color:var(--muted);font-size:13px">None logged yet</div>';
+}
 
 window.updateGoalCurrentFromAccounts=function(){
   const wrap=document.getElementById('goalLinkedAccountsWrap');
@@ -838,6 +887,8 @@ window.saveGoal=function(){
   const emoji=document.getElementById('goalEmoji').value.trim()||'🎯';
   const target=parseFloat(document.getElementById('goalTarget').value)||0;
   const current=parseFloat(document.getElementById('goalCurrent').value)||0;
+  const trackContributions=document.getElementById('goalTrackContributions').checked;
+  const autoMatchKeyword=document.getElementById('goalAutoMatchKeyword').value.trim().toLowerCase();
   // Get checked account IDs
   const wrap=document.getElementById('goalLinkedAccountsWrap');
   const linkedAccountIds=[...wrap.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
@@ -846,11 +897,49 @@ window.saveGoal=function(){
   if(!appData.goals)appData.goals=[];
   if(editId){
     const g=appData.goals.find(x=>x.id===editId);
-    if(g){Object.assign(g,{name,emoji,target,current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});}
+    if(g){
+      Object.assign(g,{name,emoji,target,trackContributions});
+      if(trackContributions){g.resetAnnually=true;g.contributions=g.contributions||[];g.autoMatchKeyword=autoMatchKeyword||null;}
+      else{Object.assign(g,{current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});g.autoMatchKeyword=null;}
+    }
   } else {
-    appData.goals.push({id:uid(),name,emoji,target,current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null,created:todayStr()});
+    const g={id:uid(),name,emoji,target,created:todayStr()};
+    if(trackContributions)Object.assign(g,{trackContributions:true,resetAnnually:true,contributions:[],autoMatchKeyword:autoMatchKeyword||null});
+    else Object.assign(g,{current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});
+    appData.goals.push(g);
   }
   saveData();closeModal('goalModal');renderGoals();toast('✓ Goal saved');
+};
+
+// ── Contribution logging (for goals tracking money Plaid can't see, like
+// Roth/brokerage transfers) ─────────────────────────────────────────
+window.openContributionModal=function(goalId){
+  if(!goalId)return; // guard: modal button is hidden until the goal has been saved once
+  document.getElementById('contribGoalId').value=goalId;
+  document.getElementById('contribAmount').value='';
+  document.getElementById('contribDate').value=todayStr();
+  openModal('contributionModal');
+};
+
+window.saveContribution=function(){
+  const goalId=document.getElementById('contribGoalId').value;
+  const amount=parseFloat(document.getElementById('contribAmount').value);
+  const date=document.getElementById('contribDate').value||todayStr();
+  if(!goalId||!amount)return;
+  const g=(appData.goals||[]).find(x=>x.id===goalId);
+  if(!g)return;
+  g.contributions=g.contributions||[];
+  g.contributions.push({id:uid(),amount,date});
+  saveData();closeModal('contributionModal');renderGoals();
+  renderGoalContributionsList(g);
+  toast(`✓ Logged ${fmt(amount)}`);
+};
+
+window.deleteContribution=function(goalId,contribId){
+  const g=(appData.goals||[]).find(x=>x.id===goalId);
+  if(!g)return;
+  g.contributions=(g.contributions||[]).filter(c=>c.id!==contribId);
+  saveData();renderGoals();renderGoalContributionsList(g);
 };
 window.deleteGoal=function(id){
   const g=(appData.goals||[]).find(x=>x.id===id);

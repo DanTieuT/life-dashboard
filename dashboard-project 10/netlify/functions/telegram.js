@@ -320,7 +320,7 @@ function buildSystemPrompt(ctx) {
   const completedTodayList = ctx.completedToday?.length ? ctx.completedToday.map(t => `  ✓ "${t.name}"`).join('\n') : '  (none)';
   const habitList = ctx.habits.length ? ctx.habits.map(h => `  [${h.id}] "${h.name}" (${h.type})${h.doneToday ? ' ✓' : ''}`).join('\n') : '  (none)';
   const accountList = (ctx.accounts||[]).length ? ctx.accounts.map(a => `  ${a.name} (${a.type}): $${a.balance.toLocaleString()}`).join('\n') : '  (none)';
-  const goalList = (ctx.goals||[]).length ? ctx.goals.map(g => `  ${g.emoji} ${g.name}: $${g.current.toLocaleString()} / $${g.target.toLocaleString()} (${g.pct}%)`).join('\n') : '  (none)';
+  const goalList = (ctx.goals||[]).length ? ctx.goals.map(g => `  [${g.id}] ${g.emoji} ${g.name}: $${g.current.toLocaleString()} / $${g.target.toLocaleString()} (${g.pct}%)`).join('\n') : '  (none)';
   const eventList = ctx.events.length ? ctx.events.map(e => `  ${e.time} – ${e.name}`).join('\n') : '  (none)';
   const projectList = ctx.projects.length ? ctx.projects.map(p => `  [${p.id}] ${p.emoji} "${p.name}" [${p.stage}]${p.nextAction ? ` → ${p.nextAction}` : ''}`).join('\n') : '  (none)';
 
@@ -456,6 +456,7 @@ AVAILABLE ACTIONS:
 {"type":"update_calendar_event","event_id":"<id from calendar>","title":"...","date":"YYYY-MM-DD","time":"HH:MM","end_time":"HH:MM","location":"...","note":"..."}
 {"type":"delete_calendar_event","event_id":"<id from calendar>","title":"<event title for confirmation>","occurrence_date":"<YYYY-MM-DD, required if the event repeats and Dan means just one date>","delete_series":"<true only if Dan explicitly means every occurrence>"}
 {"type":"add_transaction","name":"...","amount":50,"category":"Food","transactionType":"out"}
+{"type":"log_contribution","goalId":"<goal id from GOALS list>","name":"<exact goal name from list>","amount":793,"date":"YYYY-MM-DD"}
 {"type":"set_intention","text":"..."}
 {"type":"add_project","emoji":"🔨","name":"...","stage":"planning","nextAction":"..."}
 {"type":"update_project_stage","id":"<project id>","name":"<project name>","stage":"building"}
@@ -474,6 +475,7 @@ RULES:
 - REMINDERS: when Dan says "remind me to X at/in Y", use add_reminder. Resolve relative times from Current time above ("in 20 minutes", "tonight"≈20:00, "tomorrow morning"≈09:00). date/time are Pacific. recurrence: "" for one-time, or "daily"/"weekdays"/"weekly"/"monthly" ("every Sunday at 9" → weekly, first occurrence next Sunday). If no time given, ask. Reminders fire as Telegram + push at that time — distinct from add_task (a to-do) and add_event (calendar).
 - Can return multiple actions at once
 - To reschedule a task or change its name, use update_task with the new due date or newName
+- CONTRIBUTIONS: when Dan says he contributed/deposited/put money into something tracked as a goal ("log $793 to Roth IRA", "I just put $500 into the Roth"), use log_contribution against the matching goal from the GOALS list above — never add_transaction for this (transfers into brokerage/retirement accounts aren't spending, and Plaid can't see these anyway, which is the whole reason this exists). Only works for goals with contribution tracking on (they'll show a lower current than target that only grows from these logs, not a linked-account balance). If no matching goal exists, say so and suggest Dan create one on the dashboard first.
 - NOTES vs MEMORY: Two distinct systems:
   • add_note = ideas, thoughts, brain dumps Dan wants to SEE on his dashboard later. Use when Dan says "save this", "note this down", "I want to remember this idea", or brain-dumps something. These show up as cards on his dashboard.
   • save_memory = facts about Dan that make you smarter going forward. Silent background knowledge, not shown as dashboard cards.

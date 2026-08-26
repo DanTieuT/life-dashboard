@@ -731,7 +731,11 @@ function buildChatContext(weather){
   const reminders=(appData.reminders||[]).filter(r=>!r.sent).sort((a,b)=>a.dueAt-b.dueAt).slice(0,10).map(r=>({
     id:r.id,text:r.text,recurrence:r.recurrence||'',when:fmtReminderWhen(r.dueAt),
   }));
-  return{today,dayName,monthName,tasks,habits,events,budget:Math.round(budget),spent,projects,weather:weather||null,monthlyIncome:income,savingsRate,budgetAlert,nowTime,reminders};
+  const goals=(appData.goals||[]).map(g=>{
+    const current=typeof goalCurrentBalance==='function'?goalCurrentBalance(g):(g.current||0);
+    return{id:g.id,name:g.name,emoji:g.emoji||'🎯',current,target:g.target,trackContributions:!!g.trackContributions};
+  });
+  return{today,dayName,monthName,tasks,habits,events,budget:Math.round(budget),spent,projects,weather:weather||null,monthlyIncome:income,savingsRate,budgetAlert,nowTime,reminders,goals};
 }
 
 function appendChatMsg(text,cls){
@@ -774,6 +778,17 @@ async function executeActions(actions){
         appData.transactions.push({id:uid(),name:action.name,amount:action.amount,category:action.category,type:action.transactionType||'out',date:today});
         labels.push(`$${action.amount} – ${action.name}`);
         break;
+      case 'log_contribution':{
+        if(action.amount==null)break;
+        const gl=(appData.goals||[]).find(x=>x.id===action.goalId)
+          ||(action.name?(appData.goals||[]).find(x=>x.name.toLowerCase().includes(action.name.toLowerCase())):null);
+        if(gl){
+          gl.contributions=gl.contributions||[];
+          gl.contributions.push({id:uid(),amount:action.amount,date:action.date||today});
+          labels.push(`Logged $${action.amount} to ${gl.name}`);
+          if(typeof renderGoals==='function')renderGoals();
+        }
+        break;}
       case 'set_intention':
         appData.intention=action.text;
         const iEl=document.getElementById('intentionInput');

@@ -5,6 +5,15 @@
 // pending excluded, initial backfill capped at 30 days). No-ops until
 // PLAID_CLIENT_ID / PLAID_SECRET are configured or no banks are linked.
 // Manual trigger: /plaid-sync?trigger=manual
+//
+// Contribution auto-match: outgoing transfers (personal_finance_category
+// primary TRANSFER_OUT) that mapTransaction() would otherwise drop entirely
+// (see plaid.js — transfers are excluded from spending on purpose) get a
+// second look here against any contribution-tracked goal's
+// `autoMatchKeyword` (case-insensitive substring on the raw Plaid `name`,
+// e.g. "schwab"). A match appends {date, amount, plaidTxnId} to that goal's
+// `contributions` array instead — never to appData.transactions, so it still
+// never counts as spending. Dedup is by plaidTxnId, same as the main feed.
 const admin = require('firebase-admin');
 const plaid = require('./plaid.js');
 
@@ -37,12 +46,17 @@ exports.handler = async () => {
     const data = snap.exists ? snap.data() : {};
     const accounts = data.accounts || [];
     const transactions = data.transactions || [];
+    const goals = data.goals || [];
     const knownTxnIds = new Set(transactions.map(t => t.plaidTxnId).filter(Boolean));
+    const autoMatchGoals = goals.filter(g => g.trackContributions && g.autoMatchKeyword);
+    const knownContribTxnIds = new Set(
+      goals.flatMap(g => (g.contributions || []).map(c => c.plaidTxnId)).filter(Boolean)
+    );
 
     const cutoffDate = new Date(Date.now() - BACKFILL_DAYS * 86400000)
       .toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
 
-    let balancesUpdated = 0, txnsAdded = 0, txnsRemoved = 0;
+    let balancesUpdated = 0, txnsAdded = 0, txnsRemoved = 0, contribsAdded = 0;
 
     for (const itemDoc of itemsSnap.docs) {
       const item = itemDoc.data();
@@ -66,6 +80,24 @@ exports.handler = async () => {
         while (hasMore && guard++ < 20) {
           const res = await plaid.transactionsSync(item.accessToken, cursor);
           for (const pt of res.added) {
+            // Contribution auto-match runs on the raw transfer, independent
+            // of mapTransaction() below (which would just drop it) — see
+            // header comment.
+            if (
+              autoMatchGoals.length
+              && pt.personal_finance_category?.primary === 'TRANSFER_OUT'
+              && !knownContribTxnIds.has(pt.transaction_id)
+              && pt.date >= cutoffDate
+            ) {
+              const name = (pt.name || '').toLowerCase();
+              const goal = autoMatchGoals.find(g => name.includes(g.autoMatchKeyword));
+              if (goal) {
+                goal.contributions = goal.contributions || [];
+                goal.contributions.push({ id: uidGen(), date: pt.date, amount: Math.abs(pt.amount), plaidTxnId: pt.transaction_id });
+                knownContribTxnIds.add(pt.transaction_id);
+                contribsAdded++;
+              }
+            }
             const t = plaid.mapTransaction(pt);
             if (!t || knownTxnIds.has(t.plaidTxnId)) continue;
             if (t.date < cutoffDate) continue; // cap initial backfill
@@ -91,8 +123,8 @@ exports.handler = async () => {
       }
     }
 
-    await ref.update({ accounts, transactions });
-    const summary = `Balances: ${balancesUpdated}, +${txnsAdded} txns, -${txnsRemoved}`;
+    await ref.update({ accounts, transactions, goals });
+    const summary = `Balances: ${balancesUpdated}, +${txnsAdded} txns, -${txnsRemoved}${contribsAdded ? `, +${contribsAdded} contributions` : ''}`;
     console.log('[plaid-sync]', summary);
     return { statusCode: 200, body: summary };
   } catch (e) {
