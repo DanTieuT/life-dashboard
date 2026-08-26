@@ -753,6 +753,19 @@ function goalBalanceMonthAgo(g){
   return older[older.length-1].balance;
 }
 
+// How far through the calendar year "today" is, as a percentage — the same
+// idea as the spending card's pace arrow (spendingPaceTick), but scoped to
+// a year instead of a month. Used to show where a contribution-tracked
+// goal "should" be today to land on its target by Dec 31.
+function yearPacePct(){
+  const now=new Date();
+  const startOfYear=new Date(now.getFullYear(),0,1);
+  const endOfYear=new Date(now.getFullYear()+1,0,1);
+  const dayOfYear=Math.floor((now-startOfYear)/86400000)+1;
+  const daysInYear=Math.round((endOfYear-startOfYear)/86400000);
+  return Math.min(100,(dayOfYear/daysInYear)*100);
+}
+
 function renderGoals(){
   const el=document.getElementById('goalsGrid');
   if(!el)return;
@@ -793,6 +806,21 @@ function renderGoals(){
       :(linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'');
     const pctText=done?'🎉 Goal reached!':`${Math.round(pct)}% · ${fmtM(target-current)} to go`;
     const logBtn=g.trackContributions?`<button class="goal-pct" style="border:none;background:none;color:${color};cursor:pointer;font-weight:600;padding:0" onclick="openContributionModal('${g.id}')">+ Log contribution</button>`:'';
+    // Year-end pace arrow — only meaningful for goals with an annual
+    // deadline (contribution-tracked + resetAnnually implies "hit target by
+    // Dec 31"). Shows where current should be today to stay on pace,
+    // both as a marker on the bar and as a plain-text ahead/behind line
+    // (the marker alone doesn't work on touch — no hover to read its title).
+    let paceArrow='',paceText='';
+    if(g.trackContributions&&g.resetAnnually&&target>0&&!done){
+      const pacePct=yearPacePct();
+      const paceTarget=target*pacePct/100;
+      const diff=current-paceTarget;
+      paceArrow=`<div class="goal-pace-arrow" style="left:${pacePct.toFixed(2)}%" title="On pace today: ${fmtM(Math.round(paceTarget))} toward ${fmtM(target)} by Dec 31"></div>`;
+      const pColor=diff>=0?'var(--green)':'var(--red)';
+      const pText=diff>=0?`${fmtM(diff)} ahead of pace`:`${fmtM(Math.abs(diff))} behind pace`;
+      paceText=`<span class="goal-pace-text" style="color:${pColor}">${pText}</span>`;
+    }
     return `<div class="goal-card">
       <div class="goal-top">
         <button class="goal-icon" style="background:${color}22;color:${color}" onclick="openGoalModal('${g.id}')" title="Edit ${escHtml(g.name)}">${g.emoji||'🎯'}</button>
@@ -805,12 +833,16 @@ function renderGoals(){
         <div class="goal-current" style="color:${color}">${fmtM(current)}</div>
         <div class="goal-target">of ${fmtM(target)}</div>
       </div>
-      <div class="goal-bar-track">
-        <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
+      <div class="goal-bar-track-wrap">
+        ${paceArrow}
+        <div class="goal-bar-track">
+          <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
       </div>
       <div class="goal-foot-row">
         <span class="goal-pct">${pctText}</span>
         ${logBtn}
+        ${paceText}
         ${monthlyHtml}
       </div>
     </div>`;
