@@ -98,12 +98,22 @@ const INTERNAL_DETAILED = new Set([
   'TRANSFER_IN_ACCOUNT_TRANSFER',
 ]);
 
+// Venmo/Cash App/Zelle/PayPal cashouts land in Plaid as
+// TRANSFER_IN_ACCOUNT_TRANSFER — Plaid's heuristic treats the P2P app like
+// "your own linked account" moving money back, same bucket as a transfer
+// between two of your own tracked bank accounts. But this app never tracks
+// a Venmo/Cash App/Zelle balance, so a cashout is the first time this money
+// is seen here — it's genuinely new income, not a double-count.
+const P2P_CASHOUT_RE = /venmo|cash app|cashapp|zelle|paypal/i;
+
 // Plaid transaction → dashboard transaction (or null to skip).
 // Plaid convention: positive amount = money leaving the account.
 function mapTransaction(pt) {
   if (pt.pending) return null;
   const pfc = pt.personal_finance_category || {};
-  if (INTERNAL_DETAILED.has(pfc.detailed)) return null; // credit-card payments / internal transfers
+  const name = pt.merchant_name || pt.name || '';
+  const isP2pCashIn = pt.amount < 0 && pfc.detailed === 'TRANSFER_IN_ACCOUNT_TRANSFER' && P2P_CASHOUT_RE.test(name);
+  if (!isP2pCashIn && INTERNAL_DETAILED.has(pfc.detailed)) return null; // credit-card payments / internal transfers
   // TRANSFER_OUT_SAVINGS is Plaid's specific tag for a transfer landing in a
   // savings account — unlike generic account transfers (excluded above) or
   // investment/retirement transfers (caught by the goal auto-match in
@@ -115,8 +125,10 @@ function mapTransaction(pt) {
   // TRANSFER_IN_SAVINGS / TRANSFER_IN_INVESTMENT_AND_RETIREMENT_FUNDS /
   // TRANSFER_IN_ACCOUNT_TRANSFER, which are just your own money moving back
   // from another account you already own and would double-count as "new"
-  // income if included. Only DEPOSIT is genuinely new money in.
-  const category = pfc.detailed === 'TRANSFER_OUT_SAVINGS' ? 'Savings'
+  // income if included. Only DEPOSIT is genuinely new money in — except a
+  // P2P cashout (isP2pCashIn above), which is also genuinely new.
+  const category = isP2pCashIn ? 'Other'
+    : pfc.detailed === 'TRANSFER_OUT_SAVINGS' ? 'Savings'
     : pfc.detailed === 'TRANSFER_IN_DEPOSIT' ? 'Other'
     : mapTxnCategory(pfc.primary);
   if (!category) return null; // transfers between accounts — skip
