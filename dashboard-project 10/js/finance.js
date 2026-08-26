@@ -805,7 +805,7 @@ function renderGoals(){
       ?`<div class="goal-sub">${yearContribs.length?`${yearContribs.length} contribution${yearContribs.length!==1?'s':''} in ${year}`:`No contributions logged in ${year} yet`}</div>`
       :(linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'');
     const pctText=done?'🎉 Goal reached!':`${Math.round(pct)}% · ${fmtM(target-current)} to go`;
-    const logBtn=g.trackContributions?`<button class="goal-pct" style="border:none;background:none;color:${color};cursor:pointer;font-weight:600;padding:0" onclick="openContributionModal('${g.id}')">+ Log contribution</button>`:'';
+    const logBtn=g.trackContributions?`<button class="goal-log-btn" style="color:${color}" onclick="openContributionModal('${g.id}')">+ Log contribution</button>`:'';
     // Year-end pace arrow — only meaningful for goals with an annual
     // deadline (contribution-tracked + resetAnnually implies "hit target by
     // Dec 31"). Shows where current should be today to stay on pace,
@@ -828,6 +828,7 @@ function renderGoals(){
           <div class="goal-name">${g.name}</div>
           ${linkedSub}
         </div>
+        ${logBtn}
       </div>
       <div class="goal-amounts">
         <div class="goal-current" style="color:${color}">${fmtM(current)}</div>
@@ -841,7 +842,6 @@ function renderGoals(){
       </div>
       <div class="goal-foot-row">
         <span class="goal-pct">${pctText}</span>
-        ${logBtn}
         ${paceText}
         ${monthlyHtml}
       </div>
