@@ -1195,13 +1195,14 @@ function renderCatBarChart(mt){
   // Group by category
   const bycat={};
   spent.forEach(t=>{bycat[t.category]=(bycat[t.category]||0)+t.amount;});
-  let cats=Object.entries(bycat).sort((a,b)=>b[1]-a[1]);
-  // Top 6 + Other
-  if(cats.length>6){
-    const other=cats.slice(6).reduce((s,[,v])=>s+v,0);
-    cats=cats.slice(0,6);
-    if(other>0)cats.push(['Other',other]);
-  }
+  // Every category with spend gets a bar (no top-N cutoff) — sorted by
+  // amount descending, except 'Other' always trails regardless of its
+  // total since it's the catch-all, not a meaningful budget line.
+  let cats=Object.entries(bycat).sort((a,b)=>{
+    if(a[0]==='Other')return 1;
+    if(b[0]==='Other')return -1;
+    return b[1]-a[1];
+  });
   const catBudgets=appData.categoryBudgets||{};
   if(!cats.length){el.innerHTML='<div style="color:var(--muted);font-size:13px">No spending this month</div>';return;}
   // Pace — same day-of-month/days-in-month fraction as the overall spending

@@ -104,7 +104,12 @@ function mapTransaction(pt) {
   if (pt.pending) return null;
   const pfc = pt.personal_finance_category || {};
   if (INTERNAL_DETAILED.has(pfc.detailed)) return null; // credit-card payments / internal transfers
-  const category = mapTxnCategory(pfc.primary);
+  // TRANSFER_OUT_SAVINGS is Plaid's specific tag for a transfer landing in a
+  // savings account — unlike generic account transfers (excluded above) or
+  // investment/retirement transfers (caught by the goal auto-match in
+  // plaid-sync.js instead), this is money you're intentionally setting aside
+  // as part of your budget, so it counts as real spend under 'Savings'.
+  const category = pfc.detailed === 'TRANSFER_OUT_SAVINGS' ? 'Savings' : mapTxnCategory(pfc.primary);
   if (!category) return null; // transfers between accounts — skip
   return {
     plaidTxnId: pt.transaction_id,
