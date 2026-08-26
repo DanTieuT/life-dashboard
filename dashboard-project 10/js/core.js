@@ -264,6 +264,7 @@ window.openProfileDropdown=function(){
   const bd=document.getElementById('pddBackdrop');
   if(!dd)return;
   updateThemeSwitch();
+  updateHideAmountsSwitch();
   updateCompactSwitch();
   updateFontSizeBtns();
   dd.classList.add('open');
@@ -284,6 +285,15 @@ function updateThemeSwitch(){
   if(!toggle)return;
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
   toggle.classList.toggle('on',isDark);
+}
+window.pddToggleHideAmounts=function(){
+  toggleHideNumbers();
+  updateHideAmountsSwitch();
+};
+function updateHideAmountsSwitch(){
+  const toggle=document.getElementById('pddHideAmountsToggle');
+  if(!toggle)return;
+  toggle.classList.toggle('on',numbersHidden);
 }
 // ── DATA ──────────────────────────────────────────────────────────
 // Snapshot of each top-level key as last persisted — used to compute dirty keys

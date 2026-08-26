@@ -77,16 +77,6 @@ input,select,textarea{font-family:inherit}
 .page-hdr-eyebrow{font-size:15px;font-weight:500;color:var(--sub);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .page-hdr-title{font-size:25px;font-weight:700;letter-spacing:.2px;line-height:1.2;white-space:nowrap}
 .page-hdr-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.hdr-icon-btn{width:34px;height:34px;border-radius:17px;background:var(--pill-bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex-shrink:0;padding:0;transition:filter .15s,transform .08s ease-out}
-.hdr-icon-btn:hover{filter:brightness(1.15)}
-.hdr-icon-btn:active{transform:scale(.9)}
-.hdr-icon-btn svg{width:18px;height:18px}
-.hdr-icon-btn svg.icon-eye-open,.hdr-icon-btn svg.icon-eye-closed{width:20px;height:20px}
-.hdr-icon-btn .icon-sun,.hdr-icon-btn .icon-eye-closed{display:none}
-[data-theme="light"] .hdr-icon-btn .icon-moon{display:none}
-[data-theme="light"] .hdr-icon-btn .icon-sun{display:block}
-[data-hide-amounts="true"] .hdr-icon-btn .icon-eye-open{display:none}
-[data-hide-amounts="true"] .hdr-icon-btn .icon-eye-closed{display:block}
 .hdr-avatar{width:38px;height:38px;border-radius:19px;background:linear-gradient(160deg,#8e8e93,#48484a);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;flex-shrink:0;cursor:pointer}
 
 /* ── AUTH SCREEN ─────────────────────────────────────────────────── */
@@ -189,7 +179,7 @@ input,select,textarea{font-family:inherit}
 .add-evt-btn:hover{border-color:var(--green);color:var(--green)}
 
 /* ── HABIT TRACKER ───────────────────────────────────────────────── */
-.habits-section{margin-bottom:28px}
+.habits-section{margin-bottom:20px}
 .section-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
 .section-title{font-size:22px;font-weight:700;margin-bottom:3px}
 .section-sub{font-size:13px;color:var(--sub)}
@@ -275,28 +265,42 @@ input,select,textarea{font-family:inherit}
 .tasks-add-date:focus{border-color:var(--green);color:var(--text)}
 .tasks-add-btn{background:var(--green);color:#000;border:none;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:600;flex-shrink:0}
 .tasks-add-btn:hover{filter:brightness(1.1)}
-.tasks-section{margin-bottom:16px}
-.tasks-section-body{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--card-shadow)}
-.task-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:.5px solid var(--divider);transition:background .1s}
+.tasks-section{margin-bottom:18px}
+.tasks-section-body{background:none;border-radius:0;padding:0;box-shadow:none}
+.tasks-section-label{font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:.5px solid var(--divider);padding-bottom:5px;margin-bottom:2px}
+.task-row{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:.5px solid var(--divider);transition:background .1s}
 .task-row:last-child{border-bottom:none}
 .task-row:hover{background:rgba(255,255,255,.02)}
 .task-row.done-row{opacity:.4}
 .task-row.recent-done-row{opacity:.65}
-.task-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--divider);background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s;cursor:pointer}
-.task-check.checked{background:var(--green);border-color:var(--green);color:#fff}
-.task-label{flex:1;font-size:16px;font-weight:400;outline:none;background:none;border:none;color:var(--text)}
+/* Small tap-friendly button with a tiny dot drawn via ::before — keeps a
+   real hit target (~22px) without the visual weight of a full checkbox */
+.task-check{width:22px;height:22px;border-radius:50%;border:none;background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.task-check::before{content:'';width:6px;height:6px;border-radius:50%;border:1.2px solid var(--sub);transition:all .15s}
+.task-check.checked::before{background:var(--green);border-color:var(--green)}
+.task-label{flex:1;font-size:13px;font-weight:400;outline:none;background:none;border:none;color:var(--text);cursor:pointer}
 .task-label.done-text{text-decoration:line-through;color:var(--muted)}
-.due-text{font-size:12px;font-weight:500;color:var(--sub);flex-shrink:0}
+.due-text{font-size:10px;font-weight:500;color:var(--sub);flex-shrink:0}
 .due-text.overdue{color:var(--red)}
+.overdue-badge{font-size:9px;font-weight:700;color:var(--red);background:var(--red-dim);padding:1px 5px;border-radius:5px;flex-shrink:0;margin-left:4px}
 /* pointer-events:none while hidden — an opacity-0 button still swallows taps,
    which on mobile made "tap task to complete" open the edit modal instead */
-.task-row-del,.task-row-edit{background:none;border:none;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px;flex-shrink:0;opacity:0;pointer-events:none;transition:opacity .15s;cursor:pointer}
+.task-row-del,.task-row-edit{background:none;border:none;color:var(--muted);font-size:12px;padding:4px 6px;border-radius:6px;flex-shrink:0;opacity:0;pointer-events:none;transition:opacity .15s;cursor:pointer}
 .task-row:hover .task-row-del,.task-row:hover .task-row-edit{opacity:.6;pointer-events:auto}
 .task-row-del:hover{color:var(--red);opacity:1}
 .task-row-edit:hover{color:var(--text);opacity:1}
 .done-toggle-btn{background:none;border:none;color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;padding:0}
 .done-toggle-btn:hover{color:var(--sub)}
 .tasks-empty{color:var(--muted);font-size:13px;padding:14px 16px;text-align:center}
+
+/* Minimal density — scoped to the Tasks tab only, shared classes elsewhere untouched */
+#page-tasks .page-hdr-title{font-size:19px}
+#page-tasks .page-hdr-eyebrow{font-size:12px}
+#page-tasks .list-search{font-size:12px;padding:8px 12px;margin-bottom:10px}
+#page-tasks .task-filter-bar{margin-bottom:10px}
+#page-tasks .task-filter-btn{padding:6px 0;font-size:11px}
+.tasks-add-bar{display:block;width:100%;background:var(--green-dim);border:none;border-radius:8px;color:var(--green);font-size:12px;font-weight:600;text-align:center;padding:6px 12px;margin-bottom:14px;cursor:pointer;transition:filter .1s;font-family:inherit}
+.tasks-add-bar:hover{filter:brightness(1.15)}
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
 .nav-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
 
@@ -1136,10 +1140,8 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   .tasks-quick-add{flex-wrap:wrap}
   .tasks-add-input{width:100%}
   .tasks-add-date{flex:1;min-width:0}
-  /* No hover on touch: show the edit pencil as a real (intentional) target;
-     hide delete entirely — swipe-left already deletes on mobile */
-  .task-row-edit{opacity:.45;pointer-events:auto}
-  .task-row-del{display:none}
+  /* Edit/delete buttons aren't rendered on touch at all — swipe-right edits,
+     swipe-left deletes (see attachTaskTouchGestures in tasks.js) */
   /* Handle hidden until a reorder is active (long-press works anywhere) */
   .task-drag-handle{display:none}
 
@@ -1303,3 +1305,31 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 
 /* ── SUBSCRIPTIONS ───────────────────────────────────────────────── */
 .sub-total{font-size:13px;color:var(--sub);margin-bottom:10px}
+
+/* ── DASHBOARD HOME REMODEL ──────────────────────────────────────────
+   Money snapshot (Net Worth + Budget) leads as one merged hero, right
+   below the greeting. Today/Focus sit side-by-side on wider screens.
+   Reminders+Shipping are grouped into one alerts strip. Brain Dump
+   collapses by default to keep the page shorter. ────────────────── */
+
+.dash-section-label{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--sub);margin:2px 2px 8px;display:flex;align-items:center;gap:6px}
+.dash-section-label::before{content:'';width:6px;height:6px;border-radius:3px;background:var(--green);display:inline-block}
+
+.money-hero{position:relative;background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:18px}
+.money-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),rgba(52,199,89,0));z-index:1}
+.money-hero .nw-chart-card,.money-hero .budget-wide-card{background:none;box-shadow:none;border-radius:0;margin-bottom:0;padding-left:18px;padding-right:18px}
+.money-hero .nw-chart-card{padding-bottom:12px}
+.money-hero .budget-wide-card{padding-top:14px;border-top:1px solid var(--border2)}
+
+.dash-row-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;align-items:start}
+.dash-row-2col .today-card,.dash-row-2col .focus-card{margin-bottom:0}
+@media(max-width:860px){
+  .dash-row-2col{grid-template-columns:1fr}
+}
+
+/* Give the dashboard tab a little extra breathing room on wide screens
+   so the 2-col row actually earns its keep — other tabs keep the
+   narrower reading width. */
+@media(min-width:861px){
+  .main:has(#page-dashboard.active){max-width:1180px}
+}

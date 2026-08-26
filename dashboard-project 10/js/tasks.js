@@ -5,11 +5,17 @@ function taskRowHTML(t){
   const today=todayStr();
   let duePill='';
   if(t.due){
-    let cls,label;
-    if(t.due<today){cls='overdue';label=humanDate(t.due,today);}
-    else if(t.due===today){cls='today';label='Today';}
-    else{cls='upcoming';label=humanDate(t.due,today);}
-    duePill=`<span class="due-text ${cls}">${label}</span>`;
+    if(t.due<today){
+      // Overdue: short date + a "+N days" badge instead of humanDate's
+      // "Last Thursday" wording — easier to scan how overdue at a glance.
+      const daysOver=Math.round((new Date(today+'T12:00:00')-new Date(t.due+'T12:00:00'))/86400000);
+      const md=new Date(t.due+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      duePill=`<span class="due-text overdue">${md}</span><span class="overdue-badge">+${daysOver}</span>`;
+    } else {
+      const cls=t.due===today?'today':'upcoming';
+      const label=t.due===today?'Today':humanDate(t.due,today);
+      duePill=`<span class="due-text ${cls}">${label}</span>`;
+    }
   }
   const recentDone=isRecentDone(t);
   const rowCls=t.done?(recentDone?'recent-done-row':'done-row'):'';
@@ -23,16 +29,21 @@ function taskRowHTML(t){
       <span class="subtask-text${s.done?' done':''}">${escHtml(s.text)}</span>
     </div>`).join('');
   const expandRow=hasExpand?`<div class="task-notes-expand" id="tnotes-${t.id}">${t.notes?escHtml(t.notes):''}${subs.length?`<div class="task-subtasks-inline" style="margin-top:${t.notes?'6px':'0'}">${subRows}</div>`:''}</div>`:'';
+  // Touch devices get edit/delete via swipe (see attachTaskTouchGestures) —
+  // no pencil button cluttering the row. Desktop has no swipe, so it keeps
+  // both as hover-revealed icons.
+  const editBtn=_isTouchDevice?'':`<button class="task-row-edit" onclick="openEditTaskModal('${t.id}')" title="Edit">✎</button>`;
+  const delBtn=_isTouchDevice?'':`<button class="task-row-del" onclick="deleteTask('${t.id}')">✕</button>`;
   return`<div class="task-row${rowCls?' '+rowCls:''}${hasExpand?' has-notes':''}" data-task-id="${t.id}"${_isTouchDevice?'':' draggable="true"'}>
     <span class="task-drag-handle" title="Drag to reorder">⠿</span>
-    <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</button>
+    <button class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')" title="${t.done?'Mark not done':'Mark done'}"></button>
     ${recurBadge}
     <span class="task-label${t.done?' done-text':''}" onclick="toggleTask('${t.id}')" style="cursor:pointer;flex:1">${t.name}</span>
     ${subChip}
     ${notesBadge}
     ${duePill}
-    <button class="task-row-edit" onclick="openEditTaskModal('${t.id}')" title="Edit">✎</button>
-    <button class="task-row-del" onclick="deleteTask('${t.id}')">✕</button>
+    ${editBtn}
+    ${delBtn}
   </div>${expandRow}`;
 }
 
@@ -54,7 +65,7 @@ function renderTaskSection(containerId,label,tasks){
   if(!tasks.length){el.innerHTML='';return;}
   el.innerHTML=`<div class="tasks-section">
     <div class="tasks-section-body">
-      <div class="card-title">${label}</div>
+      <div class="tasks-section-label">${label} · ${tasks.length}</div>
       ${tasks.map(t=>taskRowHTML(t)).join('')}
     </div>
   </div>`;
@@ -461,11 +472,11 @@ function attachTaskDragListeners(sectionBodyEl){
     });
   });
 }
-// ── TOUCH GESTURES: long-press reorder + swipe-to-delete (#80) ────
+// ── TOUCH GESTURES: long-press reorder + swipe-to-delete/edit (#80) ────
 // One handler distinguishes intent by first movement:
-//   • quick tap        → nothing here; the child button's onclick fires (complete/edit)
+//   • quick tap        → nothing here; the child button's onclick fires (complete)
 //   • hold ~380ms still → reorder drag (haptic + floating clone)
-//   • horizontal swipe  → left = delete
+//   • horizontal swipe  → left = delete, right = edit (Apple Mail/Reminders-style)
 //   • vertical move     → native scroll (we never preventDefault in that case)
 function attachTaskTouchGestures(row,sectionBodyEl){
   if(row._gesturesAttached)return;
@@ -514,7 +525,7 @@ function attachTaskTouchGestures(row,sectionBodyEl){
     }
     if(state==='swipe'){
       moved=true;e.preventDefault();
-      if(dx<0&&dx>-120){row.style.transition='none';row.style.transform=`translateX(${dx}px)`;}
+      if(Math.abs(dx)<120){row.style.transition='none';row.style.transform=`translateX(${dx}px)`;}
     } else if(state==='drag'){
       e.preventDefault();
       if(clone)clone.style.top=(e.touches[0].clientY-clone.offsetHeight/2)+'px';
@@ -537,6 +548,14 @@ function attachTaskTouchGestures(row,sectionBodyEl){
         setTimeout(r,2000);
         document.addEventListener('touchstart',r,{once:true,passive:true});
         if(dx<-100){resetSwipe();if(row.dataset.taskId)deleteTask(row.dataset.taskId);}
+      } else if(dx>SWIPE_THRESHOLD){
+        haptic(25);
+        row.style.transform='translateX(80px)';
+        row.style.background='linear-gradient(to right, var(--blue) 80px, var(--card) 80px)';
+        const r=()=>{resetSwipe();document.removeEventListener('touchstart',r);};
+        setTimeout(r,2000);
+        document.addEventListener('touchstart',r,{once:true,passive:true});
+        if(dx>100){resetSwipe();if(row.dataset.taskId)openEditTaskModal(row.dataset.taskId);}
       } else resetSwipe();
     } else if(state==='drag'){
       const under=rowUnder(e.changedTouches[0].clientX,e.changedTouches[0].clientY);

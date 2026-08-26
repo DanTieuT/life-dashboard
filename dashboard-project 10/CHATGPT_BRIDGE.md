@@ -176,9 +176,19 @@ from `dashboard-context`'s `goals` list, or by `name` if no id is given.
    > exactly one, like "work calendar" or "Julia's calendar") — generic
    > phrasing like "my calendar," "the calendar," or "add an event" is NOT a
    > named calendar, even though "Dan's Calendar" is also one of the eight;
-   > treat those as unspecified and ask. Ask as a lettered list (A-H, same
-   > order) before creating. Skip (Dan doesn't answer) → defaults to Shared
-   > D+J.
+   > treat those as unspecified and ask. Ask using this exact list, all
+   > eight lines every time, verbatim — do not shorten it or drop any
+   > option even if one seems unlikely (e.g. Stock Events):
+   > "Which calendar?
+   > A) Shared D+J
+   > B) Dan's Calendar
+   > C) Dan's Work Calendar
+   > D) Julia's Calendar
+   > E) Home
+   > F) Work
+   > G) Personal Private
+   > H) Stock Events"
+   > Skip (Dan doesn't answer) → defaults to Shared D+J.
    >
    > DELETING a calendar event: confirm "Want me to delete [event]?" first —
    > destructive. Every other action type executes immediately.
