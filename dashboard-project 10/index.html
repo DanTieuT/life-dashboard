@@ -522,11 +522,19 @@
         </div>
       </div>
 
-      <!-- Subscriptions — auto-detected from recurring merchant/amount/interval patterns -->
-      <div class="fin-card" id="recurringTxnCard" style="display:none">
-        <div class="fin-section-title" style="margin-bottom:2px">Subscriptions</div>
-        <div class="sub-total" id="subTotalLine"></div>
-        <div id="recurringTxnList"></div>
+      <!-- Subscriptions — auto-detected from recurring merchant/amount/interval
+           patterns. Collapsible like the other Finance sections; hidden
+           entirely until detectSubscriptions() finds something (see
+           renderRecurringTxns's display toggle, unrelated to collapse state). -->
+      <div class="fin-collapsible" id="recurringTxnCard" data-fin-id="subscriptions" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Subscriptions
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="sub-total" id="subTotalLine"></div>
+          <div id="recurringTxnList"></div>
+        </div>
       </div>
 
 
