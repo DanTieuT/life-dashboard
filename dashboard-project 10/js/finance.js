@@ -209,14 +209,12 @@ function renderFinanceTab(){
   // refund, or reimbursement landing this month. Also shown on its own on
   // the payday card below.
   const extraIncome=mt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
-  // "of $X" is the spending limit set in Budget Settings plus any extra
-  // income this period — a real cap Dan defines that flexes up with bonus
-  // money, not this month's total income (income tends to track close to
-  // spend once transfers count as spend too, which made "of $X" mirror the
-  // spent total and hide genuine overspending). Stays 0 (hidden) with no
-  // budget set — extra income alone isn't a limit.
-  const baseBudget=appData.budget.monthly||appData.budget.income||0;
-  const budget=baseBudget>0?baseBudget+extraIncome:0;
+  // "of $X" auto-pulls this month's real income (recognized paycheck +
+  // any extra deposits) rather than requiring a manual Budget Settings
+  // figure — falls back to that manual figure only if no income has
+  // posted yet this period (e.g. early in the month, before payday).
+  const autoIncome=monthlyIncome(appData.transactions,currentMonth,currentYear)+extraIncome;
+  const budget=autoIncome>0?autoIncome:(appData.budget.monthly||appData.budget.income||0);
   const accounts=appData.accounts||[];
 
   // ── Account Table ───────────────────────────────────────────────

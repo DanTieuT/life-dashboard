@@ -305,13 +305,12 @@ function renderStats(){
     const bMonth=currentMonth,bYear=currentYear;
     const bMt=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
     const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-    // Mirrors the Finance tab's spending card — "of $X" is the spending
-    // limit set in Budget Settings plus any extra (non-paycheck) income
-    // this period, not this month's total income (see finance.js
-    // renderFinanceTab for why plain income was reverted here).
+    // Mirrors the Finance tab's spending card — "of $X" auto-pulls this
+    // month's real income (paycheck + extra deposits), falling back to
+    // the manual Budget Settings figure only if none has posted yet.
     const bExtraIncome=bMt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
-    const bBaseBudget=appData.budget.monthly||appData.budget.income||0;
-    const budgetAmt=bBaseBudget>0?bBaseBudget+bExtraIncome:0;
+    const bAutoIncome=monthlyIncome(appData.transactions,bMonth,bYear)+bExtraIncome;
+    const budgetAmt=bAutoIncome>0?bAutoIncome:(appData.budget.monthly||appData.budget.income||0);
     const daysInBMonth=new Date(bYear,bMonth+1,0).getDate();
 
     budgetNumEl.textContent=fmtM(bSpent);
