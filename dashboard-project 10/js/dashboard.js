@@ -303,7 +303,10 @@ function renderStats(){
   if(budgetNumEl){
     const now=new Date();
     const bMonth=currentMonth,bYear=currentYear;
-    const budgetAmt=appData.budget.monthly||appData.budget.income||0;
+    // Mirrors the Finance tab's spending card — "of $X" is this month's
+    // actual income when there's real data, falling back to the manual
+    // Budget Settings figure otherwise (see finance.js renderFinanceTab).
+    const budgetAmt=monthlyIncome(appData.transactions,bMonth,bYear)||appData.budget.monthly||appData.budget.income||0;
     const bMt=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
     const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
     const daysInBMonth=new Date(bYear,bMonth+1,0).getDate();

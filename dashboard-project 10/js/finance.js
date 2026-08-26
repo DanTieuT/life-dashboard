@@ -204,7 +204,11 @@ function renderFinanceTab(){
 
   const mt=appData.transactions.filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
   const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-  const budget=appData.budget.monthly||appData.budget.income||0;
+  // "of $X" tracks this month's actual income (real deposits, via
+  // monthlyIncome()) instead of the fixed number typed into Budget
+  // Settings — falls back to that manual figure only when no real income
+  // has posted yet (e.g. no bank linked, or early in the month).
+  const budget=monthlyIncome(appData.transactions,currentMonth,currentYear)||appData.budget.monthly||appData.budget.income||0;
   const accounts=appData.accounts||[];
 
   // ── Account Table ───────────────────────────────────────────────

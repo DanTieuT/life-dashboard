@@ -109,7 +109,16 @@ function mapTransaction(pt) {
   // investment/retirement transfers (caught by the goal auto-match in
   // plaid-sync.js instead), this is money you're intentionally setting aside
   // as part of your budget, so it counts as real spend under 'Savings'.
-  const category = pfc.detailed === 'TRANSFER_OUT_SAVINGS' ? 'Savings' : mapTxnCategory(pfc.primary);
+  //
+  // TRANSFER_IN_DEPOSIT is the mirror case on the income side — an actual
+  // cash/check/external deposit landing in the account, as opposed to
+  // TRANSFER_IN_SAVINGS / TRANSFER_IN_INVESTMENT_AND_RETIREMENT_FUNDS /
+  // TRANSFER_IN_ACCOUNT_TRANSFER, which are just your own money moving back
+  // from another account you already own and would double-count as "new"
+  // income if included. Only DEPOSIT is genuinely new money in.
+  const category = pfc.detailed === 'TRANSFER_OUT_SAVINGS' ? 'Savings'
+    : pfc.detailed === 'TRANSFER_IN_DEPOSIT' ? 'Other'
+    : mapTxnCategory(pfc.primary);
   if (!category) return null; // transfers between accounts — skip
   return {
     plaidTxnId: pt.transaction_id,
