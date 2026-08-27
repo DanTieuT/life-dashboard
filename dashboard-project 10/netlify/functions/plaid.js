@@ -98,12 +98,15 @@ const INTERNAL_DETAILED = new Set([
   'TRANSFER_IN_ACCOUNT_TRANSFER',
 ]);
 
-// Venmo/Cash App/Zelle/PayPal cashouts land in Plaid as
-// TRANSFER_IN_ACCOUNT_TRANSFER — Plaid's heuristic treats the P2P app like
-// "your own linked account" moving money back, same bucket as a transfer
-// between two of your own tracked bank accounts. But this app never tracks
-// a Venmo/Cash App/Zelle balance, so a cashout is the first time this money
-// is seen here — it's genuinely new income, not a double-count.
+// Venmo/Cash App/Zelle/PayPal cashouts land in Plaid tagged as some flavor
+// of transfer — most often TRANSFER_IN_ACCOUNT_TRANSFER (Plaid's heuristic
+// treats the P2P app like "your own linked account" moving money back,
+// same bucket as a transfer between two of Dan's own tracked bank
+// accounts), but not reliably always that exact tag. Matched by name
+// instead of any specific Plaid category so it wins regardless of which
+// transfer-shaped tag Plaid picks — this app never tracks a Venmo/Cash
+// App/Zelle/PayPal balance, so a cashout landing in checking is genuinely
+// new income, not a double-count, no matter how Plaid categorized it.
 const P2P_CASHOUT_RE = /venmo|cash app|cashapp|zelle|paypal/i;
 
 // Accounts that only ever receive Dan's own money moving in from an account
@@ -127,7 +130,7 @@ function mapTransaction(pt, acct) {
   // that already counted as income (or already excluded) on the sending
   // side. Checked before everything else below.
   if (pt.amount < 0 && acct && TRANSFER_DESTINATION_RE.test(acct.name || '')) return null;
-  const isP2pCashIn = pt.amount < 0 && pfc.detailed === 'TRANSFER_IN_ACCOUNT_TRANSFER' && P2P_CASHOUT_RE.test(name);
+  const isP2pCashIn = pt.amount < 0 && P2P_CASHOUT_RE.test(name);
   if (!isP2pCashIn && INTERNAL_DETAILED.has(pfc.detailed)) return null; // credit-card payments / internal transfers
   // TRANSFER_OUT_SAVINGS is Plaid's specific tag for a transfer landing in a
   // savings account — unlike generic account transfers (excluded above) or
