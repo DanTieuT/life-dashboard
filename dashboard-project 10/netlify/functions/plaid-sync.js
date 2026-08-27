@@ -98,7 +98,7 @@ exports.handler = async () => {
                 contribsAdded++;
               }
             }
-            const t = plaid.mapTransaction(pt);
+            const t = plaid.mapTransaction(pt, accounts.find(a => a.plaidAccountId === pt.account_id));
             if (!t || knownTxnIds.has(t.plaidTxnId)) continue;
             if (t.date < cutoffDate) continue; // cap initial backfill
             knownTxnIds.add(t.plaidTxnId);
@@ -106,7 +106,7 @@ exports.handler = async () => {
             txnsAdded++;
           }
           for (const pt of res.modified) {
-            const t = plaid.mapTransaction(pt);
+            const t = plaid.mapTransaction(pt, accounts.find(a => a.plaidAccountId === pt.account_id));
             const existing = transactions.find(x => x.plaidTxnId === pt.transaction_id);
             if (existing && t) Object.assign(existing, { name: t.name, amount: t.amount, type: t.type, category: t.category, date: t.date });
           }

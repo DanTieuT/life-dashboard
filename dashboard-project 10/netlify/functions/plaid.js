@@ -106,12 +106,27 @@ const INTERNAL_DETAILED = new Set([
 // is seen here — it's genuinely new income, not a double-count.
 const P2P_CASHOUT_RE = /venmo|cash app|cashapp|zelle|paypal/i;
 
+// Accounts that only ever receive Dan's own money moving in from an account
+// he already tracks (never a primary income-receiving account) — matched by
+// name since there's no dedicated "role" field on an account. Plaid can't
+// always tell a cross-institution transfer (e.g. Chase → Wealthfront) is
+// internal the way it can within one bank, so it sometimes tags the
+// receiving leg as a genuine TRANSFER_IN_DEPOSIT — this is the backstop.
+const TRANSFER_DESTINATION_RE = /wealthfront/i;
+
 // Plaid transaction → dashboard transaction (or null to skip).
 // Plaid convention: positive amount = money leaving the account.
-function mapTransaction(pt) {
+// `acct` is the local (already-linked) account this transaction posted to —
+// see plaid-sync.js, which looks it up by pt.account_id before calling this.
+function mapTransaction(pt, acct) {
   if (pt.pending) return null;
   const pfc = pt.personal_finance_category || {};
   const name = pt.merchant_name || pt.name || '';
+  // Money arriving in a pure transfer-destination account is never new
+  // income, regardless of how Plaid categorized it — it's Dan's own money
+  // that already counted as income (or already excluded) on the sending
+  // side. Checked before everything else below.
+  if (pt.amount < 0 && acct && TRANSFER_DESTINATION_RE.test(acct.name || '')) return null;
   const isP2pCashIn = pt.amount < 0 && pfc.detailed === 'TRANSFER_IN_ACCOUNT_TRANSFER' && P2P_CASHOUT_RE.test(name);
   if (!isP2pCashIn && INTERNAL_DETAILED.has(pfc.detailed)) return null; // credit-card payments / internal transfers
   // TRANSFER_OUT_SAVINGS is Plaid's specific tag for a transfer landing in a
