@@ -1458,6 +1458,38 @@ function renderRecurringTxns(){
   </div>`).join('');
 }
 
+// ── Likely duplicate detector ───────────────────────────────────────
+// Flags a manually-entered transaction that closely matches ANOTHER entry
+// in the SAME direction (both money in, or both money out) within a few
+// days and a close amount — two records of what's probably the same real
+// event. The exact shape of a real incident: Dan hand-typed a Venmo/ATM
+// deposit before Plaid had synced it, and the real synced record showed up
+// a day later as a separate line, silently double-counting it. Only fires
+// when at least one side is manual — two Plaid-synced entries matching
+// this way is normal (e.g. two identical recurring charges), not a
+// duplicate. Pure UI hint: never auto-merges or deletes anything, just
+// flags for review — a false positive here should cost a glance, not data.
+function findLikelyDuplicateIds(transactions){
+  const flagged=new Set();
+  const DAY=86400000;
+  const list=transactions||[];
+  for(let i=0;i<list.length;i++){
+    const a=list[i];
+    if(a.type!=='in'&&a.type!=='out')continue;
+    for(let j=i+1;j<list.length;j++){
+      const b=list[j];
+      if(a.type!==b.type)continue; // same direction — two records of one event
+      if(a.source==='plaid'&&b.source==='plaid')continue; // both synced — not our concern here
+      const amtTol=Math.max(3,a.amount*0.03);
+      if(Math.abs(a.amount-b.amount)>amtTol)continue;
+      const dayGap=Math.abs(new Date(a.date)-new Date(b.date))/DAY;
+      if(dayGap>3)continue;
+      flagged.add(a.id);flagged.add(b.id);
+    }
+  }
+  return flagged;
+}
+
 // ── #26: Transaction search ───────────────────────────────────────
 function renderTxnListFiltered(mt){
   const searchEl=document.getElementById('txnSearch');
@@ -1472,16 +1504,21 @@ function renderTxnListFiltered(mt){
   if(q)sorted=sorted.filter(t=>(t.name||'').toLowerCase().includes(q)||(t.category||'').toLowerCase().includes(q));
   const shown=sorted.slice(0,50);
   if(countEl)countEl.textContent=q?`${shown.length} result${shown.length!==1?'s':''}`:'';
+  const dupIds=findLikelyDuplicateIds(mt);
   txnEl.innerHTML=!shown.length
     ?`<div class="empty-state" style="padding:30px">${q?'No matching transactions':'No transactions this month'}</div>`
     :shown.map(t=>{
       const acct=byPlaidId[t.plaidAccountId];
       const acctLabel=acct?acct.name+(acct.mask?' ••'+acct.mask:''):'';
+      const isManual=t.source!=='plaid';
+      const manualBadge=isManual?'<span class="txn-manual-badge" title="Entered by hand, not synced from your bank">manual</span>':'';
+      const dupBadge=dupIds.has(t.id)?'<span class="txn-dup-badge" title="Closely matches another entry within a few days — might be the same real transfer counted twice. Tap to review.">⚠ possible duplicate</span>':'';
       return`<div class="txn-item" onclick="openEditTxnModal('${t.id}')">
       <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>
       <div class="txn-name-col">
         <div class="txn-name">${escHtml(t.name)}${t.recurring?' <span style="font-size:10px;color:var(--blue)">↻</span>':''}</div>
         <div class="txn-cat">${t.category||'Other'} · ${t.date}${acctLabel?' · '+acctLabel:''}</div>
+        ${(manualBadge||dupBadge)?`<div class="txn-badges">${manualBadge}${dupBadge}</div>`:''}
       </div>
       <span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>
       <button class="txn-del" onclick="event.stopPropagation();deleteTxn('${t.id}')">✕</button>
