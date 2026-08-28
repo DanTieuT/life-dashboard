@@ -1349,3 +1349,50 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 @media(min-width:861px){
   .main:has(#page-dashboard.active){max-width:1180px}
 }
+
+/* ── DENSITY PASS — carry the Finance page's type + spacing scale to the
+   rest of the app ───────────────────────────────────────────────────────
+   The Finance tab was built tighter than Dashboard/Tasks/Projects: card
+   headers at ~13px, primary numbers at ~26px, card padding 16–18px,
+   16px between cards, list rows at 13–14px, captions at 11px. These
+   overrides pull the other pages down to that same scale. Grouped last
+   so the values are easy to find and tune. Calendar is already at this
+   density and is left alone. ───────────────────────────────────────── */
+
+/* Shared list controls (search + filter pills) — same as the Tasks tab
+   already uses, now applied everywhere (Projects search, etc.) */
+.list-search{font-size:12px;padding:8px 12px;margin-bottom:10px}
+.task-filter-bar{margin-bottom:12px}
+.proj-filter-bar{margin-bottom:12px}
+.proj-filter-btn{font-size:12px;padding:6px 11px}
+
+/* Dashboard — Today / Focus cards */
+.card-sub{margin-bottom:12px}
+.today-hdr{margin-bottom:12px}
+.focus-text{font-size:14px}
+.focus-item{padding:7px 0}
+
+/* Dashboard — Habit tracker section */
+.section-title{font-size:17px}
+.section-hdr{margin-bottom:12px}
+.habits-section{margin-bottom:16px}
+.habit-card-top{margin-bottom:12px}
+.habit-name{font-size:14px}
+.habit-icon{width:36px;height:36px;font-size:17px}
+
+/* Dashboard — Projects widget + JARVIS history */
+.money-hero{margin-bottom:16px}
+.dash-proj-hdr{padding:14px 16px 10px}
+.dash-proj-name{font-size:14px}
+.dash-proj-row{padding:11px 16px}
+.dash-proj-cols{padding:0 16px 8px}
+.jarvis-history-hdr{padding:12px 16px 10px}
+.jarvis-history-title{font-size:13px}
+
+/* Projects tab — card grid + list rows */
+.proj-card-name{font-size:14.5px}
+.proj-card-desc{margin-bottom:8px}
+.proj-row{padding:12px 16px}
+.proj-table-head{padding:10px 16px}
+.proj-group-hdr{padding:12px 16px 8px}
+.proj-controls{margin-bottom:14px}
