@@ -234,7 +234,7 @@ function renderFinanceTab(){
             <div class="accounts-table-name-col">
               <div class="accounts-table-name">
                 <span class="accounts-table-dot" style="background:${meta.color}"></span>
-                <span>${a.name}${mask?` <span class="accounts-table-mask">••${mask}</span>`:''}${a.source==='plaid'?` <span class="accounts-table-synced" title="Synced via Plaid">${a.updatedAt?fmtTimeAgo(new Date(a.updatedAt)):'Synced'}</span>`:''}</span>
+                <span>${a.name}${mask?` <span class="accounts-table-mask">••${mask}</span>`:''}${a.source==='plaid'?` <span class="accounts-table-synced" title="Synced via Plaid${a.updatedAt?' · '+fmtTimeAgo(new Date(a.updatedAt)):''}">●</span>`:''}</span>
               </div>
             </div>
             <div class="accounts-table-type">${meta.label}</div>
@@ -1511,14 +1511,12 @@ function renderTxnListFiltered(mt){
       const acct=byPlaidId[t.plaidAccountId];
       const acctLabel=acct?acct.name+(acct.mask?' ••'+acct.mask:''):'';
       const isManual=t.source!=='plaid';
-      const manualBadge=isManual?'<span class="txn-manual-badge" title="Entered by hand, not synced from your bank">manual</span>':'';
-      const dupBadge=dupIds.has(t.id)?'<span class="txn-dup-badge" title="Closely matches another entry within a few days — might be the same real transfer counted twice. Tap to review.">⚠ possible duplicate</span>':'';
+      const dupMark=dupIds.has(t.id)?' <span class="txn-dup-mark" title="Closely matches another entry within a few days — might be the same real transfer counted twice. Tap to review.">⚠</span>':'';
       return`<div class="txn-item" onclick="openEditTxnModal('${t.id}')">
       <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>
       <div class="txn-name-col">
-        <div class="txn-name">${escHtml(t.name)}${t.recurring?' <span style="font-size:10px;color:var(--blue)">↻</span>':''}</div>
-        <div class="txn-cat">${t.category||'Other'} · ${t.date}${acctLabel?' · '+acctLabel:''}</div>
-        ${(manualBadge||dupBadge)?`<div class="txn-badges">${manualBadge}${dupBadge}</div>`:''}
+        <div class="txn-name">${escHtml(t.name)}${t.recurring?' <span style="font-size:10px;color:var(--blue)">↻</span>':''}${dupMark}</div>
+        <div class="txn-cat">${t.category||'Other'} · ${t.date}${acctLabel?' · '+acctLabel:''}${isManual?' · manual':''}</div>
       </div>
       <span class="txn-amount ${t.type}">${t.type==='out'?'-':'+'}${fmtM(t.amount)}</span>
       <button class="txn-del" onclick="event.stopPropagation();deleteTxn('${t.id}')">✕</button>

@@ -11,7 +11,7 @@
   --red:#ff3b30;--red-dim:rgba(255,59,48,.15);
   --yellow:#ffd60a;--yellow-dim:rgba(255,214,10,.12);
   --purple:#af52de;--indigo:#5856d6;
-  --card-shadow:0 1px 2px rgba(0,0,0,.2), 0 8px 20px rgba(0,0,0,.25);
+  --card-shadow:0 1px 3px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.24);
   --radius:20px;--radius-lg:26px;--radius-sm:10px;
 
   --bg:#000;--card:#1c1c1e;--card2:#232326;--card3:#0d0d0f;
@@ -21,7 +21,7 @@
   --divider:rgba(84,84,88,.65);--pill-bg:rgba(120,120,128,.28);
   --invert-bg:#fff;--invert-text:#000;}
 [data-theme="light"]{
-  --card-shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,.045);
+  --card-shadow:0 1px 2px rgba(0,0,0,.06), 0 4px 14px rgba(0,0,0,.07);
 
   --bg:#e7e7ec;--card:#fff;--card2:#f2f2f7;--card3:#f9f9fb;
   --border:#e5e5ea;--border2:#d1d1d6;
@@ -641,7 +641,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .accounts-table-name>span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .accounts-table-dot{width:8px;height:8px;border-radius:4px;flex-shrink:0}
 .accounts-table-mask{color:var(--muted);font-weight:400;font-size:12px;letter-spacing:.3px}
-.accounts-table-synced{font-size:10px;font-weight:600;color:var(--green);background:var(--green-dim);padding:1px 6px;border-radius:5px;margin-left:4px;vertical-align:middle}
+.accounts-table-synced{font-size:8px;color:var(--green);margin-left:5px;vertical-align:middle;cursor:help}
 .accounts-table-type{font-size:12px;color:var(--sub)}
 .accounts-table-bal{font-size:14.5px;font-weight:650;text-align:right;letter-spacing:-.2px;font-variant-numeric:tabular-nums}
 .accounts-table-bal.red{color:var(--red)}
@@ -1430,6 +1430,21 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 
 /* Busier list rows inside cards */
 .txn-item{padding:10px 0}
+.txn-dup-mark{color:var(--yellow);font-size:11px;cursor:help}
+.budget-c-catlist{margin-top:12px}
 .nw-row{padding:8px 0}
 .recur-txn-row,.bestcard-row,.reminder-row,.watchlist-row-item,
 .accounts-table-row,.holdings-table-row{padding-top:8px;padding-bottom:8px}
+
+/* ── ONE CARD TREATMENT — shadow only, no border ───────────────────────
+   Every card used to carry a border AND a shadow AND (often) an uppercase
+   label — three cues doing one job. Drop the outline; a single soft
+   elevation defines the card. Inputs, buttons, pills, chips, chat bubbles
+   and internal row dividers keep their borders. */
+.stat-card,.focus-card,.finance-card,.today-card,.habit-combined-card,
+.week-cal,.month-cal,.finance-stat-card,.net-worth-card,
+.goal-card,.proj-table-wrap,.dash-proj-wrap,.proj-card,.ring-stat-card,
+.fin-card,.fin-collapsible,.jarvis-history-wrap,.pkg-card,.payday-card,
+.spending-card,.nw-chart-card,.brain-dump-input-row,.cal-week-view{
+  border:0;
+}
