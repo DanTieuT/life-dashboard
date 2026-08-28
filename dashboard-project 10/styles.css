@@ -1396,3 +1396,40 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 .proj-table-head{padding:10px 16px}
 .proj-group-hdr{padding:12px 16px 8px}
 .proj-controls{margin-bottom:14px}
+
+/* ── CARD SPACING — tighten every card app-wide ─────────────────────────
+   One place to tune overall density. Card interiors go to ~14px padding,
+   the gap between stacked cards to 12px (collapsibles 14px), and the
+   busier list rows inside cards come in a couple px. Finance included. */
+
+/* Card interior padding */
+.stat-card,.finance-stat-card,.net-worth-card,.budget-wide-card{padding:14px}
+.focus-card,.today-card,.habit-combined-card,.ring-stat-card,.proj-card-body{padding:14px}
+.finance-card{padding:16px}
+.habit-card{padding:13px}
+.goal-card{padding:13px 15px}
+.fin-card,.spending-card{padding:14px 14px 12px}
+.payday-card{padding:12px 16px}
+.pkg-card{padding:12px 14px}
+.brain-dump-card{padding:10px 12px}
+.week-cal{padding:11px 10px}
+.fin-collapse-hdr{padding:10px 14px}
+.money-hero .nw-chart-card,.money-hero .budget-wide-card{padding-left:14px;padding-right:14px}
+.money-hero .budget-wide-card{padding-top:12px}
+.money-hero .nw-chart-card{padding-bottom:10px}
+
+/* Gap between stacked cards */
+.today-card,.net-worth-card,.dash-proj-wrap,.jarvis-history-wrap,
+.payday-card,.nw-chart-card,.fin-card{margin-bottom:12px}
+.fin-collapsible{margin-bottom:14px}
+.pkg-card{margin-bottom:8px}
+.money-hero{margin-bottom:12px}
+.habits-section{margin-bottom:14px}
+.dash-row-2col{gap:12px;margin-bottom:12px}
+.mid-row{gap:12px;margin-bottom:12px}
+
+/* Busier list rows inside cards */
+.txn-item{padding:10px 0}
+.nw-row{padding:8px 0}
+.recur-txn-row,.bestcard-row,.reminder-row,.watchlist-row-item,
+.accounts-table-row,.holdings-table-row{padding-top:8px;padding-bottom:8px}
