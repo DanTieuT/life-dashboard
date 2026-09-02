@@ -9,6 +9,8 @@
 //     access token, so a dead connection doesn't linger or keep billing.
 //   GET  /plaid-link?action=set_webhooks → points every linked Item at
 //     plaid-webhook.js (one-time; new Items get the URL from the link token).
+//   POST /plaid-link?action=reset_cursors → body {institutions:[...]} or
+//     {all:true}: wipe sync cursors and re-pull full history (dedupes by id).
 // No-ops with a clear error until PLAID_CLIENT_ID / PLAID_SECRET are set.
 //
 // Every action requires a valid Firebase ID token (Authorization: Bearer
@@ -19,6 +21,7 @@
 // real gap that it had no auth check at all before this.
 const admin = require('firebase-admin');
 const plaid = require('./plaid.js');
+const { syncItems } = require('./plaid-sync-core.js');
 
 const USER_UID = 'aqzJe5gq4IVYdKmUIW0pNJGL2ML2';
 
@@ -88,6 +91,27 @@ exports.handler = async (event) => {
       const snap = await db.collection(`users/${USER_UID}/plaidItems`).get();
       const items = snap.docs.map(d => ({ itemId: d.id, institution: d.data().institution || '(unknown)', investmentsEnabled: !!d.data().investmentsEnabled }));
       return json(200, { items });
+    }
+
+    // Wipe the /transactions/sync cursor for the given Items (or all of them)
+    // and immediately re-sync, so Plaid replays its full history and we pick
+    // up anything a past sync consumed but never stored (e.g. pending txns the
+    // pre-webhook code dropped). Safe to re-run: transactions dedupe by
+    // plaidTxnId, so only genuinely-missing rows get added.
+    //   POST /plaid-link?action=reset_cursors   body {institutions:["Chase",...]}  or  {all:true}
+    if (action === 'reset_cursors' && event.httpMethod === 'POST') {
+      let body;
+      try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
+      initFirebase();
+      const db = admin.firestore();
+      const snap = await db.collection(`users/${USER_UID}/plaidItems`).get();
+      const want = (body.institutions || []).map(s => String(s).toLowerCase());
+      const targets = snap.docs.filter(d =>
+        body.all === true || want.includes(String(d.data().institution || '').toLowerCase()));
+      if (!targets.length) return json(400, { error: 'no matching items', linked: snap.docs.map(d => d.data().institution) });
+      for (const d of targets) await d.ref.update({ cursor: '' });
+      const { summary } = await syncItems(db, targets);
+      return json(200, { reset: targets.map(d => d.data().institution), summary });
     }
 
     // One-time: push our webhook URL onto every already-linked Item so Plaid
