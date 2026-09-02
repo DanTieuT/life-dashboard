@@ -1,10 +1,17 @@
 // Plaid sync — scheduled every 6h (see netlify.toml). For each linked item:
 // refreshes account balances and pulls new transactions via /transactions/sync
 // (cursor-based, so each run only sees what changed). New transactions are
-// mapped into appData.transactions (deduped by plaidTxnId, transfers and
-// pending excluded, initial backfill capped at 30 days). No-ops until
+// mapped into appData.transactions (deduped by plaidTxnId, transfers
+// excluded, initial backfill capped at 30 days). No-ops until
 // PLAID_CLIENT_ID / PLAID_SECRET are configured or no banks are linked.
 // Manual trigger: /plaid-sync?trigger=manual
+//
+// Pending transactions are included, tagged `pending: true`. When one posts
+// Plaid assigns a new transaction_id and lists the old pending id in
+// res.removed; reconcilePending() below swaps the posted data onto the
+// existing row (matched via pendingPlaidTxnId) so it's updated in place, not
+// duplicated. Contribution auto-match deliberately waits for the posted
+// version (see the `!pt.pending` guard) so a goal is never funded twice.
 //
 // Contribution auto-match: outgoing transfers (personal_finance_category
 // primary TRANSFER_OUT) that mapTransaction() would otherwise drop entirely
@@ -58,6 +65,22 @@ exports.handler = async () => {
 
     let balancesUpdated = 0, txnsAdded = 0, txnsRemoved = 0, contribsAdded = 0;
 
+    // A freshly-posted txn (`t`) carries pendingPlaidTxnId pointing at the
+    // pending row it replaces. Update that row in place — new plaidTxnId, new
+    // amount/date/category, pending cleared — and report whether we handled it
+    // here (so the caller skips the normal add path).
+    const reconcilePending = (t) => {
+      if (!t.pendingPlaidTxnId) return false;
+      const prev = transactions.find(x => x.plaidTxnId === t.pendingPlaidTxnId);
+      if (!prev) return false;
+      Object.assign(prev, {
+        plaidTxnId: t.plaidTxnId, name: t.name, amount: t.amount, type: t.type,
+        category: t.category, date: t.date, pending: t.pending, pendingPlaidTxnId: null,
+      });
+      knownTxnIds.add(t.plaidTxnId);
+      return true;
+    };
+
     for (const itemDoc of itemsSnap.docs) {
       const item = itemDoc.data();
       try {
@@ -85,8 +108,10 @@ exports.handler = async () => {
             // header comment.
             if (
               autoMatchGoals.length
+              && !pt.pending // wait for the posted version — avoids double-funding
               && pt.personal_finance_category?.primary === 'TRANSFER_OUT'
               && !knownContribTxnIds.has(pt.transaction_id)
+              && !(pt.pending_transaction_id && knownContribTxnIds.has(pt.pending_transaction_id))
               && pt.date >= cutoffDate
             ) {
               const name = (pt.name || '').toLowerCase();
@@ -100,6 +125,7 @@ exports.handler = async () => {
             }
             const t = plaid.mapTransaction(pt, accounts.find(a => a.plaidAccountId === pt.account_id));
             if (!t || knownTxnIds.has(t.plaidTxnId)) continue;
+            if (reconcilePending(t)) continue; // posted version of a pending row we already have
             if (t.date < cutoffDate) continue; // cap initial backfill
             knownTxnIds.add(t.plaidTxnId);
             transactions.unshift({ id: uidGen(), ...t });
@@ -107,8 +133,10 @@ exports.handler = async () => {
           }
           for (const pt of res.modified) {
             const t = plaid.mapTransaction(pt, accounts.find(a => a.plaidAccountId === pt.account_id));
+            if (!t) continue;
             const existing = transactions.find(x => x.plaidTxnId === pt.transaction_id);
-            if (existing && t) Object.assign(existing, { name: t.name, amount: t.amount, type: t.type, category: t.category, date: t.date });
+            if (existing) Object.assign(existing, { name: t.name, amount: t.amount, type: t.type, category: t.category, date: t.date, pending: t.pending });
+            else reconcilePending(t); // some institutions send the pending→posted swap as a modify
           }
           for (const r of res.removed) {
             const idx = transactions.findIndex(x => x.plaidTxnId === r.transaction_id);

@@ -126,7 +126,10 @@ const TRANSFER_DESTINATION_RE = /wealthfront/i;
 // `acct` is the local (already-linked) account this transaction posted to —
 // see plaid-sync.js, which looks it up by pt.account_id before calling this.
 function mapTransaction(pt, acct) {
-  if (pt.pending) return null;
+  // Pending transactions are kept (tagged `pending`) so they show up right
+  // away. Plaid gives the posted version a *new* transaction_id and lists the
+  // old pending id in res.removed, so plaid-sync.js reconciles the two via
+  // `pendingPlaidTxnId` (pt.pending_transaction_id) to avoid showing both.
   const pfc = pt.personal_finance_category || {};
   const name = pt.merchant_name || pt.name || '';
   // Money arriving in a pure transfer-destination account is never new
@@ -164,6 +167,8 @@ function mapTransaction(pt, acct) {
     category,
     date: pt.date, // already YYYY-MM-DD
     source: 'plaid',
+    pending: !!pt.pending,
+    pendingPlaidTxnId: pt.pending_transaction_id || null,
   };
 }
 

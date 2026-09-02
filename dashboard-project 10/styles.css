@@ -1431,6 +1431,8 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 /* Busier list rows inside cards */
 .txn-item{padding:10px 0}
 .txn-dup-mark{color:var(--yellow);font-size:11px;cursor:help}
+.txn-pending-mark{display:inline-block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--card2);border:.5px solid var(--divider);border-radius:4px;padding:1px 4px;vertical-align:1px;cursor:help}
+.txn-pending .txn-icon,.txn-pending .txn-amount{opacity:.55}
 .budget-c-catlist{margin-top:12px}
 .nw-row{padding:8px 0}
 .recur-txn-row,.bestcard-row,.reminder-row,.watchlist-row-item,
