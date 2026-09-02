@@ -7,6 +7,8 @@
 //     removes that one account. If it was the last account on its Plaid
 //     item, also revokes the item on Plaid's side and deletes the stored
 //     access token, so a dead connection doesn't linger or keep billing.
+//   GET  /plaid-link?action=set_webhooks → points every linked Item at
+//     plaid-webhook.js (one-time; new Items get the URL from the link token).
 // No-ops with a clear error until PLAID_CLIENT_ID / PLAID_SECRET are set.
 //
 // Every action requires a valid Firebase ID token (Authorization: Bearer
@@ -86,6 +88,25 @@ exports.handler = async (event) => {
       const snap = await db.collection(`users/${USER_UID}/plaidItems`).get();
       const items = snap.docs.map(d => ({ itemId: d.id, institution: d.data().institution || '(unknown)', investmentsEnabled: !!d.data().investmentsEnabled }));
       return json(200, { items });
+    }
+
+    // One-time: push our webhook URL onto every already-linked Item so Plaid
+    // starts POSTing SYNC_UPDATES_AVAILABLE to plaid-webhook.js. New Items get
+    // the URL from the link token and don't need this.
+    if (action === 'set_webhooks') {
+      initFirebase();
+      const db = admin.firestore();
+      const snap = await db.collection(`users/${USER_UID}/plaidItems`).get();
+      const results = [];
+      for (const d of snap.docs) {
+        try {
+          await plaid.updateItemWebhook(d.data().accessToken);
+          results.push({ item: d.id, ok: true });
+        } catch (e) {
+          results.push({ item: d.id, ok: false, error: e.message });
+        }
+      }
+      return json(200, { webhook: plaid.WEBHOOK_URL, results });
     }
 
     // Update-mode link_token to add Investments to an already-linked Item.

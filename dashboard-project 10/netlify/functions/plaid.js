@@ -178,6 +178,53 @@ function mapTransaction(pt, acct) {
 // be a bare page with no query string/hash. See plaid-oauth-redirect.html.
 const REDIRECT_URI = 'https://dn2dashboard.netlify.app/plaid-oauth-redirect.html';
 
+// Where Plaid POSTs webhooks (SYNC_UPDATES_AVAILABLE etc.). New Items pick
+// this up from the link token; existing Items get it via /item/webhook/update
+// (see plaid-link.js?action=set_webhooks). Handler: plaid-webhook.js.
+const WEBHOOK_URL = 'https://dn2dashboard.netlify.app/.netlify/functions/plaid-webhook';
+
+const crypto = require('crypto');
+const b64urlToBuf = (s) => Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+
+// Verify a Plaid webhook — https://plaid.com/docs/api/webhooks/webhook-verification/
+// True iff the Plaid-Verification JWT is validly ES256-signed by Plaid's
+// current key, issued within the last 5 min (replay guard), and commits to
+// exactly the request body we received. `call` is defined above.
+const _webhookKeyCache = new Map(); // kid -> JWK
+async function verifyWebhook(jwtHeaderValue, rawBody) {
+  try {
+    const [h, p, sig] = String(jwtHeaderValue || '').split('.');
+    if (!h || !p || !sig) return false;
+    const header = JSON.parse(b64urlToBuf(h).toString());
+    if (header.alg !== 'ES256' || !header.kid) return false;
+
+    let jwk = _webhookKeyCache.get(header.kid);
+    if (!jwk) {
+      const { key } = await call('/webhook_verification_key/get', { key_id: header.kid });
+      if (!key || key.expired_at) return false;
+      jwk = { kty: key.kty, crv: key.crv, x: key.x, y: key.y };
+      _webhookKeyCache.set(header.kid, jwk);
+    }
+
+    const pubKey = crypto.createPublicKey({ key: jwk, format: 'jwk' });
+    const sigOk = crypto.verify(
+      'sha256', Buffer.from(`${h}.${p}`),
+      { key: pubKey, dsaEncoding: 'ieee-p1363' }, b64urlToBuf(sig),
+    );
+    if (!sigOk) return false;
+
+    const claims = JSON.parse(b64urlToBuf(p).toString());
+    if (!claims.iat || Date.now() / 1000 - claims.iat > 300) return false;
+    const bodyHash = crypto.createHash('sha256').update(rawBody || '', 'utf8').digest('hex');
+    return typeof claims.request_body_sha256 === 'string'
+      && claims.request_body_sha256.length === bodyHash.length
+      && crypto.timingSafeEqual(Buffer.from(bodyHash), Buffer.from(claims.request_body_sha256));
+  } catch (e) {
+    console.error('[plaid] webhook verification error:', e.message);
+    return false;
+  }
+}
+
 module.exports = {
   configured,
   createLinkToken: (userId) => call('/link/token/create', {
@@ -187,6 +234,7 @@ module.exports = {
     country_codes: ['US'],
     language: 'en',
     redirect_uri: REDIRECT_URI,
+    webhook: WEBHOOK_URL,
   }),
   // Adds a product to an ALREADY-linked Item (e.g. Investments, after the
   // original Link only requested Transactions) — Plaid's "update mode":
@@ -219,6 +267,11 @@ module.exports = {
   // fallback below picking the wrong field than a caching-frequency problem.
   getBalances: (accessToken) => call('/accounts/get', { access_token: accessToken }),
   transactionsSync: (accessToken, cursor) => call('/transactions/sync', { access_token: accessToken, cursor: cursor || undefined, count: 200 }),
+  // Point an already-linked Item at our webhook URL (new Items get it from
+  // the link token instead).
+  updateItemWebhook: (accessToken, webhook = WEBHOOK_URL) => call('/item/webhook/update', { access_token: accessToken, webhook }),
+  verifyWebhook,
+  WEBHOOK_URL,
   mapAccountType,
   cleanAccountName,
   mapTxnCategory,

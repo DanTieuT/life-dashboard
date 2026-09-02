@@ -42,10 +42,13 @@
 [functions."reminder-check"]
   schedule = "* * * * *"
 
-# Plaid bank sync — balances + new transactions 4x/day. No-ops until
-# PLAID_CLIENT_ID / PLAID_SECRET are configured and a bank is linked.
+# Plaid bank sync — balances + new transactions, hourly. Plaid webhooks
+# (plaid-webhook.js) usually beat this to new data; the hourly run is the
+# fallback for missed/undelivered webhooks. Plaid bills Transactions as a
+# flat monthly per-Item fee, so call frequency here costs nothing extra.
+# No-ops until PLAID_CLIENT_ID / PLAID_SECRET are configured and a bank is linked.
 [functions."plaid-sync"]
-  schedule = "0 */6 * * *"
+  schedule = "0 * * * *"
 
 # Plaid Investments holdings — once daily is plenty (positions/prices don't
 # need intraday freshness for a personal dashboard). No-ops until an Item has
