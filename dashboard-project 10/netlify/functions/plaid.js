@@ -139,7 +139,16 @@ function mapTransaction(pt, acct) {
   const isTransferDestination = acct && (acct.type === 'investment' || TRANSFER_DESTINATION_RE.test(acct.name || ''));
   if (pt.amount < 0 && isTransferDestination) return null;
   const isP2pCashIn = pt.amount < 0 && P2P_CASHOUT_RE.test(name);
-  if (!isP2pCashIn && INTERNAL_DETAILED.has(pfc.detailed)) return null; // credit-card payments / internal transfers
+  // An outgoing transfer into Wealthfront is Dan funding his cash/savings
+  // account — he budgets for that as real spend under 'Savings', same as
+  // TRANSFER_OUT_SAVINGS below. Matched by name and checked before the
+  // internal-transfer / TRANSFER_OUT skips so it lands regardless of which
+  // transfer sub-tag Plaid picks (ACCOUNT_TRANSFER one month,
+  // INVESTMENT_AND_RETIREMENT_FUNDS the next). TRANSFER_OUT + positive amount
+  // only, so a withdrawal back out of Wealthfront never counts as spend.
+  const isSavingsContribution = pt.amount > 0 && pfc.primary === 'TRANSFER_OUT'
+    && TRANSFER_DESTINATION_RE.test(name);
+  if (!isP2pCashIn && !isSavingsContribution && INTERNAL_DETAILED.has(pfc.detailed)) return null; // credit-card payments / internal transfers
   // TRANSFER_OUT_SAVINGS is Plaid's specific tag for a transfer landing in a
   // savings account — unlike generic account transfers (excluded above) or
   // investment/retirement transfers (caught by the goal auto-match in
@@ -154,6 +163,7 @@ function mapTransaction(pt, acct) {
   // income if included. Only DEPOSIT is genuinely new money in — except a
   // P2P cashout (isP2pCashIn above), which is also genuinely new.
   const category = isP2pCashIn ? 'Other'
+    : isSavingsContribution ? 'Savings'
     : pfc.detailed === 'TRANSFER_OUT_SAVINGS' ? 'Savings'
     : pfc.detailed === 'TRANSFER_IN_DEPOSIT' ? 'Other'
     : mapTxnCategory(pfc.primary);
