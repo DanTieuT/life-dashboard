@@ -304,10 +304,11 @@ function renderStats(){
     const now=new Date();
     const bMonth=currentMonth,bYear=currentYear;
     const bMt=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
-    // Savings transfers are money set aside, not spent — kept out of the
-    // budget number, "left", pace tick, and category breakdown here (matches
-    // the Finance tab's spending card). See isSavingsTransfer() in core.js.
-    const bSpent=bMt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
+    // Net discretionary spend — outflows minus Savings transfers minus
+    // refunds/reimbursements — matching the Finance tab's spending card.
+    // Kept out of the budget number, "left", pace tick, and category
+    // breakdown here. See netSpend() / isSavingsTransfer() in core.js.
+    const bSpent=Math.max(0,netSpend(bMt));
     // Mirrors the Finance tab's spending card — "of $X" is spendable money:
     // this month's real income (or the manual Budget Settings figure before
     // any income posts) minus what's set aside for savings. See
@@ -337,7 +338,8 @@ function renderStats(){
     const CAT_DOT_COLORS=['#007aff','#34c759','#ff9500','#af52de','#30b0c7','#ff3b30','#5856d6','#ff2d55'];
     const catSpends=Object.keys(appData.budget.categories||{}).filter(cat=>cat!=='Savings').map((cat,i)=>({
       cat,
-      spent:bMt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0),
+      spent:bMt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0)
+        -bMt.filter(t=>isSpendOffset(t)&&offsetCategory(t)===cat).reduce((s,t)=>s+t.amount,0),
       color:CAT_DOT_COLORS[i%CAT_DOT_COLORS.length],
     })).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent);
 

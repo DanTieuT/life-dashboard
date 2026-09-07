@@ -351,6 +351,14 @@
         <div id="catBarChart" style="margin-top:14px"></div>
       </div>
 
+      <!-- P2P inflow review — Venmo/Zelle/etc. that could be income OR a
+           friend paying Dan back. He classifies each one himself. -->
+      <div class="fin-card inflow-review-card" id="inflowReviewCard" style="display:none">
+        <div class="fin-section-title" style="margin-bottom:2px">Review payments received</div>
+        <div class="inflow-review-sub">Venmo / Zelle / PayPal in — real income, or someone paying you back?</div>
+        <div id="inflowReviewList"></div>
+      </div>
+
       <!-- Savings Rate (#30) — radial gauge; this number only moves once a
            month so it earns a heavier treatment than a flat progress bar.
            Collapsible like the other Finance sections. -->
@@ -791,7 +799,19 @@
       </select>
     </div>
     <div class="form-group"><label class="form-label">Type</label>
-      <select class="form-select" id="txnType"><option value="out">Expense</option><option value="in">Income</option></select>
+      <select class="form-select" id="txnType" onchange="updateTxnInflowVis()"><option value="out">Expense</option><option value="in">Income</option></select>
+    </div>
+    <div class="form-group" id="txnInflowKindRow" style="display:none">
+      <label class="form-label">Money in is…</label>
+      <select class="form-select" id="txnInflowKind" onchange="updateTxnInflowVis()">
+        <option value="income">Real income</option>
+        <option value="refund">A refund / return</option>
+        <option value="reimbursement">Someone paying me back</option>
+      </select>
+      <select class="form-select" id="txnReimburseCat" style="display:none;margin-top:8px">
+        <option>Food</option><option>Transport</option><option>Shopping</option>
+        <option>Entertainment</option><option>Health &amp; Fitness</option><option>Housing</option>
+      </select>
     </div>
     <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="txnDate" type="date"></div>
     <div class="form-group" style="display:flex;align-items:center;gap:12px">

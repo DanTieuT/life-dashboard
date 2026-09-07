@@ -13,6 +13,28 @@ const calendarSvc = require('./apple-calendar.js');
 
 const uidGen = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
+// Mirrors js/core.js inflow classification. A type:'in' transaction is
+// 'income', 'refund', or 'reimbursement'; the latter two net against
+// spending instead of counting as income. Unclassified P2P (Venmo/Zelle/
+// PayPal) defaults to 'reimbursement' — Dan reviews those on the dashboard.
+const P2P_INFLOW_RE = /venmo|cash ?app|zelle|paypal/i;
+const SPEND_CATEGORIES = new Set(['Food', 'Transport', 'Shopping', 'Entertainment', 'Health & Fitness', 'Housing']);
+function inflowKind(t) {
+  if (!t || t.type !== 'in') return null;
+  if (t.inflowKind) return t.inflowKind;
+  if (P2P_INFLOW_RE.test(t.name || '')) return 'reimbursement';
+  if (SPEND_CATEGORIES.has(t.category)) return 'refund';
+  return 'income';
+}
+const isSpendOffset = (t) => { const k = inflowKind(t); return k === 'refund' || k === 'reimbursement'; };
+// Net discretionary spend for an already-filtered set: outflows (minus
+// Savings transfers) minus refunds/reimbursements.
+function netSpend(txns) {
+  const out = (txns || []).filter(t => t.type === 'out' && t.category !== 'Savings').reduce((s, t) => s + (t.amount || 0), 0);
+  const offsets = (txns || []).filter(isSpendOffset).reduce((s, t) => s + (t.amount || 0), 0);
+  return out - offsets;
+}
+
 function todayStr() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
 }
@@ -75,10 +97,9 @@ function buildContext(data) {
     const d = new Date(t.date);
     return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear();
   });
-  // Savings-category outflows are transfers to your own savings/investment
-  // accounts, not discretionary spend — excluded here to match the dashboard's
-  // spending card and finance-tools.mjs.
-  const spent = Math.round(monthTxns.filter(t => t.type === 'out' && t.category !== 'Savings').reduce((s, t) => s + (t.amount || 0), 0));
+  // Net discretionary spend — outflows minus Savings transfers minus
+  // refunds/reimbursements — matching the dashboard's spending card.
+  const spent = Math.max(0, Math.round(netSpend(monthTxns)));
   // Budget = spendable money: the manual Budget Settings figure minus what's
   // set aside for savings (the Savings category budget, or the month's actual
   // Savings transfers if larger). Matches spendableBudget() on the dashboard.
@@ -305,9 +326,7 @@ function applyActions(data, actions) {
         // Spendable budget — gross minus savings set aside (target or actual, whichever's larger).
         const budget = grossBudget > 0 ? Math.max(0, grossBudget - Math.max(Math.round(data.budget?.categories?.Savings || 0), monthSaved)) : 0;
         if (budget > 0 && (action.category || 'Other') !== 'Savings' && (action.transactionType || 'out') === 'out') {
-          const monthSpent = Math.round((data.transactions || []).filter(t => {
-            return inThisMonth(t) && t.type === 'out' && t.category !== 'Savings';
-          }).reduce((s, t) => s + (t.amount || 0), 0));
+          const monthSpent = Math.max(0, Math.round(netSpend((data.transactions || []).filter(inThisMonth))));
           const pct = Math.round(monthSpent / budget * 100);
           const prevPct = Math.round((monthSpent - (action.amount || 0)) / budget * 100);
           if (pct >= 100 && prevPct < 100) spendingAlert = `🔴 Budget alert: you've hit 100% of your monthly budget ($${monthSpent} of $${budget}).`;
@@ -484,5 +503,5 @@ async function runCalendarSideEffects(actions) {
 
 module.exports = {
   uidGen, todayStr, isRDO, buildContext, ptToEpoch, findById, applyActions,
-  runCalendarSideEffects, calendarSvc,
+  runCalendarSideEffects, calendarSvc, netSpend, inflowKind, isSpendOffset,
 };

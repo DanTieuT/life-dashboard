@@ -730,6 +730,23 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .spend-total-num{font-size:26px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
 .spend-total-of{font-size:13px;color:var(--sub)}
 .spend-total-saved{font-size:12px;color:var(--green);margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.inflow-review-sub{font-size:12px;color:var(--sub);margin-bottom:10px}
+.inflow-review-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border)}
+.inflow-review-row:first-of-type{border-top:none}
+.inflow-review-info{flex:1;min-width:0}
+.inflow-review-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inflow-review-amt{color:var(--green);font-weight:600;font-variant-numeric:tabular-nums}
+.inflow-review-date{font-size:11px;color:var(--sub)}
+.inflow-review-cat{width:auto;flex:0 0 auto;font-size:12px;padding:4px 6px}
+.inflow-review-btns{display:flex;gap:6px;flex:0 0 auto}
+.inflow-review-btn{font-size:12px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;white-space:nowrap}
+.inflow-review-btn.primary{background:var(--blue);border-color:transparent;color:#fff}
+.inflow-review-more{font-size:11px;color:var(--sub);padding-top:8px;text-align:center}
+@media(max-width:520px){
+  .inflow-review-row{flex-wrap:wrap}
+  .inflow-review-cat{order:3;flex:1}
+  .inflow-review-btns{order:4}
+}
 .spend-total-track-wrap{position:relative;padding-top:7px}
 .spend-total-track{height:6px;background:var(--track);border-radius:3px;overflow:hidden}
 .spend-total-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}

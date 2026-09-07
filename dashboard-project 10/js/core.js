@@ -217,6 +217,7 @@ function monthlyIncome(transactions,month,year){
   let total=0;
   (transactions||[]).forEach(t=>{
     if(t.type!=='in')return;
+    if(isSpendOffset(t))return; // refunds & reimbursements net against spend, not income
     const d=txnLocalDate(t.date);
     let effMonth=d.getMonth(),effYear=d.getFullYear();
     if(isPaycheckLike(t.name)&&d.getDate()>=25){
@@ -235,6 +236,41 @@ function monthlyIncome(transactions,month,year){
 // it out with this. The Finance-tab category bar chart is the deliberate
 // exception — it shows Savings there, with "over budget = good".
 const isSavingsTransfer = t => !!t && t.type==='out' && t.category==='Savings';
+
+// ── Inflow classification ─────────────────────────────────────────
+// A type:'in' transaction is one of: 'income' (real new money — counts
+// toward income and the spending ceiling), 'refund' (a merchant return —
+// nets against that purchase's category), or 'reimbursement' (a friend
+// paying you back — nets against a category you pick, default Food).
+// Dan gets paid for a side gig on Venmo *and* gets paid back for dinners on
+// Venmo, and they're indistinguishable by name — so a P2P inflow he hasn't
+// classified defaults to 'reimbursement' and shows on the finance tab's
+// review card until he taps Income or Reimbursement. Everything else infers:
+// a spend-category deposit is a refund, the rest is income.
+const P2P_INFLOW_RE = /venmo|cash ?app|zelle|paypal/i;
+const SPEND_CATEGORIES = new Set(['Food','Transport','Shopping','Entertainment','Health & Fitness','Housing']);
+function inflowKind(t){
+  if(!t||t.type!=='in')return null;
+  if(t.inflowKind)return t.inflowKind;
+  if(P2P_INFLOW_RE.test(t.name||''))return 'reimbursement';
+  if(SPEND_CATEGORIES.has(t.category))return 'refund';
+  return 'income';
+}
+// A P2P inflow with no explicit choice yet — surfaced on the review card.
+const needsInflowReview = t => !!t && t.type==='in' && !t.inflowKind && P2P_INFLOW_RE.test(t.name||'');
+// refund + reimbursement reduce spending instead of counting as income.
+const isSpendOffset = t => { const k=inflowKind(t); return k==='refund'||k==='reimbursement'; };
+// The category a spend-offset nets against: the picked one for a
+// reimbursement, the deposit's own category for a refund.
+const offsetCategory = t => inflowKind(t)==='reimbursement' ? (t.reimburseCategory||'Food') : (t.category||'Other');
+// Net discretionary spend for an already-month-filtered set of txns:
+// outflows (excluding Savings transfers) minus refunds/reimbursements.
+function netSpend(monthTxns){
+  const out=(monthTxns||[]).filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
+  const offsets=(monthTxns||[]).filter(isSpendOffset).reduce((s,t)=>s+t.amount,0);
+  return out-offsets;
+}
+
 // The ceiling the spending card + budget gauges pace against: gross income
 // (or the manual Budget Settings figure before any income posts) minus what's
 // set aside for savings — money earmarked for, or already moved to, savings
@@ -869,7 +905,8 @@ function haptic(ms=40){
 
 // ── GLOBAL EXPORTS (inline handlers + cross-module refs resolve via window) ──
 Object.assign(window, {
-  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, isPaycheckLike, isSavingsTransfer, spendableBudget, escHtml,
+  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, isPaycheckLike, isSavingsTransfer, spendableBudget,
+  inflowKind, needsInflowReview, isSpendOffset, offsetCategory, netSpend, SPEND_CATEGORIES, escHtml,
   habitColors, calcStreak, migrateOldSavings, saveData, loadData, renderAll,
   updateThemeBtn, updateHideNumBtn, haptic, updateCompactSwitch, updateFontSizeBtns,
   updateLastBackupLabel,

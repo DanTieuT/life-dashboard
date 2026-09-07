@@ -180,7 +180,7 @@ function renderFinanceRing(){
   const mt=appData.transactions.filter(t=>{
     const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;
   });
-  const spent=mt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
+  const spent=Math.max(0,netSpend(mt));
   if(!budget)return;
   const circ=2*Math.PI*70;
   const offset=circ*(1-Math.min(spent/budget,1));
@@ -203,10 +203,12 @@ function renderFinanceTab(){
   if(monthEl) monthEl.textContent=months[currentMonth]+' '+currentYear;
 
   const mt=appData.transactions.filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
-  // 'spent' drives the spending card total, ring, and pace arrow — Savings
-  // transfers (money set aside, not spent) are excluded and surfaced on
-  // their own line instead. See isSavingsTransfer() in core.js.
-  const spent=mt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
+  // 'spent' drives the spending card total, ring, and pace arrow: outflows
+  // minus Savings transfers (money set aside — surfaced on its own line) and
+  // minus refunds/reimbursements (money back on a purchase). See netSpend()
+  // and isSavingsTransfer() in core.js. Floored at 0 — a month where money
+  // back outweighs spend reads as $0, not a negative.
+  const spent=Math.max(0,netSpend(mt));
   const savedThisMonth=mt.filter(isSavingsTransfer).reduce((s,t)=>s+t.amount,0);
   // Extra income this period — real deposits beyond the recognized paycheck
   // (isPaycheckLike, same test monthlyIncome() uses), so a bonus, side gig,
@@ -443,6 +445,7 @@ function renderFinanceTab(){
       </div>`).join('');
   }
   // ── Batch-3 finance sections ────────────────────────────────────
+  if(typeof renderInflowReview==='function')renderInflowReview();
   if(typeof renderSavingsRate==='function')renderSavingsRate(mt);
   if(typeof renderCatBarChart==='function')renderCatBarChart(mt);
   if(typeof renderMonthlyTrend==='function')renderMonthlyTrend();
@@ -493,6 +496,9 @@ window.openTxnModal=function(){
   const sel=document.getElementById('txnRecurFreq');
   if(cb)cb.checked=false;
   if(sel)sel.style.display='none';
+  const ik=document.getElementById('txnInflowKind');if(ik)ik.value='income';
+  const rc=document.getElementById('txnReimburseCat');if(rc)rc.value='Food';
+  updateTxnInflowVis();
   openModal('txnModal');
 };
 window.openEditTxnModal=function(id){
@@ -511,7 +517,18 @@ window.openEditTxnModal=function(id){
   const sel=document.getElementById('txnRecurFreq');
   if(cb)cb.checked=!!t.recurring;
   if(sel){sel.style.display=t.recurring?'block':'none';sel.value=t.recurrence||'monthly';}
+  const ik=document.getElementById('txnInflowKind');if(ik)ik.value=(t.type==='in'?inflowKind(t):'income');
+  const rc=document.getElementById('txnReimburseCat');if(rc)rc.value=t.reimburseCategory||'Food';
+  updateTxnInflowVis();
   openModal('txnModal');
+};
+window.updateTxnInflowVis=function(){
+  const isIn=document.getElementById('txnType')?.value==='in';
+  const kind=document.getElementById('txnInflowKind')?.value;
+  const row=document.getElementById('txnInflowKindRow');
+  const rc=document.getElementById('txnReimburseCat');
+  if(row)row.style.display=isIn?'':'none';
+  if(rc)rc.style.display=(isIn&&kind==='reimbursement')?'':'none';
 };
 window.saveTxn=function(){
   const name=document.getElementById('txnName').value.trim();
@@ -520,13 +537,19 @@ window.saveTxn=function(){
   const recurring=document.getElementById('txnRecurring')?.checked||false;
   const recurrence=recurring?(document.getElementById('txnRecurFreq')?.value||'monthly'):null;
   const editId=document.getElementById('txnEditId').value;
+  const type=document.getElementById('txnType').value;
+  const kind=document.getElementById('txnInflowKind')?.value||'income';
   const fields={
     name,amount,
     category:document.getElementById('txnCategory').value,
-    type:document.getElementById('txnType').value,
+    type,
     date:document.getElementById('txnDate').value,
     recurring:recurring||false,
     recurrence:recurrence||null,
+    // Inflow classification — only meaningful for money in. An explicit
+    // choice here takes it out of the P2P review card. Cleared for expenses.
+    inflowKind:type==='in'?kind:null,
+    reimburseCategory:(type==='in'&&kind==='reimbursement')?(document.getElementById('txnReimburseCat')?.value||'Food'):null,
   };
   if(editId){
     const t=appData.transactions.find(x=>x.id===editId);
@@ -1177,6 +1200,51 @@ function _attachNWScrub(svg,card){
   svg.addEventListener('touchend',end,{passive:true});
 }
 
+// ── P2P inflow review ─────────────────────────────────────────────
+// Venmo/Zelle/PayPal money in that Dan hasn't classified. Each row: pick a
+// category (only matters for Reimbursement), then tap Income or Reimbursement.
+// Not month-scoped — it's a global queue to clear. Newest first, capped.
+const INFLOW_REVIEW_CAP=25;
+function renderInflowReview(){
+  const card=document.getElementById('inflowReviewCard');
+  const list=document.getElementById('inflowReviewList');
+  if(!card||!list)return;
+  const pending=(appData.transactions||[]).filter(needsInflowReview)
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!pending.length){card.style.display='none';return;}
+  card.style.display='';
+  const shown=pending.slice(0,INFLOW_REVIEW_CAP);
+  const catOpts=[...SPEND_CATEGORIES].map(c=>`<option>${c}</option>`).join('');
+  list.innerHTML=shown.map(t=>`
+    <div class="inflow-review-row">
+      <div class="inflow-review-info">
+        <div class="inflow-review-name">${escHtml(t.name)} <span class="inflow-review-amt">+${fmtM(t.amount)}</span></div>
+        <div class="inflow-review-date">${t.date}</div>
+      </div>
+      <select class="form-select inflow-review-cat" id="infl-cat-${t.id}" title="Category to offset if this is a payback">${catOpts}</select>
+      <div class="inflow-review-btns">
+        <button class="inflow-review-btn" onclick="classifyInflow('${t.id}','income')">Income</button>
+        <button class="inflow-review-btn primary" onclick="classifyInflow('${t.id}','reimbursement')">Paid back</button>
+      </div>
+    </div>`).join('')
+    +(pending.length>shown.length?`<div class="inflow-review-more">+${pending.length-shown.length} more</div>`:'');
+}
+window.classifyInflow=function(id,kind){
+  const t=(appData.transactions||[]).find(x=>x.id===id);
+  if(!t)return;
+  if(kind==='reimbursement'){
+    t.inflowKind='reimbursement';
+    t.reimburseCategory=document.getElementById('infl-cat-'+id)?.value||'Food';
+    toast(`✓ Counted as a payback — ${t.reimburseCategory} spend reduced by ${fmtM(t.amount)}`);
+  } else {
+    t.inflowKind='income';
+    delete t.reimburseCategory;
+    toast(`✓ Counted as income`);
+  }
+  saveData();
+  renderFinanceTab();
+};
+
 // ── #30: Savings rate ─────────────────────────────────────────────
 function renderSavingsRate(mt){
   const card=document.getElementById('savingsRateCard');
@@ -1186,10 +1254,9 @@ function renderSavingsRate(mt){
   // ~$5.5k) toward the month it happened to post in instead of the month
   // it actually funds. See monthlyIncome()'s comment in core.js.
   const income=monthlyIncome(appData.transactions,currentMonth,currentYear);
-  // Savings transfers aren't expenses — moving money to Wealthfront IS
-  // saving, so excluding it here lets a contribution lift the rate, not
-  // sink it.
-  const expenses=mt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
+  // Expenses = net discretionary spend (outflows minus Savings transfers and
+  // minus refunds/reimbursements) — same figure as the spending card total.
+  const expenses=Math.max(0,netSpend(mt));
   if(income<=0){card.style.display='none';return;}
   card.style.display='';
   const rate=Math.round((income-expenses)/income*100);
@@ -1237,10 +1304,14 @@ function renderCatBarChart(mt){
   if(!el)return;
   const DONUT_COLORS=['#ff453a','#ff9f0a','#30d158','#bf5af2','#0a84ff','#64d2ff','#ffd60a','#ff6b35'];
   const spent=mt.filter(t=>t.type==='out');
-  const total=spent.reduce((s,t)=>s+t.amount,0)||1;
-  // Group by category
+  // Group by category, then net out refunds (against their own category) and
+  // reimbursements (against the category Dan picked). A category that ends up
+  // at or below $0 — reimbursed more than spent — is dropped.
   const bycat={};
   spent.forEach(t=>{bycat[t.category]=(bycat[t.category]||0)+t.amount;});
+  mt.filter(isSpendOffset).forEach(t=>{const c=offsetCategory(t);bycat[c]=(bycat[c]||0)-t.amount;});
+  Object.keys(bycat).forEach(c=>{if(bycat[c]<=0)delete bycat[c];});
+  const total=Object.values(bycat).reduce((s,v)=>s+v,0)||1;
   // Every category with spend gets a bar (no top-N cutoff) — sorted by
   // amount descending, except 'Other' always trails regardless of its
   // total since it's the catch-all, not a meaningful budget line.
@@ -1309,8 +1380,8 @@ function renderMonthlyTrend(){
   const DONUT_COLORS=['#ff453a','#ff9f0a','#30d158','#bf5af2','#0a84ff','#64d2ff'];
   const data=months.map((mo,i)=>{
     const txns=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===mo.m&&d.getFullYear()===mo.y;});
-    const spent=txns.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
-    const income=txns.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
+    const spent=Math.max(0,netSpend(txns));
+    const income=txns.filter(t=>t.type==='in'&&!isSpendOffset(t)).reduce((s,t)=>s+t.amount,0);
     const isCurrent=mo.m===now.getMonth()&&mo.y===now.getFullYear();
     return{...mo,spent,income,isCurrent,color:DONUT_COLORS[i]};
   });

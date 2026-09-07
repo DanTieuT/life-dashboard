@@ -21,6 +21,21 @@
 //   (those never enter appData in the first place — see plaid-link.js).
 
 const TRANSFER_PROXY_CATEGORY = 'Savings';
+// Mirrors js/core.js inflow classification. A type:'in' transaction is
+// 'income', 'refund' (merchant return), or 'reimbursement' (someone paying
+// Dan back) — the latter two net against spending, not income. Unclassified
+// P2P defaults to 'reimbursement' (Dan reviews those on the dashboard).
+const P2P_INFLOW_RE = /venmo|cash ?app|zelle|paypal/i;
+const SPEND_CATEGORIES = new Set(['Food', 'Transport', 'Shopping', 'Entertainment', 'Health & Fitness', 'Housing']);
+function inflowKind(t) {
+  if (!t || t.type !== 'in') return null;
+  if (t.inflowKind) return t.inflowKind;
+  if (P2P_INFLOW_RE.test(t.name || '')) return 'reimbursement';
+  if (SPEND_CATEGORIES.has(t.category)) return 'refund';
+  return 'income';
+}
+const isSpendOffset = (t) => { const k = inflowKind(t); return k === 'refund' || k === 'reimbursement'; };
+const offsetCategory = (t) => (inflowKind(t) === 'reimbursement' ? (t.reimburseCategory || 'Food') : (t.category || 'Other'));
 const MAX_TXN_LIMIT = 200;
 const DEFAULT_TXN_LIMIT = 50;
 const MAX_DATE_RANGE_DAYS = 3660; // ~10 years — generous but not unbounded
@@ -255,10 +270,23 @@ function get_spending_summary(appData, args = {}) {
     const k = keyFor(t);
     groups[k] = (groups[k] || 0) + t.amount;
   });
+  // Refunds/reimbursements in range net against spending. For a category
+  // breakdown they come off the specific category (a reimbursement off the
+  // one Dan picked); for other groupings only the total is adjusted.
+  let offsets = (appData.transactions || []).filter((t) => isSpendOffset(t) && inRange(t, range.start, range.end) && !excluded.has(offsetCategory(t)));
+  if (Array.isArray(args.accountIds) && args.accountIds.length) {
+    const wantPlaidIds = plaidIdsForAccountIds(appData, args.accountIds);
+    offsets = offsets.filter((t) => wantPlaidIds.has(t.plaidAccountId));
+  }
+  if (groupBy === 'category') {
+    offsets.forEach((t) => { const k = offsetCategory(t); groups[k] = (groups[k] || 0) - t.amount; });
+  }
+  const offsetTotal = offsets.reduce((s, t) => s + t.amount, 0);
   const breakdown = Object.entries(groups)
     .map(([key, total]) => ({ key, total: Math.round(total * 100) / 100 }))
+    .filter((r) => r.total > 0)
     .sort((a, b) => b.total - a.total);
-  const totalSpent = Math.round(txns.reduce((s, t) => s + t.amount, 0) * 100) / 100;
+  const totalSpent = Math.round((txns.reduce((s, t) => s + t.amount, 0) - offsetTotal) * 100) / 100;
   return {
     dateRange: range.label,
     groupedBy: groupBy,
@@ -266,6 +294,7 @@ function get_spending_summary(appData, args = {}) {
     transactionCount: txns.length,
     breakdown,
     excludedCategories: [...excluded],
+    ...(offsetTotal > 0 ? { refundsAndReimbursementsNetted: Math.round(offsetTotal * 100) / 100 } : {}),
   };
 }
 function isoWeekKey(d) {
@@ -280,10 +309,12 @@ function get_cash_flow_summary(appData, args = {}) {
   if (range.error) return { error: range.error };
   const inRangeTxns = (appData.transactions || []).filter((t) => inRange(t, range.start, range.end));
   const isTransferProxy = (t) => t.category === TRANSFER_PROXY_CATEGORY;
-  const inflows = inRangeTxns.filter((t) => t.type === 'in' && !isTransferProxy(t));
+  // Refunds/reimbursements aren't income — they net against outflows instead.
+  const inflows = inRangeTxns.filter((t) => t.type === 'in' && !isTransferProxy(t) && !isSpendOffset(t));
   const outflows = inRangeTxns.filter((t) => t.type === 'out' && !isTransferProxy(t));
+  const offsetTotal = inRangeTxns.filter((t) => isSpendOffset(t) && !isTransferProxy(t)).reduce((s, t) => s + t.amount, 0);
   const totalIn = Math.round(inflows.reduce((s, t) => s + t.amount, 0) * 100) / 100;
-  const totalOut = Math.round(outflows.reduce((s, t) => s + t.amount, 0) * 100) / 100;
+  const totalOut = Math.round((outflows.reduce((s, t) => s + t.amount, 0) - offsetTotal) * 100) / 100;
   // Best-effort income classification — this app doesn't tag deposits with a
   // Plaid income/transfer sub-type, so this is a heuristic, not certainty.
   const payrollLike = inflows.filter((t) => /payroll|salary|direct dep/i.test(t.name));

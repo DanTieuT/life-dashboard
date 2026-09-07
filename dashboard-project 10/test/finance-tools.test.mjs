@@ -113,6 +113,39 @@ describe('get_spending_summary — transfer exclusion and no double counting', (
   });
 });
 
+describe('get_spending_summary — refunds & reimbursements net against spend', () => {
+  const withOffsets = () => {
+    const d = mockAppData();
+    d.transactions.push(
+      // Amazon return — type:'in' in a spend category → auto 'refund'
+      { id: 'r1', name: 'AMAZON.COM REFUND', category: 'Shopping', amount: 30, type: 'in', date: iso(3), plaidAccountId: 'p1' },
+      // a Shopping purchase to net it against
+      { id: 'r2', name: 'AMAZON.COM', category: 'Shopping', amount: 80, type: 'out', date: iso(4), plaidAccountId: 'p1' },
+      // Venmo payback, explicitly classified against Food
+      { id: 'r3', name: 'Venmo', category: 'Other', amount: 20, type: 'in', date: iso(2), inflowKind: 'reimbursement', reimburseCategory: 'Food', plaidAccountId: 'p1' },
+      // Venmo side-gig income, explicitly classified
+      { id: 'r4', name: 'Venmo', category: 'Other', amount: 150, type: 'in', date: iso(2), inflowKind: 'income', plaidAccountId: 'p1' },
+    );
+    return d;
+  };
+  test('refund comes off its own category', async () => {
+    const r = await executeTool('get_spending_summary', { startDate: iso(10), endDate: iso(0), groupBy: 'category' }, withOffsets());
+    const shopping = r.breakdown.find((b) => b.key === 'Shopping');
+    assert.equal(shopping.total, 50); // 80 spent − 30 refunded
+  });
+  test('reimbursement comes off the picked category, side-gig Venmo does not', async () => {
+    const r = await executeTool('get_spending_summary', { startDate: iso(10), endDate: iso(0), groupBy: 'category' }, withOffsets());
+    const food = r.breakdown.find((b) => b.key === 'Food');
+    // Food this range: Chipotle 12 + Fancy Steakhouse 400 + Cash tip 5 = 417, minus 20 payback
+    assert.equal(food.total, 397);
+    assert.equal(r.refundsAndReimbursementsNetted, 50);
+  });
+  test('explicit-income Venmo still counts as income in cash flow', async () => {
+    const r = await executeTool('get_cash_flow_summary', { startDate: iso(10), endDate: iso(0) }, withOffsets());
+    assert.ok(r.inflowBreakdown.otherDeposits >= 150, 'the $150 side-gig Venmo is income');
+  });
+});
+
 describe('get_cash_flow_summary', () => {
   test('excludes internal transfers from both inflow and outflow', async () => {
     const r = await executeTool('get_cash_flow_summary', { startDate: iso(10), endDate: iso(0) }, mockAppData());
