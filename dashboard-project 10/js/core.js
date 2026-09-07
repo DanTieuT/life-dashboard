@@ -235,6 +235,23 @@ function monthlyIncome(transactions,month,year){
 // it out with this. The Finance-tab category bar chart is the deliberate
 // exception — it shows Savings there, with "over budget = good".
 const isSavingsTransfer = t => !!t && t.type==='out' && t.category==='Savings';
+// The ceiling the spending card + budget gauges pace against: gross income
+// (or the manual Budget Settings figure before any income posts) minus what's
+// set aside for savings — money earmarked for, or already moved to, savings
+// was never yours to spend. "Set aside" = your configured Savings category
+// budget, bumped up to the month's actual Savings transfers if you've already
+// moved more than the target. See isSavingsTransfer().
+function spendableBudget(transactions, month, year){
+  const income=monthlyIncome(transactions,month,year);
+  const gross=income>0?income:(window.appData?.budget?.monthly||window.appData?.budget?.income||0);
+  if(gross<=0)return gross;
+  const target=(window.appData?.budget?.categories?.Savings)||0;
+  const saved=(transactions||[]).filter(t=>{
+    const d=txnLocalDate(t.date);
+    return d.getMonth()===month&&d.getFullYear()===year&&isSavingsTransfer(t);
+  }).reduce((s,t)=>s+t.amount,0);
+  return Math.max(0,gross-Math.max(target,saved));
+}
 // ── AUTH ──────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user=>{
   if(user){
@@ -852,7 +869,7 @@ function haptic(ms=40){
 
 // ── GLOBAL EXPORTS (inline handlers + cross-module refs resolve via window) ──
 Object.assign(window, {
-  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, isPaycheckLike, isSavingsTransfer, escHtml,
+  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, isPaycheckLike, isSavingsTransfer, spendableBudget, escHtml,
   habitColors, calcStreak, migrateOldSavings, saveData, loadData, renderAll,
   updateThemeBtn, updateHideNumBtn, haptic, updateCompactSwitch, updateFontSizeBtns,
   updateLastBackupLabel,

@@ -70,7 +70,6 @@ function buildContext(data) {
   }).map(t => ({ id: t.id, name: t.name || '' }));
   const habits = (data.habits || []).map(h => ({ id: h.id, name: h.name, type: h.type, doneToday: !!(h.log && h.log[today]) }));
   const events = (data.events || []).filter(e => e.date === today).sort((a, b) => (a.time || '').localeCompare(b.time || '')).map(e => ({ time: e.time, name: e.name }));
-  const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
   const now2 = now;
   const monthTxns = (data.transactions || []).filter(t => {
     const d = new Date(t.date);
@@ -80,6 +79,15 @@ function buildContext(data) {
   // accounts, not discretionary spend — excluded here to match the dashboard's
   // spending card and finance-tools.mjs.
   const spent = Math.round(monthTxns.filter(t => t.type === 'out' && t.category !== 'Savings').reduce((s, t) => s + (t.amount || 0), 0));
+  // Budget = spendable money: the manual Budget Settings figure minus what's
+  // set aside for savings (the Savings category budget, or the month's actual
+  // Savings transfers if larger). Matches spendableBudget() on the dashboard.
+  const savingsSetAside = Math.max(
+    Math.round(data.budget?.categories?.Savings || 0),
+    Math.round(monthTxns.filter(t => t.type === 'out' && t.category === 'Savings').reduce((s, t) => s + (t.amount || 0), 0)),
+  );
+  const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
+  const budget = grossBudget > 0 ? Math.max(0, grossBudget - savingsSetAside) : 0;
   const projects = (data.userProjects || []).filter(p => !p.archived).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '🔨', stage: p.stage, nextAction: p.nextAction || '' }));
   const accounts = (data.accounts || []).map(a => ({ name: a.name, type: a.type, balance: a.balance }));
   // Lightweight only — top holdings by value, not the full position list.
@@ -290,11 +298,15 @@ function applyActions(data, actions) {
         labels.push(`$${action.amount} – ${action.name}`);
         // Spending alert: check if we crossed a budget threshold. Skipped for
         // Savings transfers — those aren't discretionary spend (see 'spent' above).
-        const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
+        const now2 = new Date();
+        const inThisMonth = t => { const d = new Date(t.date); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear(); };
+        const monthSaved = Math.round((data.transactions || []).filter(t => inThisMonth(t) && t.type === 'out' && t.category === 'Savings').reduce((s, t) => s + (t.amount || 0), 0));
+        const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
+        // Spendable budget — gross minus savings set aside (target or actual, whichever's larger).
+        const budget = grossBudget > 0 ? Math.max(0, grossBudget - Math.max(Math.round(data.budget?.categories?.Savings || 0), monthSaved)) : 0;
         if (budget > 0 && (action.category || 'Other') !== 'Savings' && (action.transactionType || 'out') === 'out') {
-          const now2 = new Date();
           const monthSpent = Math.round((data.transactions || []).filter(t => {
-            const d = new Date(t.date); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear() && t.type === 'out' && t.category !== 'Savings';
+            return inThisMonth(t) && t.type === 'out' && t.category !== 'Savings';
           }).reduce((s, t) => s + (t.amount || 0), 0));
           const pct = Math.round(monthSpent / budget * 100);
           const prevPct = Math.round((monthSpent - (action.amount || 0)) / budget * 100);

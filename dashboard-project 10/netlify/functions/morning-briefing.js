@@ -177,13 +177,16 @@ exports.handler = async (event) => {
     const calDan   = calToday.filter(calendarSvc.isDanEvent);
     const calJulia = calToday.filter(e => !calendarSvc.isDanEvent(e));
     const dailyHabits = (data.habits || []).filter(h => h.type === 'daily' || !h.type);
-    const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
     const now = new Date();
-    const spent = Math.round((data.transactions || []).filter(t => {
-      const d = new Date(t.date);
-      // Savings transfers excluded — not discretionary spend, matches the dashboard.
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && t.type === 'out' && t.category !== 'Savings';
-    }).reduce((s, t) => s + (t.amount || 0), 0));
+    const inMonth = t => { const d = new Date(t.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); };
+    // Savings transfers excluded — not discretionary spend, matches the dashboard.
+    const spent = Math.round((data.transactions || []).filter(t => inMonth(t) && t.type === 'out' && t.category !== 'Savings').reduce((s, t) => s + (t.amount || 0), 0));
+    // Budget = spendable money: gross minus savings set aside (target or this
+    // month's actual Savings transfers, whichever's larger). Matches
+    // spendableBudget() on the dashboard.
+    const monthSaved = Math.round((data.transactions || []).filter(t => inMonth(t) && t.type === 'out' && t.category === 'Savings').reduce((s, t) => s + (t.amount || 0), 0));
+    const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
+    const budget = grossBudget > 0 ? Math.max(0, grossBudget - Math.max(Math.round(data.budget?.categories?.Savings || 0), monthSaved)) : 0;
     const budgetPct = budget > 0 ? Math.round(spent / budget * 100) : null;
 
     // ── Pace: % of month elapsed vs % of budget spent — same "pace tick"

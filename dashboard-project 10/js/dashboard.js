@@ -308,13 +308,11 @@ function renderStats(){
     // budget number, "left", pace tick, and category breakdown here (matches
     // the Finance tab's spending card). See isSavingsTransfer() in core.js.
     const bSpent=bMt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
-    // Mirrors the Finance tab's spending card — "of $X" auto-pulls this
-    // month's real total income (monthlyIncome() already includes every
-    // 'in' transaction, not just the paycheck — see finance.js for why it
-    // isn't added to extraIncome again), falling back to the manual
-    // Budget Settings figure only if none has posted yet.
-    const bAutoIncome=monthlyIncome(appData.transactions,bMonth,bYear);
-    const budgetAmt=bAutoIncome>0?bAutoIncome:(appData.budget.monthly||appData.budget.income||0);
+    // Mirrors the Finance tab's spending card — "of $X" is spendable money:
+    // this month's real income (or the manual Budget Settings figure before
+    // any income posts) minus what's set aside for savings. See
+    // spendableBudget() in core.js.
+    const budgetAmt=spendableBudget(appData.transactions,bMonth,bYear);
     const daysInBMonth=new Date(bYear,bMonth+1,0).getDate();
 
     budgetNumEl.textContent=fmtM(bSpent);

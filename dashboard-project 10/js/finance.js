@@ -216,12 +216,11 @@ function renderFinanceTab(){
   // month (paycheck-shaped ones just get date-shifted; everything else
   // counts as-is). Adding extraIncome on top of that double-counted it.
   const extraIncome=mt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
-  // "of $X" auto-pulls this month's real total income rather than
-  // requiring a manual Budget Settings figure — falls back to that manual
-  // figure only if no income has posted yet this period (e.g. early in
-  // the month, before payday).
-  const autoIncome=monthlyIncome(appData.transactions,currentMonth,currentYear);
-  const budget=autoIncome>0?autoIncome:(appData.budget.monthly||appData.budget.income||0);
+  // "of $X" is spendable money — this month's real income (or the manual
+  // Budget Settings figure before any income posts) minus what's set aside
+  // for savings, so the bar and pace arrow measure spend against what's
+  // actually yours to spend. See spendableBudget() in core.js.
+  const budget=spendableBudget(appData.transactions,currentMonth,currentYear);
   const accounts=appData.accounts||[];
 
   // ── Account Table ───────────────────────────────────────────────
