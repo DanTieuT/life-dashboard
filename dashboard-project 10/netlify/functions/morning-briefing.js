@@ -181,7 +181,8 @@ exports.handler = async (event) => {
     const now = new Date();
     const spent = Math.round((data.transactions || []).filter(t => {
       const d = new Date(t.date);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && t.type === 'out';
+      // Savings transfers excluded — not discretionary spend, matches the dashboard.
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && t.type === 'out' && t.category !== 'Savings';
     }).reduce((s, t) => s + (t.amount || 0), 0));
     const budgetPct = budget > 0 ? Math.round(spent / budget * 100) : null;
 

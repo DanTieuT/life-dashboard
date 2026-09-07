@@ -304,7 +304,10 @@ function renderStats(){
     const now=new Date();
     const bMonth=currentMonth,bYear=currentYear;
     const bMt=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===bMonth&&d.getFullYear()===bYear;});
-    const bSpent=bMt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+    // Savings transfers are money set aside, not spent — kept out of the
+    // budget number, "left", pace tick, and category breakdown here (matches
+    // the Finance tab's spending card). See isSavingsTransfer() in core.js.
+    const bSpent=bMt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
     // Mirrors the Finance tab's spending card — "of $X" auto-pulls this
     // month's real total income (monthlyIncome() already includes every
     // 'in' transaction, not just the paycheck — see finance.js for why it
@@ -334,7 +337,7 @@ function renderStats(){
     }
 
     const CAT_DOT_COLORS=['#007aff','#34c759','#ff9500','#af52de','#30b0c7','#ff3b30','#5856d6','#ff2d55'];
-    const catSpends=Object.keys(appData.budget.categories||{}).map((cat,i)=>({
+    const catSpends=Object.keys(appData.budget.categories||{}).filter(cat=>cat!=='Savings').map((cat,i)=>({
       cat,
       spent:bMt.filter(t=>t.type==='out'&&t.category===cat).reduce((s,t)=>s+t.amount,0),
       color:CAT_DOT_COLORS[i%CAT_DOT_COLORS.length],

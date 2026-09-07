@@ -729,6 +729,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .spend-total-row{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}
 .spend-total-num{font-size:26px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
 .spend-total-of{font-size:13px;color:var(--sub)}
+.spend-total-saved{font-size:12px;color:var(--green);margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
 .spend-total-track-wrap{position:relative;padding-top:7px}
 .spend-total-track{height:6px;background:var(--track);border-radius:3px;overflow:hidden}
 .spend-total-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}

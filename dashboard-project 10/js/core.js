@@ -227,6 +227,14 @@ function monthlyIncome(transactions,month,year){
   });
   return total;
 }
+// Money moved into your own savings/investment accounts (e.g. a Wealthfront
+// contribution) posts as a category:'Savings' outflow so it still lands in
+// the ledger, net worth, and "money left" — but it's "pay yourself first",
+// not discretionary spending, so the spending gauges (spending card total +
+// pace arrow, the home budget card, savings rate, the 6-month trend) filter
+// it out with this. The Finance-tab category bar chart is the deliberate
+// exception — it shows Savings there, with "over budget = good".
+const isSavingsTransfer = t => !!t && t.type==='out' && t.category==='Savings';
 // ── AUTH ──────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user=>{
   if(user){
@@ -844,7 +852,7 @@ function haptic(ms=40){
 
 // ── GLOBAL EXPORTS (inline handlers + cross-module refs resolve via window) ──
 Object.assign(window, {
-  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, isPaycheckLike, escHtml,
+  uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, isPaycheckLike, isSavingsTransfer, escHtml,
   habitColors, calcStreak, migrateOldSavings, saveData, loadData, renderAll,
   updateThemeBtn, updateHideNumBtn, haptic, updateCompactSwitch, updateFontSizeBtns,
   updateLastBackupLabel,

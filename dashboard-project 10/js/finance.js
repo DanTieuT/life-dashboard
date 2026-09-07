@@ -180,7 +180,7 @@ function renderFinanceRing(){
   const mt=appData.transactions.filter(t=>{
     const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;
   });
-  const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+  const spent=mt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
   if(!budget)return;
   const circ=2*Math.PI*70;
   const offset=circ*(1-Math.min(spent/budget,1));
@@ -203,7 +203,11 @@ function renderFinanceTab(){
   if(monthEl) monthEl.textContent=months[currentMonth]+' '+currentYear;
 
   const mt=appData.transactions.filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
-  const spent=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+  // 'spent' drives the spending card total, ring, and pace arrow — Savings
+  // transfers (money set aside, not spent) are excluded and surfaced on
+  // their own line instead. See isSavingsTransfer() in core.js.
+  const spent=mt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
+  const savedThisMonth=mt.filter(isSavingsTransfer).reduce((s,t)=>s+t.amount,0);
   // Extra income this period — real deposits beyond the recognized paycheck
   // (isPaycheckLike, same test monthlyIncome() uses), so a bonus, side gig,
   // refund, or reimbursement landing this month. Shown on its own on the
@@ -400,6 +404,11 @@ function renderFinanceTab(){
   // at you instead of showing there's no limit configured. Match the home
   // page's budget card: only show "of $Y" when there's an actual budget.
   if(ofEl) ofEl.textContent=budget>0?'of '+fmtM(budget):'';
+  const savedEl=document.getElementById('spendingSaved');
+  if(savedEl){
+    savedEl.textContent=savedThisMonth>0?`+${fmtM(savedThisMonth)} to savings`:'';
+    savedEl.style.display=savedThisMonth>0?'':'none';
+  }
   if(totalFillEl){
     const pct=budget>0?Math.min(spent/budget,1)*100:(spent>0?100:0);
     totalFillEl.style.width=pct+'%';
@@ -1178,7 +1187,10 @@ function renderSavingsRate(mt){
   // ~$5.5k) toward the month it happened to post in instead of the month
   // it actually funds. See monthlyIncome()'s comment in core.js.
   const income=monthlyIncome(appData.transactions,currentMonth,currentYear);
-  const expenses=mt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+  // Savings transfers aren't expenses — moving money to Wealthfront IS
+  // saving, so excluding it here lets a contribution lift the rate, not
+  // sink it.
+  const expenses=mt.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
   if(income<=0){card.style.display='none';return;}
   card.style.display='';
   const rate=Math.round((income-expenses)/income*100);
@@ -1298,7 +1310,7 @@ function renderMonthlyTrend(){
   const DONUT_COLORS=['#ff453a','#ff9f0a','#30d158','#bf5af2','#0a84ff','#64d2ff'];
   const data=months.map((mo,i)=>{
     const txns=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===mo.m&&d.getFullYear()===mo.y;});
-    const spent=txns.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+    const spent=txns.filter(t=>t.type==='out'&&!isSavingsTransfer(t)).reduce((s,t)=>s+t.amount,0);
     const income=txns.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
     const isCurrent=mo.m===now.getMonth()&&mo.y===now.getFullYear();
     return{...mo,spent,income,isCurrent,color:DONUT_COLORS[i]};

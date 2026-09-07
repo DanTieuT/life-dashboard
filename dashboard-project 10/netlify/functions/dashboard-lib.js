@@ -76,7 +76,10 @@ function buildContext(data) {
     const d = new Date(t.date);
     return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear();
   });
-  const spent = Math.round(monthTxns.filter(t => t.type === 'out').reduce((s, t) => s + (t.amount || 0), 0));
+  // Savings-category outflows are transfers to your own savings/investment
+  // accounts, not discretionary spend — excluded here to match the dashboard's
+  // spending card and finance-tools.mjs.
+  const spent = Math.round(monthTxns.filter(t => t.type === 'out' && t.category !== 'Savings').reduce((s, t) => s + (t.amount || 0), 0));
   const projects = (data.userProjects || []).filter(p => !p.archived).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '🔨', stage: p.stage, nextAction: p.nextAction || '' }));
   const accounts = (data.accounts || []).map(a => ({ name: a.name, type: a.type, balance: a.balance }));
   // Lightweight only — top holdings by value, not the full position list.
@@ -285,12 +288,13 @@ function applyActions(data, actions) {
         data.transactions = data.transactions || [];
         data.transactions.push({ id: uidGen(), name: action.name, amount: action.amount, category: action.category || 'Other', type: action.transactionType || 'out', date: today });
         labels.push(`$${action.amount} – ${action.name}`);
-        // Spending alert: check if we crossed a budget threshold
+        // Spending alert: check if we crossed a budget threshold. Skipped for
+        // Savings transfers — those aren't discretionary spend (see 'spent' above).
         const budget = Math.round(data.budget?.monthly || data.budget?.income || 0);
-        if (budget > 0) {
+        if (budget > 0 && (action.category || 'Other') !== 'Savings' && (action.transactionType || 'out') === 'out') {
           const now2 = new Date();
           const monthSpent = Math.round((data.transactions || []).filter(t => {
-            const d = new Date(t.date); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear() && t.type === 'out';
+            const d = new Date(t.date); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear() && t.type === 'out' && t.category !== 'Savings';
           }).reduce((s, t) => s + (t.amount || 0), 0));
           const pct = Math.round(monthSpent / budget * 100);
           const prevPct = Math.round((monthSpent - (action.amount || 0)) / budget * 100);
