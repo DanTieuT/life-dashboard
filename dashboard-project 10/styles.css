@@ -708,12 +708,9 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 /* Soft radial wash marks this as a daily-glance hero, distinct from the
    flat list-style cards around it — same idea as iOS widgets that get one
    tinted "important" surface per screen instead of competing everywhere. */
-.payday-card{
-  background:radial-gradient(120% 140% at 0% 0%, var(--green-dim), transparent 60%), var(--card);
-  border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:16px;
-  display:flex;align-items:center;gap:20px;box-shadow:var(--card-shadow);
-}
-.payday-left{min-width:110px;flex-shrink:0}
+.payday-card-inner{display:flex;align-items:center;gap:20px}
+.fin-hdr-sum{color:var(--text);font-weight:600;text-transform:none;letter-spacing:0;margin-left:6px;font-variant-numeric:tabular-nums}
+.payday-left{min-width:90px;flex-shrink:0}
 .payday-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 .payday-days-line{display:flex;align-items:baseline;gap:5px;margin-bottom:2px}
 .payday-days-num{font-size:22px;font-weight:700;color:var(--green);letter-spacing:-.2px;font-variant-numeric:tabular-nums}
@@ -727,13 +724,12 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .payday-extra{font-size:11px;color:var(--green);text-align:right;margin-top:4px;font-weight:600}
 .payday-check{font-size:11px;text-align:right;margin-top:3px;font-weight:600}
 /* ── RUNWAY + CREDIT CARDS ───────────────────────────────────────── */
-.runway-top,.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.runway-label,.cc-label{font-size:12px;color:var(--sub);font-weight:600}
-.runway-num,.cc-num{font-size:22px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
-.runway-verdict,.cc-util{font-size:12px;font-weight:600;padding-top:2px;white-space:nowrap}
-.runway-track{position:relative;height:6px;background:var(--track);border-radius:3px;overflow:visible;margin:2px 0 8px}
-.runway-fill{height:100%;border-radius:3px;transition:width .4s}
-.runway-payday-tick{position:absolute;top:-2px;width:2px;height:10px;background:var(--text);opacity:.5;transform:translateX(-50%)}
+.runway-top,.cc-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.runway-num,.cc-num{font-size:17px;font-weight:700;letter-spacing:-.2px;font-variant-numeric:tabular-nums}
+.runway-verdict,.cc-util{font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.runway-track{position:relative;height:8px;background:var(--track);border-radius:4px;overflow:hidden;margin:2px 0 6px}
+.runway-fill{height:100%;border-radius:4px;transition:width .4s}
+.runway-payday-lbl{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text);opacity:.55;pointer-events:none}
 .runway-sub{font-size:11px;color:var(--sub)}
 .runway-bills{margin-top:8px}
 .runway-bills-hdr{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px}

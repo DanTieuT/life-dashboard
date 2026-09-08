@@ -353,6 +353,7 @@ function renderFinanceTab(){
   const pEl=id=>document.getElementById(id);
   if(pEl('paydayDays')) pEl('paydayDays').textContent=daysLeft;
   if(pEl('paydayDaysText')) pEl('paydayDaysText').textContent='days';
+  if(pEl('paydayHdrSum')) pEl('paydayHdrSum').textContent=isCurrentMonth?`${daysLeft}d`:'';
   if(pEl('paydayStart')) pEl('paydayStart').textContent=startLabel+' '+currentYear;
   if(pEl('paydayEnd')) pEl('paydayEnd').textContent=endLabel+' '+currentYear;
   if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
@@ -382,12 +383,12 @@ function renderFinanceTab(){
   }
 
   // ── Spending total + progress (category breakdown renders via #21 below) ──
-  const spendingHdr=document.getElementById('spendingCardHdr');
-  if(spendingHdr) spendingHdr.textContent=months[currentMonth]+' spending';
   const totalEl=document.getElementById('spendingTotal');
   const ofEl=document.getElementById('spendingOf');
   const totalFillEl=document.getElementById('spendingTotalFill');
   if(totalEl) totalEl.textContent=fmtM(spent);
+  const spendHdrSum=document.getElementById('spendingHdrSum');
+  if(spendHdrSum) spendHdrSum.textContent=`${fmtM(spent)}${budget>0?' of '+fmtM(budget):''}`;
   // Was falling back to `spent` when no real budget is set, which made an
   // over-budget month silently render as "$X of $X" — mirroring spend back
   // at you instead of showing there's no limit configured. Match the home
@@ -703,27 +704,32 @@ window.openAccountModal=function(id){
   document.getElementById('accountType').value=a?a.type:'savings';
   document.getElementById('accountBalance').value=a?a.balance:'';
   document.getElementById('accountCreditLimit').value=(a&&a.creditLimit)||'';
+  const _bk=document.getElementById('accountBucket');if(_bk)_bk.value=(a&&a.allocationBucket)||'';
   document.getElementById('accountDeleteBtn').style.display=a?'':'none';
   updateAcctTypeVis();
   openModal('accountModal');
 };
 window.updateAcctTypeVis=function(){
+  const type=document.getElementById('accountType').value;
   const row=document.getElementById('accountCreditLimitRow');
-  if(row)row.style.display=document.getElementById('accountType').value==='debt'?'':'none';
+  if(row)row.style.display=type==='debt'?'':'none';
+  const bk=document.getElementById('accountBucketRow');
+  if(bk)bk.style.display=(type==='investment'||type==='crypto')?'':'none';
 };
 window.saveAccount=function(){
   const name=document.getElementById('accountName').value.trim();
   const balance=parseFloat(document.getElementById('accountBalance').value)||0;
   const type=document.getElementById('accountType').value;
   const creditLimit=type==='debt'?(parseFloat(document.getElementById('accountCreditLimit').value)||null):null;
+  const allocationBucket=(type==='investment'||type==='crypto')?(document.getElementById('accountBucket')?.value||null):null;
   const editId=document.getElementById('accountEditId').value;
   if(!name)return;
   if(!appData.accounts)appData.accounts=[];
   if(editId){
     const a=appData.accounts.find(x=>x.id===editId);
-    if(a){a.name=name;a.type=type;a.balance=balance;a.creditLimit=creditLimit;a.updatedAt=Date.now();}
+    if(a){a.name=name;a.type=type;a.balance=balance;a.creditLimit=creditLimit;a.allocationBucket=allocationBucket;a.updatedAt=Date.now();}
   } else {
-    appData.accounts.push({id:uid(),name,type,balance,creditLimit,updatedAt:Date.now()});
+    appData.accounts.push({id:uid(),name,type,balance,creditLimit,allocationBucket,updatedAt:Date.now()});
   }
   saveData();closeModal('accountModal');renderFinanceTab();renderGoals();renderNWSparkline();toast('✓ Account saved');
 };
@@ -945,8 +951,8 @@ window.openGoalModal=function(id){
   document.getElementById('goalDeleteBtn').style.display=g?'':'none';
   document.getElementById('goalTrackContributions').checked=!!(g&&g.trackContributions);
   document.getElementById('goalAutoMatchKeyword').value=g?(g.autoMatchKeyword||''):'';
-  document.getElementById('goalTargetDate').value=g?(g.targetDate||''):'';
-  document.getElementById('goalAnnualLimit').value=g?(g.annualLimit||''):'';
+  const _td=document.getElementById('goalTargetDate');if(_td)_td.value=g?(g.targetDate||''):'';
+  const _al=document.getElementById('goalAnnualLimit');if(_al)_al.value=g?(g.annualLimit||''):'';
   // Populate multi-select linked accounts
   const wrap=document.getElementById('goalLinkedAccountsWrap');
   const selectedIds=g?(g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[])):[];
@@ -971,8 +977,8 @@ window.toggleGoalTrackMode=function(){
   document.getElementById('goalCurrentGroup').style.display=tracking?'none':'';
   document.getElementById('goalLinkedGroup').style.display=tracking?'none':'';
   document.getElementById('goalAutoMatchGroup').style.display=tracking?'':'none';
-  document.getElementById('goalTargetDateGroup').style.display=tracking?'':'none';
-  document.getElementById('goalAnnualLimitGroup').style.display=tracking?'':'none';
+  const _tdg=document.getElementById('goalTargetDateGroup');if(_tdg)_tdg.style.display=tracking?'':'none';
+  const _alg=document.getElementById('goalAnnualLimitGroup');if(_alg)_alg.style.display=tracking?'':'none';
   document.getElementById('goalContributionsGroup').style.display=tracking?'':'none';
   const hasId=!!document.getElementById('goalEditId').value;
   document.getElementById('goalLogContribBtn').style.display=hasId?'':'none';
@@ -1010,8 +1016,8 @@ window.saveGoal=function(){
   const current=parseFloat(document.getElementById('goalCurrent').value)||0;
   const trackContributions=document.getElementById('goalTrackContributions').checked;
   const autoMatchKeyword=document.getElementById('goalAutoMatchKeyword').value.trim().toLowerCase();
-  const targetDate=document.getElementById('goalTargetDate').value||null;
-  const annualLimit=parseFloat(document.getElementById('goalAnnualLimit').value)||null;
+  const targetDate=document.getElementById('goalTargetDate')?.value||null;
+  const annualLimit=parseFloat(document.getElementById('goalAnnualLimit')?.value)||null;
   // Get checked account IDs
   const wrap=document.getElementById('goalLinkedAccountsWrap');
   const linkedAccountIds=[...wrap.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
@@ -1244,11 +1250,17 @@ function _renderNWDeltaAlloc(card,hist,accounts,nw,hidden){
     const buckets={Cash:0,Investments:0,Retirement:0,Crypto:0,Property:0};
     (accounts||[]).forEach(a=>{
       if(a.type==='debt')return;
-      if(a.type==='crypto'||/crypto/i.test(a.name||''))buckets.Crypto+=a.balance;
-      else if(a.type==='property')buckets.Property+=a.balance;
-      else if(a.type==='checking'||a.type==='savings')buckets.Cash+=a.balance;
-      else if(_RETIREMENT_RE.test(a.name||''))buckets.Retirement+=a.balance;
-      else buckets.Investments+=a.balance;
+      // Explicit bucket (set on the account) wins; otherwise infer from type
+      // and name. Only investment/crypto accounts are ambiguous.
+      let b=a.allocationBucket;
+      if(!b){
+        if(a.type==='crypto'||/crypto/i.test(a.name||''))b='Crypto';
+        else if(a.type==='property')b='Property';
+        else if(a.type==='checking'||a.type==='savings')b='Cash';
+        else if(_RETIREMENT_RE.test(a.name||''))b='Retirement';
+        else b='Investments';
+      }
+      if(buckets[b]!=null)buckets[b]+=a.balance;
     });
     const COLORS={Cash:'#0a84ff',Investments:'#ff9f0a',Retirement:'#30d158',Crypto:'#bf5af2',Property:'#64d2ff'};
     const entries=Object.entries(buckets).filter(([,v])=>v>0);
@@ -1293,6 +1305,8 @@ function renderInflowReview(){
     .sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(!pending.length){card.style.display='none';return;}
   card.style.display='';
+  const hs=document.getElementById('inflowHdrSum');
+  if(hs)hs.textContent=String(pending.length);
   const shown=pending.slice(0,INFLOW_REVIEW_CAP);
   const catOpts=[...SPEND_CATEGORIES].map(c=>`<option>${c}</option>`).join('');
   list.innerHTML=shown.map(t=>`
@@ -1680,37 +1694,47 @@ function recurringOutflows(){
 }
 
 // ── Runway to payday ───────────────────────────────────────────────
+// The bar is the stretch of time between today and payday. The fill is how
+// much of it your checking balance covers at your recent spending pace,
+// minus the bills you can see coming. Full green bar = you reach payday with
+// money to spare; a short red fill = the point you'd run low, and the gap to
+// the "payday" marker is roughly how many days short you are.
 function renderRunway(){
   const card=document.getElementById('runwayCard');if(!card)return;
   const accts=spendingAccounts();
   const pay=nextPaydayInfo();
   if(!accts.length||!pay){card.style.display='none';return;}
+  const hidden=isNumbersHidden();
   const cash=accts.reduce((s,a)=>s+(a.balance||0),0);
   const dailyBurn=trailingBurn(30)/30;
-  const daysToPayday=pay.daysUntil;
-  // Bills landing before payday that we can see coming
-  const bills=recurringOutflows().filter(b=>b.nextDate>new Date()&&(b.nextDate-new Date())/86400000<=daysToPayday);
+  const daysToPayday=Math.max(1,pay.daysUntil);
+  const now=new Date();
+  const bills=recurringOutflows().filter(b=>b.nextDate>now&&(b.nextDate-now)/86400000<=daysToPayday);
   const billTotal=bills.reduce((s,b)=>s+b.amount,0);
-  const projectedLow=cash-dailyBurn*daysToPayday-billTotal;
-  const runwayDays=dailyBurn>0?Math.floor((cash-billTotal)/dailyBurn):999;
+  // Days the money lasts (bills paid up front, then burned daily).
+  const runwayDays=dailyBurn>0?Math.max(0,Math.floor((cash-billTotal)/dailyBurn)):daysToPayday+30;
+  const covered=runwayDays>=daysToPayday;
+  const spareAtPayday=cash-billTotal-dailyBurn*daysToPayday;
+  const runOutDate=new Date(now.getTime()+runwayDays*86400000);
   card.style.display='';
-  const covered=projectedLow>=0;
-  document.getElementById('runwayNum').textContent=isNumbersHidden()?'••••':`${Math.min(runwayDays,99)} day${runwayDays===1?'':'s'}`;
+  const numEl=document.getElementById('runwayNum');
+  numEl.textContent=hidden?'••••'
+    :covered?`Covered to payday${spareAtPayday>0?` · ${fmtM(spareAtPayday)} to spare`:''}`
+    :`Runs low ~${_shortDate(runOutDate)}`;
+  numEl.style.color=covered?'var(--text)':'var(--red)';
   const vEl=document.getElementById('runwayVerdict');
-  vEl.textContent=covered?'✓ covers payday':`⚠ short ~${fmtM(Math.abs(projectedLow))}`;
+  vEl.textContent=covered?'✓':`${Math.max(1,daysToPayday-runwayDays)}d short`;
   vEl.style.color=covered?'var(--green)':'var(--red)';
+  const hs=document.getElementById('runwayHdrSum');
+  if(hs)hs.textContent=covered?'✓':'⚠';
   const fill=document.getElementById('runwayFill');
-  const pct=Math.max(0,Math.min(100,runwayDays/Math.max(daysToPayday,1)*100));
-  fill.style.width=Math.min(pct,100)+'%';
+  fill.style.width=Math.max(3,Math.min(100,runwayDays/daysToPayday*100))+'%';
   fill.style.background=covered?'var(--green)':'var(--red)';
-  const tick=document.getElementById('runwayPaydayTick');
-  tick.style.left=Math.min(100,daysToPayday/Math.max(runwayDays,daysToPayday,1)*100)+'%';
-  document.getElementById('runwaySub').innerHTML=isNumbersHidden()
-    ?'Amounts hidden'
-    :`${fmtM(cash)} in checking · ${fmtM(dailyBurn)}/day burn · payday ${_shortDate(pay.next)} (${daysToPayday}d)`;
+  document.getElementById('runwaySub').textContent=hidden?'Amounts hidden'
+    :`${fmtM(cash)} in checking · ${fmtM(dailyBurn)}/day recent pace · payday ${_shortDate(pay.next)} (${pay.daysUntil}d)`;
   const bEl=document.getElementById('runwayBills');
-  bEl.innerHTML=bills.length
-    ?`<div class="runway-bills-hdr">Before payday</div>`+bills.slice(0,4).map(b=>
+  bEl.innerHTML=(bills.length&&!hidden)
+    ?`<div class="runway-bills-hdr">Bills before payday</div>`+bills.slice(0,4).map(b=>
       `<div class="runway-bill-row"><span>${escHtml(b.name)}</span><span>${_shortDate(b.nextDate)} · -${fmtM(b.amount)}</span></div>`).join('')
     :'';
 }
@@ -1728,10 +1752,12 @@ function renderCreditCards(){
   const overall=limSum>0?owedWithLimit/limSum*100:null;
   document.getElementById('ccNum').textContent=isNumbersHidden()?'••••':`${fmtM(totalOwed)} owed`;
   const uEl=document.getElementById('ccUtil');
+  const hs=document.getElementById('ccHdrSum');
   if(overall!=null){
     uEl.textContent=`${overall.toFixed(0)}% used`;
     uEl.style.color=overall<10?'var(--green)':overall<30?'var(--yellow)':'var(--red)';
-  } else uEl.textContent='';
+    if(hs)hs.textContent=`${overall.toFixed(0)}%`;
+  } else { uEl.textContent=''; if(hs)hs.textContent=isNumbersHidden()?'':fmtM(totalOwed); }
   document.getElementById('ccList').innerHTML=debts.slice().sort((a,b)=>(b.balance||0)-(a.balance||0)).map(a=>{
     const u=a.creditLimit>0?(a.balance||0)/a.creditLimit*100:null;
     const c=u==null?'var(--sub)':u<10?'var(--green)':u<30?'var(--yellow)':'var(--red)';

@@ -325,73 +325,97 @@
       </div>
 
       <!-- Payday Bar -->
-      <div class="payday-card" id="paydayCard">
-        <div class="payday-left">
-          <div class="payday-label">Next Payday</div>
-          <div class="payday-days-line">
-            <span class="payday-days-num" id="paydayDays">—</span>
-            <span class="payday-days-text" id="paydayDaysText">days</span>
-          </div>
+      <div class="fin-collapsible" data-fin-id="payday" id="paydayCard">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Next Payday <span class="fin-hdr-sum" id="paydayHdrSum"></span></span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
-        <div class="payday-right">
-          <div class="payday-dates-row"><span id="paydayStart"></span><span id="paydayEnd"></span></div>
-          <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
-          <div class="payday-extra" id="paydayExtra" style="display:none"></div>
-          <div class="payday-check" id="paydayCheck" style="display:none"></div>
+        <div data-role="finBody">
+          <div class="payday-card-inner">
+            <div class="payday-left">
+              <div class="payday-days-line">
+                <span class="payday-days-num" id="paydayDays">—</span>
+                <span class="payday-days-text" id="paydayDaysText">days</span>
+              </div>
+            </div>
+            <div class="payday-right">
+              <div class="payday-dates-row"><span id="paydayStart"></span><span id="paydayEnd"></span></div>
+              <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
+              <div class="payday-extra" id="paydayExtra" style="display:none"></div>
+              <div class="payday-check" id="paydayCheck" style="display:none"></div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Spending Card (total + by-category breakdown, merged — was two cards) -->
-      <div class="fin-card spending-card">
-        <div class="fin-section-title" id="spendingCardHdr" style="margin-bottom:2px">Spending</div>
-        <div class="spend-total-row">
-          <span class="spend-total-num" id="spendingTotal">$0</span>
-          <span class="spend-total-of" id="spendingOf">of $0</span>
-          <span class="spend-total-saved" id="spendingSaved" style="display:none"></span>
+      <div class="fin-collapsible" data-fin-id="spending">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Spending <span class="fin-hdr-sum" id="spendingHdrSum"></span></span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
-        <div class="spend-total-track-wrap">
-          <div class="spend-pace-arrow" id="spendingPaceTick" title="On-pace for today" style="display:none"></div>
-          <div class="spend-total-track"><div class="spend-total-fill" id="spendingTotalFill"></div></div>
+        <div data-role="finBody">
+          <div class="spend-total-row">
+            <span class="spend-total-num" id="spendingTotal">$0</span>
+            <span class="spend-total-of" id="spendingOf">of $0</span>
+            <span class="spend-total-saved" id="spendingSaved" style="display:none"></span>
+          </div>
+          <div class="spend-total-track-wrap">
+            <div class="spend-pace-arrow" id="spendingPaceTick" title="On-pace for today" style="display:none"></div>
+            <div class="spend-total-track"><div class="spend-total-fill" id="spendingTotalFill"></div></div>
+          </div>
+          <div class="spend-safe-line" id="spendSafeLine" style="display:none"></div>
+          <div class="spend-anomaly-row" id="spendAnomalyRow" style="display:none"></div>
+          <div id="catBarChart" style="margin-top:14px"></div>
         </div>
-        <div class="spend-safe-line" id="spendSafeLine" style="display:none"></div>
-        <div class="spend-anomaly-row" id="spendAnomalyRow" style="display:none"></div>
-        <div id="catBarChart" style="margin-top:14px"></div>
       </div>
 
       <!-- Runway to payday -->
-      <div class="fin-card runway-card" id="runwayCard" style="display:none">
-        <div class="runway-top">
-          <div>
-            <div class="runway-label">Runway</div>
-            <div class="runway-num" id="runwayNum">—</div>
-          </div>
-          <div class="runway-verdict" id="runwayVerdict"></div>
+      <div class="fin-collapsible" data-fin-id="runway" id="runwayCard" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Runway <span class="fin-hdr-sum" id="runwayHdrSum"></span></span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
-        <div class="runway-track"><div class="runway-fill" id="runwayFill"></div><div class="runway-payday-tick" id="runwayPaydayTick" title="Payday"></div></div>
-        <div class="runway-sub" id="runwaySub"></div>
-        <div class="runway-bills" id="runwayBills"></div>
+        <div data-role="finBody">
+          <div class="runway-top">
+            <div class="runway-num" id="runwayNum">—</div>
+            <div class="runway-verdict" id="runwayVerdict"></div>
+          </div>
+          <div class="runway-track">
+            <div class="runway-fill" id="runwayFill"></div>
+            <span class="runway-payday-lbl">payday</span>
+          </div>
+          <div class="runway-sub" id="runwaySub"></div>
+          <div class="runway-bills" id="runwayBills"></div>
+        </div>
       </div>
 
       <!-- Credit cards -->
-      <div class="fin-card cc-card" id="ccCard" style="display:none">
-        <div class="cc-top">
-          <div>
-            <div class="cc-label">Credit cards</div>
-            <div class="cc-num" id="ccNum">—</div>
-          </div>
-          <div class="cc-util" id="ccUtil"></div>
+      <div class="fin-collapsible" data-fin-id="creditcards" id="ccCard" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Credit cards <span class="fin-hdr-sum" id="ccHdrSum"></span></span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
-        <div id="ccList"></div>
+        <div data-role="finBody">
+          <div class="cc-top">
+            <div class="cc-num" id="ccNum">—</div>
+            <div class="cc-util" id="ccUtil"></div>
+          </div>
+          <div id="ccList"></div>
+        </div>
       </div>
 
       <!-- P2P inflow review — Venmo/Zelle/etc. that could be income OR a
-
-      <!-- P2P inflow review — Venmo/Zelle/etc. that could be income OR a
            friend paying Dan back. He classifies each one himself. -->
-      <div class="fin-card inflow-review-card" id="inflowReviewCard" style="display:none">
-        <div class="fin-section-title" style="margin-bottom:2px">Review payments received</div>
-        <div class="inflow-review-sub">Venmo / Zelle / PayPal in — real income, or someone paying you back?</div>
-        <div id="inflowReviewList"></div>
+      <div class="fin-collapsible inflow-review-card" data-fin-id="inflowreview" id="inflowReviewCard" style="display:none">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Review payments received <span class="fin-hdr-sum" id="inflowHdrSum"></span></span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="inflow-review-sub">Venmo / Zelle / PayPal in — real income, or someone paying you back?</div>
+          <div id="inflowReviewList"></div>
+        </div>
       </div>
 
       <!-- Savings Rate (#30) — radial gauge; this number only moves once a
@@ -928,6 +952,16 @@
     <div class="form-group" id="accountCreditLimitRow" style="display:none">
       <label class="form-label">Credit Limit ($) <span style="color:var(--sub);font-weight:400">— for utilization %</span></label>
       <input class="form-input" id="accountCreditLimit" type="number" placeholder="e.g. 10000">
+    </div>
+    <div class="form-group" id="accountBucketRow" style="display:none">
+      <label class="form-label">Net-worth bucket <span style="color:var(--sub);font-weight:400">— for the allocation chart</span></label>
+      <select class="form-select" id="accountBucket">
+        <option value="">Auto (guess from name)</option>
+        <option value="Cash">Cash</option>
+        <option value="Investments">Investments (taxable)</option>
+        <option value="Retirement">Retirement (IRA / 401k / HSA)</option>
+        <option value="Crypto">Crypto</option>
+      </select>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="accountDeleteBtn" style="display:none;margin-right:auto;color:#ff453a" onclick="deleteAccountFromModal()">Remove</button>
