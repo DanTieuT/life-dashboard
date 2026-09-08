@@ -708,9 +708,13 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 /* Soft radial wash marks this as a daily-glance hero, distinct from the
    flat list-style cards around it — same idea as iOS widgets that get one
    tinted "important" surface per screen instead of competing everywhere. */
-.payday-card-inner{display:flex;align-items:center;gap:20px}
+.payday-card{
+  background:radial-gradient(120% 140% at 0% 0%, var(--green-dim), transparent 60%), var(--card);
+  border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:16px;
+  display:flex;align-items:center;gap:20px;box-shadow:var(--card-shadow);
+}
 .fin-hdr-sum{color:var(--text);font-weight:600;text-transform:none;letter-spacing:0;margin-left:6px;font-variant-numeric:tabular-nums}
-.payday-left{min-width:90px;flex-shrink:0}
+.payday-left{min-width:110px;flex-shrink:0}
 .payday-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 .payday-days-line{display:flex;align-items:baseline;gap:5px;margin-bottom:2px}
 .payday-days-num{font-size:22px;font-weight:700;color:var(--green);letter-spacing:-.2px;font-variant-numeric:tabular-nums}

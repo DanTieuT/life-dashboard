@@ -353,7 +353,6 @@ function renderFinanceTab(){
   const pEl=id=>document.getElementById(id);
   if(pEl('paydayDays')) pEl('paydayDays').textContent=daysLeft;
   if(pEl('paydayDaysText')) pEl('paydayDaysText').textContent='days';
-  if(pEl('paydayHdrSum')) pEl('paydayHdrSum').textContent=isCurrentMonth?`${daysLeft}d`:'';
   if(pEl('paydayStart')) pEl('paydayStart').textContent=startLabel+' '+currentYear;
   if(pEl('paydayEnd')) pEl('paydayEnd').textContent=endLabel+' '+currentYear;
   if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';

@@ -325,26 +325,19 @@
       </div>
 
       <!-- Payday Bar -->
-      <div class="fin-collapsible" data-fin-id="payday" id="paydayCard">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          <span>Next Payday <span class="fin-hdr-sum" id="paydayHdrSum"></span></span>
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="payday-card-inner">
-            <div class="payday-left">
-              <div class="payday-days-line">
-                <span class="payday-days-num" id="paydayDays">—</span>
-                <span class="payday-days-text" id="paydayDaysText">days</span>
-              </div>
-            </div>
-            <div class="payday-right">
-              <div class="payday-dates-row"><span id="paydayStart"></span><span id="paydayEnd"></span></div>
-              <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
-              <div class="payday-extra" id="paydayExtra" style="display:none"></div>
-              <div class="payday-check" id="paydayCheck" style="display:none"></div>
-            </div>
+      <div class="payday-card" id="paydayCard">
+        <div class="payday-left">
+          <div class="payday-label">Next Payday</div>
+          <div class="payday-days-line">
+            <span class="payday-days-num" id="paydayDays">—</span>
+            <span class="payday-days-text" id="paydayDaysText">days</span>
           </div>
+        </div>
+        <div class="payday-right">
+          <div class="payday-dates-row"><span id="paydayStart"></span><span id="paydayEnd"></span></div>
+          <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
+          <div class="payday-extra" id="paydayExtra" style="display:none"></div>
+          <div class="payday-check" id="paydayCheck" style="display:none"></div>
         </div>
       </div>
 
