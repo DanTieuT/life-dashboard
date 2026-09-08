@@ -170,33 +170,9 @@ window.refreshWatchlistQuotes=async function(){
   }
 };
 
-// ── FINANCE RING (legacy, kept for any callers) ───────────────────
-function renderFinanceRing(){
-  // All ring DOM elements were removed from the dashboard; this is a no-op
-  // unless the elements exist (e.g. custom HTML adds them back).
-  const arc=document.getElementById('ringArc');
-  if(!arc)return;
-  const budget=appData.budget.monthly||(appData.budget.income)||0;
-  const mt=appData.transactions.filter(t=>{
-    const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;
-  });
-  const spent=Math.max(0,netSpend(mt));
-  if(!budget)return;
-  const circ=2*Math.PI*70;
-  const offset=circ*(1-Math.min(spent/budget,1));
-  arc.setAttribute('stroke',spent>budget?'#ff453a':spent>budget*.8?'#ffd60a':'#30d158');
-  arc.style.strokeDashoffset=offset;
-  const pm=document.getElementById('paceMark');
-  if(pm){
-    const today=new Date();const dim=daysInMonth(today.getFullYear(),today.getMonth());
-    const paceAngle=(today.getDate()/dim)*2*Math.PI;
-    pm.setAttribute('cx',90+70*Math.cos(paceAngle));pm.setAttribute('cy',90+70*Math.sin(paceAngle));
-  }
-}
 // ── FINANCE TAB ───────────────────────────────────────────────────
 window.renderFinanceTab=renderFinanceTab;
 function renderFinanceTab(){
-  renderFinanceRing();
   updateHideNumBtn();
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const monthEl=document.getElementById('financeTabMonth');
@@ -1010,6 +986,9 @@ window.saveGoal=function(){
 // ── Contribution logging (for goals tracking money Plaid can't see, like
 // Roth/brokerage transfers) ─────────────────────────────────────────
 window.openContributionModal=function(goalId){
+  // Called with a goal id from the goal card, or with none from the goal
+  // modal's own button (which falls back to the goal being edited).
+  goalId=goalId||document.getElementById('goalEditId').value;
   if(!goalId)return; // guard: modal button is hidden until the goal has been saved once
   document.getElementById('contribGoalId').value=goalId;
   document.getElementById('contribAmount').value='';
@@ -1810,6 +1789,6 @@ function renderMissedRewards(mt){
 
 // ── GLOBAL EXPORTS ──
 Object.assign(window, {
-  renderFinanceRing, renderGoals, renderNWSparkline, logGoalBalanceHistory,
+  renderGoals, renderNWSparkline, logGoalBalanceHistory,
   trackNetWorthHistory, goalCurrentBalance,
 });

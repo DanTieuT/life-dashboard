@@ -12,7 +12,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
   } catch {}
 }
 const calendarSvc = require('./apple-calendar.js');
-const { netSpend, monthlySavings } = require('./dashboard-lib.js');
+const { netSpend, monthlySavings } = require('./finance-shared.js');
 
 function initFirebase() {
   if (admin.apps.length > 0) return;

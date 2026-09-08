@@ -20,22 +20,11 @@
 //   no full account numbers (only the existing `mask`), no access tokens
 //   (those never enter appData in the first place — see plaid-link.js).
 
+// Money-model helpers (income/refund/reimbursement classification) — shared
+// with dashboard-lib.js and mirrored in js/core.js.
+import { isSpendOffset, offsetCategory } from './finance-shared.js';
+
 const TRANSFER_PROXY_CATEGORY = 'Savings';
-// Mirrors js/core.js inflow classification. A type:'in' transaction is
-// 'income', 'refund' (merchant return), or 'reimbursement' (someone paying
-// Dan back) — the latter two net against spending, not income. Unclassified
-// P2P defaults to 'reimbursement' (Dan reviews those on the dashboard).
-const P2P_INFLOW_RE = /venmo|cash ?app|zelle|paypal/i;
-const SPEND_CATEGORIES = new Set(['Food', 'Transport', 'Shopping', 'Entertainment', 'Health & Fitness', 'Housing']);
-function inflowKind(t) {
-  if (!t || t.type !== 'in') return null;
-  if (t.inflowKind) return t.inflowKind;
-  if (P2P_INFLOW_RE.test(t.name || '')) return 'reimbursement';
-  if (SPEND_CATEGORIES.has(t.category)) return 'refund';
-  return 'income';
-}
-const isSpendOffset = (t) => { const k = inflowKind(t); return k === 'refund' || k === 'reimbursement'; };
-const offsetCategory = (t) => (inflowKind(t) === 'reimbursement' ? (t.reimburseCategory || 'Food') : (t.category || 'Other'));
 const MAX_TXN_LIMIT = 200;
 const DEFAULT_TXN_LIMIT = 50;
 const MAX_DATE_RANGE_DAYS = 3660; // ~10 years — generous but not unbounded

@@ -13,37 +13,9 @@ const calendarSvc = require('./apple-calendar.js');
 
 const uidGen = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-// Mirrors js/core.js inflow classification. A type:'in' transaction is
-// 'income', 'refund', or 'reimbursement'; the latter two net against
-// spending instead of counting as income. Unclassified P2P (Venmo/Zelle/
-// PayPal) defaults to 'reimbursement' — Dan reviews those on the dashboard.
-const P2P_INFLOW_RE = /venmo|cash ?app|zelle|paypal/i;
-const SPEND_CATEGORIES = new Set(['Food', 'Transport', 'Shopping', 'Entertainment', 'Health & Fitness', 'Housing']);
-function inflowKind(t) {
-  if (!t || t.type !== 'in') return null;
-  if (t.inflowKind) return t.inflowKind;
-  if (P2P_INFLOW_RE.test(t.name || '')) return 'reimbursement';
-  if (SPEND_CATEGORIES.has(t.category)) return 'refund';
-  return 'income';
-}
-const isSpendOffset = (t) => { const k = inflowKind(t); return k === 'refund' || k === 'reimbursement'; };
-// Net discretionary spend for an already-filtered set: outflows (minus
-// Savings transfers) minus refunds/reimbursements.
-function netSpend(txns) {
-  const out = (txns || []).filter(t => t.type === 'out' && t.category !== 'Savings').reduce((s, t) => s + (t.amount || 0), 0);
-  const offsets = (txns || []).filter(isSpendOffset).reduce((s, t) => s + (t.amount || 0), 0);
-  return out - offsets;
-}
-// Everything set aside for savings in a month — mirrors js/core.js
-// monthlySavings(). category:'Savings' transfers PLUS contribution-tracked
-// goal contributions dated that month (Roth etc.), which fund via an ACH
-// that never becomes a transaction.
-function monthlySavings(data, month, year) {
-  const inM = (ds) => { const d = new Date(ds); return d.getMonth() === month && d.getFullYear() === year; };
-  const xfers = (data.transactions || []).filter(t => t.type === 'out' && t.category === 'Savings' && inM(t.date)).reduce((s, t) => s + (t.amount || 0), 0);
-  const contribs = (data.goals || []).flatMap(g => g.contributions || []).filter(c => inM(c.date)).reduce((s, c) => s + (c.amount || 0), 0);
-  return xfers + contribs;
-}
+// Money-model helpers (income/refund/reimbursement classification, netSpend,
+// monthlySavings) — shared with finance-tools.mjs and mirrored in js/core.js.
+const { netSpend, monthlySavings } = require('./finance-shared.js');
 
 function todayStr() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
@@ -514,5 +486,5 @@ async function runCalendarSideEffects(actions) {
 
 module.exports = {
   uidGen, todayStr, isRDO, buildContext, ptToEpoch, findById, applyActions,
-  runCalendarSideEffects, calendarSvc, netSpend, inflowKind, isSpendOffset, monthlySavings,
+  runCalendarSideEffects, calendarSvc,
 };

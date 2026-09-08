@@ -517,7 +517,6 @@ function renderAll(){
   safeRender(renderFocusTasks);
   safeRender(renderTodaySchedule);
   safeRender(syncCalendarEvents);
-  safeRender(renderFinanceRing);
   safeRender(renderHabitsGrid,'habitsGridDash');
   safeRender(renderTasks);
   safeRender(renderFinanceTab);
