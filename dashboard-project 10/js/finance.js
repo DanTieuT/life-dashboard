@@ -217,7 +217,7 @@ function renderFinanceTab(){
   // because monthlyIncome() already includes every 'in' transaction this
   // month (paycheck-shaped ones just get date-shifted; everything else
   // counts as-is). Adding extraIncome on top of that double-counted it.
-  const extraIncome=mt.filter(t=>t.type==='in'&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
+  const extraIncome=mt.filter(t=>t.type==='in'&&!isSpendOffset(t)&&!isPaycheckLike(t.name)).reduce((s,t)=>s+t.amount,0);
   // "of $X" is spendable money — this month's real income (or the manual
   // Budget Settings figure before any income posts) minus what's set aside
   // for savings, so the bar and pace arrow measure spend against what's
@@ -592,7 +592,12 @@ window.exportTransactionsCSV=function(){
   if(!txns.length){toast('No transactions to export','error');return;}
   const esc=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
   const rows=[['Date','Description','Category','Type','Amount','Recurring']];
-  txns.forEach(t=>rows.push([t.date,t.name||'',t.category||'',t.type==='in'?'Income':'Expense',(t.amount||0).toFixed(2),t.recurring?'Yes':'No']));
+  txns.forEach(t=>{
+    const type=t.type==='in'
+      ?({income:'Income',refund:'Refund',reimbursement:'Reimbursement'}[inflowKind(t)]||'Income')
+      :'Expense';
+    rows.push([t.date,t.name||'',t.category||'',type,(t.amount||0).toFixed(2),t.recurring?'Yes':'No']);
+  });
   const csv=rows.map(r=>r.map(esc).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);

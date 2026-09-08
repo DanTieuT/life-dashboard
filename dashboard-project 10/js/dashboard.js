@@ -556,7 +556,7 @@ window.openWeeklyReview=function(){
   const tasksTotal=(appData.focusTasks||[]).length;
   // Spending
   const weekSpent=(appData.transactions||[]).filter(t=>t.type==='out'&&weekDays.includes(t.date)).reduce((s,t)=>s+t.amount,0);
-  const weekIncome=(appData.transactions||[]).filter(t=>t.type==='in'&&weekDays.includes(t.date)).reduce((s,t)=>s+t.amount,0);
+  const weekIncome=(appData.transactions||[]).filter(t=>t.type==='in'&&!isSpendOffset(t)&&weekDays.includes(t.date)).reduce((s,t)=>s+t.amount,0);
   // Goals progress
   const goals=(appData.goals||[]).map(g=>{
     const current=g.linkedAccountId?(appData.accounts||[]).find(a=>a.id===g.linkedAccountId)?.balance??g.current:g.current;
@@ -630,7 +630,7 @@ function renderWeekDigest(){
   }).length;
   // Spending / income this week
   const spent=(appData.transactions||[]).filter(t=>t.type==='out'&&weekDays.includes(t.date)).reduce((s,t)=>s+t.amount,0);
-  const income=(appData.transactions||[]).filter(t=>t.type==='in'&&weekDays.includes(t.date)).reduce((s,t)=>s+t.amount,0);
+  const income=(appData.transactions||[]).filter(t=>t.type==='in'&&!isSpendOffset(t)&&weekDays.includes(t.date)).reduce((s,t)=>s+t.amount,0);
   const label=weekStart.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+today.toLocaleDateString('en-US',{month:'short',day:'numeric'});
   el.innerHTML=`<div class="dash-proj-hdr">
       <div><div class="dash-proj-title">This Week</div><div class="dash-proj-sub">${label}</div></div>
