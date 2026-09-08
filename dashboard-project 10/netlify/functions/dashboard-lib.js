@@ -34,6 +34,16 @@ function netSpend(txns) {
   const offsets = (txns || []).filter(isSpendOffset).reduce((s, t) => s + (t.amount || 0), 0);
   return out - offsets;
 }
+// Everything set aside for savings in a month — mirrors js/core.js
+// monthlySavings(). category:'Savings' transfers PLUS contribution-tracked
+// goal contributions dated that month (Roth etc.), which fund via an ACH
+// that never becomes a transaction.
+function monthlySavings(data, month, year) {
+  const inM = (ds) => { const d = new Date(ds); return d.getMonth() === month && d.getFullYear() === year; };
+  const xfers = (data.transactions || []).filter(t => t.type === 'out' && t.category === 'Savings' && inM(t.date)).reduce((s, t) => s + (t.amount || 0), 0);
+  const contribs = (data.goals || []).flatMap(g => g.contributions || []).filter(c => inM(c.date)).reduce((s, c) => s + (c.amount || 0), 0);
+  return xfers + contribs;
+}
 
 function todayStr() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
@@ -102,10 +112,11 @@ function buildContext(data) {
   const spent = Math.max(0, Math.round(netSpend(monthTxns)));
   // Budget = spendable money: the manual Budget Settings figure minus what's
   // set aside for savings (the Savings category budget, or the month's actual
-  // Savings transfers if larger). Matches spendableBudget() on the dashboard.
+  // savings — transfers + goal contributions — if larger). Matches
+  // spendableBudget() on the dashboard.
   const savingsSetAside = Math.max(
     Math.round(data.budget?.categories?.Savings || 0),
-    Math.round(monthTxns.filter(t => t.type === 'out' && t.category === 'Savings').reduce((s, t) => s + (t.amount || 0), 0)),
+    Math.round(monthlySavings(data, now2.getMonth(), now2.getFullYear())),
   );
   const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
   const budget = grossBudget > 0 ? Math.max(0, grossBudget - savingsSetAside) : 0;
@@ -321,7 +332,7 @@ function applyActions(data, actions) {
         // Savings transfers — those aren't discretionary spend (see 'spent' above).
         const now2 = new Date();
         const inThisMonth = t => { const d = new Date(t.date); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear(); };
-        const monthSaved = Math.round((data.transactions || []).filter(t => inThisMonth(t) && t.type === 'out' && t.category === 'Savings').reduce((s, t) => s + (t.amount || 0), 0));
+        const monthSaved = Math.round(monthlySavings(data, now2.getMonth(), now2.getFullYear()));
         const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
         // Spendable budget — gross minus savings set aside (target or actual, whichever's larger).
         const budget = grossBudget > 0 ? Math.max(0, grossBudget - Math.max(Math.round(data.budget?.categories?.Savings || 0), monthSaved)) : 0;
@@ -503,5 +514,5 @@ async function runCalendarSideEffects(actions) {
 
 module.exports = {
   uidGen, todayStr, isRDO, buildContext, ptToEpoch, findById, applyActions,
-  runCalendarSideEffects, calendarSvc, netSpend, inflowKind, isSpendOffset,
+  runCalendarSideEffects, calendarSvc, netSpend, inflowKind, isSpendOffset, monthlySavings,
 };

@@ -271,21 +271,31 @@ function netSpend(monthTxns){
   return out-offsets;
 }
 
+// Everything set aside for savings in a month: category:'Savings' transfers
+// (Wealthfront etc.) PLUS contribution-tracked goal contributions dated that
+// month (Roth etc.). The latter fund via an ACH straight out of checking
+// that never lands in the transaction ledger — but the money's still gone,
+// so it counts here too.
+function monthlySavings(transactions, month, year){
+  const inM=ds=>{const d=txnLocalDate(ds);return d.getMonth()===month&&d.getFullYear()===year;};
+  const xfers=(transactions||[]).filter(t=>isSavingsTransfer(t)&&inM(t.date)).reduce((s,t)=>s+t.amount,0);
+  const contribs=(window.appData?.goals||[]).flatMap(g=>g.contributions||[])
+    .filter(c=>inM(c.date)).reduce((s,c)=>s+(c.amount||0),0);
+  return xfers+contribs;
+}
+
 // The ceiling the spending card + budget gauges pace against: gross income
 // (or the manual Budget Settings figure before any income posts) minus what's
 // set aside for savings — money earmarked for, or already moved to, savings
 // was never yours to spend. "Set aside" = your configured Savings category
-// budget, bumped up to the month's actual Savings transfers if you've already
-// moved more than the target. See isSavingsTransfer().
+// budget, bumped up to the month's actual savings (transfers + goal
+// contributions) if you've already moved more than the target.
 function spendableBudget(transactions, month, year){
   const income=monthlyIncome(transactions,month,year);
   const gross=income>0?income:(window.appData?.budget?.monthly||window.appData?.budget?.income||0);
   if(gross<=0)return gross;
   const target=(window.appData?.budget?.categories?.Savings)||0;
-  const saved=(transactions||[]).filter(t=>{
-    const d=txnLocalDate(t.date);
-    return d.getMonth()===month&&d.getFullYear()===year&&isSavingsTransfer(t);
-  }).reduce((s,t)=>s+t.amount,0);
+  const saved=monthlySavings(transactions,month,year);
   return Math.max(0,gross-Math.max(target,saved));
 }
 // ── AUTH ──────────────────────────────────────────────────────────
@@ -906,7 +916,7 @@ function haptic(ms=40){
 // ── GLOBAL EXPORTS (inline handlers + cross-module refs resolve via window) ──
 Object.assign(window, {
   uid, todayStr, fmt, fmtM, fmtTime12, humanDate, getGreeting, daysInMonth, txnLocalDate, monthlyIncome, isPaycheckLike, isSavingsTransfer, spendableBudget,
-  inflowKind, needsInflowReview, isSpendOffset, offsetCategory, netSpend, SPEND_CATEGORIES, escHtml,
+  inflowKind, needsInflowReview, isSpendOffset, offsetCategory, netSpend, monthlySavings, SPEND_CATEGORIES, escHtml,
   habitColors, calcStreak, migrateOldSavings, saveData, loadData, renderAll,
   updateThemeBtn, updateHideNumBtn, haptic, updateCompactSwitch, updateFontSizeBtns,
   updateLastBackupLabel,

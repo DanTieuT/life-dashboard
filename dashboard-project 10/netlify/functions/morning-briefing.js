@@ -12,7 +12,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
   } catch {}
 }
 const calendarSvc = require('./apple-calendar.js');
-const { netSpend } = require('./dashboard-lib.js');
+const { netSpend, monthlySavings } = require('./dashboard-lib.js');
 
 function initFirebase() {
   if (admin.apps.length > 0) return;
@@ -184,10 +184,10 @@ exports.handler = async (event) => {
     // refunds/reimbursements — matches the dashboard's spending card.
     const monthTxns = (data.transactions || []).filter(inMonth);
     const spent = Math.max(0, Math.round(netSpend(monthTxns)));
-    // Budget = spendable money: gross minus savings set aside (target or this
-    // month's actual Savings transfers, whichever's larger). Matches
-    // spendableBudget() on the dashboard.
-    const monthSaved = Math.round(monthTxns.filter(t => t.type === 'out' && t.category === 'Savings').reduce((s, t) => s + (t.amount || 0), 0));
+    // Budget = spendable money: gross minus savings set aside (target, or this
+    // month's actual savings — transfers + goal contributions — if larger).
+    // Matches spendableBudget() on the dashboard.
+    const monthSaved = Math.round(monthlySavings(data, now.getMonth(), now.getFullYear()));
     const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
     const budget = grossBudget > 0 ? Math.max(0, grossBudget - Math.max(Math.round(data.budget?.categories?.Savings || 0), monthSaved)) : 0;
     const budgetPct = budget > 0 ? Math.round(spent / budget * 100) : null;

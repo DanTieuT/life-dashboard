@@ -209,7 +209,7 @@ function renderFinanceTab(){
   // and isSavingsTransfer() in core.js. Floored at 0 — a month where money
   // back outweighs spend reads as $0, not a negative.
   const spent=Math.max(0,netSpend(mt));
-  const savedThisMonth=mt.filter(isSavingsTransfer).reduce((s,t)=>s+t.amount,0);
+  const savedThisMonth=monthlySavings(appData.transactions,currentMonth,currentYear);
   // Extra income this period — real deposits beyond the recognized paycheck
   // (isPaycheckLike, same test monthlyIncome() uses), so a bonus, side gig,
   // refund, or reimbursement landing this month. Shown on its own on the
