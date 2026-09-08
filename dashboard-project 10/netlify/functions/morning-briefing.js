@@ -12,7 +12,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
   } catch {}
 }
 const calendarSvc = require('./apple-calendar.js');
-const { netSpend, monthlySavings, txnLocalDate } = require('./finance-shared.js');
+const { netSpend, spendableBudget, txnLocalDate } = require('./finance-shared.js');
 
 function initFirebase() {
   if (admin.apps.length > 0) return;
@@ -183,13 +183,9 @@ exports.handler = async (event) => {
     // Net discretionary spend — outflows minus Savings transfers minus
     // refunds/reimbursements — matches the dashboard's spending card.
     const monthTxns = (data.transactions || []).filter(inMonth);
+    // Both mirror the dashboard's spending card exactly — see finance-shared.js.
     const spent = Math.max(0, Math.round(netSpend(monthTxns)));
-    // Budget = spendable money: gross minus savings set aside (target, or this
-    // month's actual savings — transfers + goal contributions — if larger).
-    // Matches spendableBudget() on the dashboard.
-    const monthSaved = Math.round(monthlySavings(data, now.getMonth(), now.getFullYear()));
-    const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
-    const budget = grossBudget > 0 ? Math.max(0, grossBudget - Math.max(Math.round(data.budget?.categories?.Savings || 0), monthSaved)) : 0;
+    const budget = Math.round(spendableBudget(data, now.getMonth(), now.getFullYear()));
     const budgetPct = budget > 0 ? Math.round(spent / budget * 100) : null;
 
     // ── Pace: % of month elapsed vs % of budget spent — same "pace tick"

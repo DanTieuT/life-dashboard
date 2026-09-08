@@ -58,8 +58,38 @@ function monthlySavings(data, month, year) {
   return xfers + contribs;
 }
 
+const isPaycheckLike = (name) => /payroll|salary|paycheck/i.test(name || '');
+
+// This month's income — type:'in' transactions, minus refunds/reimbursements
+// (which net against spend, not income). A paycheck-shaped deposit dated
+// on/after the 25th funds the month ahead (monthly/gov payroll posts late),
+// so it's shifted forward. Mirrors js/core.js monthlyIncome().
+function monthlyIncome(txns, month, year) {
+  let total = 0;
+  (txns || []).forEach(t => {
+    if (t.type !== 'in' || isSpendOffset(t)) return;
+    const d = txnLocalDate(t.date);
+    let m = d.getMonth(), y = d.getFullYear();
+    if (isPaycheckLike(t.name) && d.getDate() >= 25) { const s = new Date(y, m + 1, 1); m = s.getMonth(); y = s.getFullYear(); }
+    if (m === month && y === year) total += (t.amount || 0);
+  });
+  return total;
+}
+
+// The spending ceiling — spendable money for the month. Mirrors js/core.js
+// spendableBudget(): this month's income (or the manual Budget Settings
+// figure before any income has posted) minus the larger of the Savings
+// category budget and the month's actual savings.
+function spendableBudget(data, month, year) {
+  const income = monthlyIncome(data.transactions, month, year);
+  const gross = income > 0 ? income : (data.budget?.monthly || data.budget?.income || 0);
+  if (gross <= 0) return 0;
+  const target = data.budget?.categories?.Savings || 0;
+  return Math.max(0, gross - Math.max(target, monthlySavings(data, month, year)));
+}
+
 module.exports = {
   P2P_INFLOW_RE, SPEND_CATEGORIES, txnLocalDate,
-  inflowKind, isSpendOffset, offsetCategory, isSavingsTransfer,
-  netSpend, monthlySavings,
+  inflowKind, isSpendOffset, offsetCategory, isSavingsTransfer, isPaycheckLike,
+  netSpend, monthlySavings, monthlyIncome, spendableBudget,
 };

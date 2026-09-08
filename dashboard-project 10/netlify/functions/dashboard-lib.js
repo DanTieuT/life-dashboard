@@ -13,10 +13,9 @@ const calendarSvc = require('./apple-calendar.js');
 
 const uidGen = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-// Money-model helpers (income/refund/reimbursement classification, netSpend,
-// monthlySavings) and the canonical transaction-date parser — shared with
-// finance-tools.mjs and mirrored in js/core.js.
-const { netSpend, monthlySavings, txnLocalDate } = require('./finance-shared.js');
+// Money-model helpers — shared with finance-tools.mjs / morning-briefing.js
+// and mirrored in js/core.js.
+const { netSpend, monthlySavings, monthlyIncome, spendableBudget, txnLocalDate } = require('./finance-shared.js');
 
 function todayStr() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
@@ -80,19 +79,12 @@ function buildContext(data) {
     const d = txnLocalDate(t.date);
     return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear();
   });
-  // Net discretionary spend — outflows minus Savings transfers minus
-  // refunds/reimbursements — matching the dashboard's spending card.
+  // All three mirror the dashboard's spending card / savings-rate card
+  // exactly — see finance-shared.js (and js/core.js).
   const spent = Math.max(0, Math.round(netSpend(monthTxns)));
-  // Budget = spendable money: the manual Budget Settings figure minus what's
-  // set aside for savings (the Savings category budget, or the month's actual
-  // savings — transfers + goal contributions — if larger). Matches
-  // spendableBudget() on the dashboard.
-  const savingsSetAside = Math.max(
-    Math.round(data.budget?.categories?.Savings || 0),
-    Math.round(monthlySavings(data, now2.getMonth(), now2.getFullYear())),
-  );
-  const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
-  const budget = grossBudget > 0 ? Math.max(0, grossBudget - savingsSetAside) : 0;
+  const income = Math.round(monthlyIncome(data.transactions, now2.getMonth(), now2.getFullYear()));
+  const savedThisMonth = Math.round(monthlySavings(data, now2.getMonth(), now2.getFullYear()));
+  const budget = Math.round(spendableBudget(data, now2.getMonth(), now2.getFullYear()));
   const projects = (data.userProjects || []).filter(p => !p.archived).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '🔨', stage: p.stage, nextAction: p.nextAction || '' }));
   const accounts = (data.accounts || []).map(a => ({ name: a.name, type: a.type, balance: a.balance }));
   // Lightweight only — top holdings by value, not the full position list.
@@ -215,7 +207,7 @@ function buildContext(data) {
 
   return {
     today, dayName, monthName, tasks, completedToday, habits, events,
-    budget, spent, projects, accounts, goals, profile, recentNotes,
+    budget, spent, income, savedThisMonth, projects, accounts, goals, profile, recentNotes,
     overdueTasks, weeklyHabitCounts, weeklySpend: { thisWeek: Math.round(thisWeekSpend), lastWeek: Math.round(lastWeekSpend) },
     spendingPatterns, spendingTrends, rdoToday, rdoTomorrow, packages,
     nowPT, reminders, investmentsSummary,
@@ -302,13 +294,10 @@ function applyActions(data, actions) {
         data.transactions.push({ id: uidGen(), name: action.name, amount: action.amount, category: action.category || 'Other', type: action.transactionType || 'out', date: today });
         labels.push(`$${action.amount} – ${action.name}`);
         // Spending alert: check if we crossed a budget threshold. Skipped for
-        // Savings transfers — those aren't discretionary spend (see 'spent' above).
+        // Savings transfers — those aren't discretionary spend.
         const now2 = new Date();
         const inThisMonth = t => { const d = txnLocalDate(t.date); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear(); };
-        const monthSaved = Math.round(monthlySavings(data, now2.getMonth(), now2.getFullYear()));
-        const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
-        // Spendable budget — gross minus savings set aside (target or actual, whichever's larger).
-        const budget = grossBudget > 0 ? Math.max(0, grossBudget - Math.max(Math.round(data.budget?.categories?.Savings || 0), monthSaved)) : 0;
+        const budget = Math.round(spendableBudget(data, now2.getMonth(), now2.getFullYear()));
         if (budget > 0 && (action.category || 'Other') !== 'Savings' && (action.transactionType || 'out') === 'out') {
           const monthSpent = Math.max(0, Math.round(netSpend((data.transactions || []).filter(inThisMonth))));
           const pct = Math.round(monthSpent / budget * 100);
