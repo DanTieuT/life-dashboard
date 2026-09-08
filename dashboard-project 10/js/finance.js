@@ -368,6 +368,18 @@ function renderFinanceTab(){
       extraEl.style.display='none';
     }
   }
+  // Paycheck watch — confirms the last one landed, flags a missed one.
+  const checkEl=pEl('paydayCheck');
+  if(checkEl){
+    const pay=nextPaydayInfo();
+    if(pay&&pay.daysSinceLast<=10){
+      checkEl.textContent=`✓ Paycheck ${fmtM(pay.lastAmount)} on ${_shortDate(txnLocalDate(pay.last))}`;
+      checkEl.style.color='var(--green)';checkEl.style.display='';
+    } else if(pay&&pay.daysSinceLast>=38){
+      checkEl.textContent=`⚠ No paycheck in ${pay.daysSinceLast} days — expected around ${_shortDate(pay.next)}`;
+      checkEl.style.color='var(--red)';checkEl.style.display='';
+    } else checkEl.style.display='none';
+  }
 
   // ── Spending total + progress (category breakdown renders via #21 below) ──
   const spendingHdr=document.getElementById('spendingCardHdr');
@@ -421,6 +433,9 @@ function renderFinanceTab(){
       </div>`).join('');
   }
   // ── Batch-3 finance sections ────────────────────────────────────
+  if(typeof renderSpendingExtras==='function')renderSpendingExtras();
+  if(typeof renderRunway==='function')renderRunway();
+  if(typeof renderCreditCards==='function')renderCreditCards();
   if(typeof renderInflowReview==='function')renderInflowReview();
   if(typeof renderSavingsRate==='function')renderSavingsRate(mt);
   if(typeof renderCatBarChart==='function')renderCatBarChart(mt);
@@ -687,21 +702,28 @@ window.openAccountModal=function(id){
   document.getElementById('accountName').value=a?a.name:'';
   document.getElementById('accountType').value=a?a.type:'savings';
   document.getElementById('accountBalance').value=a?a.balance:'';
+  document.getElementById('accountCreditLimit').value=(a&&a.creditLimit)||'';
   document.getElementById('accountDeleteBtn').style.display=a?'':'none';
+  updateAcctTypeVis();
   openModal('accountModal');
+};
+window.updateAcctTypeVis=function(){
+  const row=document.getElementById('accountCreditLimitRow');
+  if(row)row.style.display=document.getElementById('accountType').value==='debt'?'':'none';
 };
 window.saveAccount=function(){
   const name=document.getElementById('accountName').value.trim();
   const balance=parseFloat(document.getElementById('accountBalance').value)||0;
   const type=document.getElementById('accountType').value;
+  const creditLimit=type==='debt'?(parseFloat(document.getElementById('accountCreditLimit').value)||null):null;
   const editId=document.getElementById('accountEditId').value;
   if(!name)return;
   if(!appData.accounts)appData.accounts=[];
   if(editId){
     const a=appData.accounts.find(x=>x.id===editId);
-    if(a){a.name=name;a.type=type;a.balance=balance;a.updatedAt=Date.now();}
+    if(a){a.name=name;a.type=type;a.balance=balance;a.creditLimit=creditLimit;a.updatedAt=Date.now();}
   } else {
-    appData.accounts.push({id:uid(),name,type,balance,updatedAt:Date.now()});
+    appData.accounts.push({id:uid(),name,type,balance,creditLimit,updatedAt:Date.now()});
   }
   saveData();closeModal('accountModal');renderFinanceTab();renderGoals();renderNWSparkline();toast('✓ Account saved');
 };
@@ -851,7 +873,7 @@ function renderGoals(){
     // Dec 31"). Shows where current should be today to stay on pace,
     // both as a marker on the bar and as a plain-text ahead/behind line
     // (the marker alone doesn't work on touch — no hover to read its title).
-    let paceArrow='',paceText='';
+    let paceArrow='',paceText='',extraLine='';
     if(g.trackContributions&&g.resetAnnually&&target>0&&!done){
       const pacePct=yearPacePct();
       const paceTarget=target*pacePct/100;
@@ -860,6 +882,28 @@ function renderGoals(){
       const pColor=diff>=0?'var(--green)':'var(--red)';
       const pText=diff>=0?`${fmtM(diff)} ahead of pace`:`${fmtM(Math.abs(diff))} behind pace`;
       paceText=`<span class="goal-pace-text" style="color:${pColor}">${pText}</span>`;
+    }
+    // Sinking fund — pace toward a specific date, show what to set aside/mo.
+    if(g.trackContributions&&g.targetDate&&target>0){
+      const due=txnLocalDate(g.targetDate),now=new Date();
+      const monthsLeft=Math.max(0,(due.getFullYear()-now.getFullYear())*12+(due.getMonth()-now.getMonth())+(due.getDate()>=now.getDate()?0:-1));
+      const remaining=Math.max(0,target-current);
+      if(due<now){
+        extraLine=`<div class="goal-extra" style="color:${remaining>0?'var(--red)':'var(--green)'}">${remaining>0?`${fmtM(remaining)} short — due ${_shortDate(due)}`:`Ready ✓ (due ${_shortDate(due)})`}</div>`;
+      }else{
+        const perMonth=monthsLeft>0?remaining/monthsLeft:remaining;
+        extraLine=`<div class="goal-extra">Set aside <b>${fmtM(perMonth)}/mo</b> to be ready by ${_shortDate(due)}</div>`;
+      }
+    }
+    // Annual contribution limit (IRA/HSA) — room left + Apr 15 deadline + guard.
+    if(g.trackContributions&&g.annualLimit>0){
+      const room=g.annualLimit-current;
+      const y=new Date().getFullYear();
+      if(room<=0){
+        extraLine=`<div class="goal-extra" style="color:${current>g.annualLimit?'var(--red)':'var(--green)'}">${current>g.annualLimit?`⚠ ${fmtM(current-g.annualLimit)} over the ${fmtM(g.annualLimit)} limit`:`Maxed ✓ ${fmtM(g.annualLimit)} for ${y}`}</div>`;
+      }else{
+        extraLine=`<div class="goal-extra"><b>${fmtM(room)}</b> room left of ${fmtM(g.annualLimit)} · deadline Apr 15 ${y+1}</div>`;
+      }
     }
     return `<div class="goal-card">
       <div class="goal-top">
@@ -885,6 +929,7 @@ function renderGoals(){
         ${paceText}
         ${monthlyHtml}
       </div>
+      ${extraLine}
     </div>`;
   }).join('');
 }
@@ -900,6 +945,8 @@ window.openGoalModal=function(id){
   document.getElementById('goalDeleteBtn').style.display=g?'':'none';
   document.getElementById('goalTrackContributions').checked=!!(g&&g.trackContributions);
   document.getElementById('goalAutoMatchKeyword').value=g?(g.autoMatchKeyword||''):'';
+  document.getElementById('goalTargetDate').value=g?(g.targetDate||''):'';
+  document.getElementById('goalAnnualLimit').value=g?(g.annualLimit||''):'';
   // Populate multi-select linked accounts
   const wrap=document.getElementById('goalLinkedAccountsWrap');
   const selectedIds=g?(g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[])):[];
@@ -924,6 +971,8 @@ window.toggleGoalTrackMode=function(){
   document.getElementById('goalCurrentGroup').style.display=tracking?'none':'';
   document.getElementById('goalLinkedGroup').style.display=tracking?'none':'';
   document.getElementById('goalAutoMatchGroup').style.display=tracking?'':'none';
+  document.getElementById('goalTargetDateGroup').style.display=tracking?'':'none';
+  document.getElementById('goalAnnualLimitGroup').style.display=tracking?'':'none';
   document.getElementById('goalContributionsGroup').style.display=tracking?'':'none';
   const hasId=!!document.getElementById('goalEditId').value;
   document.getElementById('goalLogContribBtn').style.display=hasId?'':'none';
@@ -961,22 +1010,27 @@ window.saveGoal=function(){
   const current=parseFloat(document.getElementById('goalCurrent').value)||0;
   const trackContributions=document.getElementById('goalTrackContributions').checked;
   const autoMatchKeyword=document.getElementById('goalAutoMatchKeyword').value.trim().toLowerCase();
+  const targetDate=document.getElementById('goalTargetDate').value||null;
+  const annualLimit=parseFloat(document.getElementById('goalAnnualLimit').value)||null;
   // Get checked account IDs
   const wrap=document.getElementById('goalLinkedAccountsWrap');
   const linkedAccountIds=[...wrap.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
   const editId=document.getElementById('goalEditId').value;
   if(!name||!target)return;
   if(!appData.goals)appData.goals=[];
+  // A sinking fund (targetDate set) paces toward that date and doesn't roll
+  // over every Jan 1; an annual-limit goal (Roth/HSA) does.
+  const resetAnnually=trackContributions&&!targetDate;
   if(editId){
     const g=appData.goals.find(x=>x.id===editId);
     if(g){
       Object.assign(g,{name,emoji,target,trackContributions});
-      if(trackContributions){g.resetAnnually=true;g.contributions=g.contributions||[];g.autoMatchKeyword=autoMatchKeyword||null;}
-      else{Object.assign(g,{current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});g.autoMatchKeyword=null;}
+      if(trackContributions){g.resetAnnually=resetAnnually;g.contributions=g.contributions||[];g.autoMatchKeyword=autoMatchKeyword||null;g.targetDate=targetDate;g.annualLimit=annualLimit;}
+      else{Object.assign(g,{current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});g.autoMatchKeyword=null;g.targetDate=null;g.annualLimit=null;}
     }
   } else {
     const g={id:uid(),name,emoji,target,created:todayStr()};
-    if(trackContributions)Object.assign(g,{trackContributions:true,resetAnnually:true,contributions:[],autoMatchKeyword:autoMatchKeyword||null});
+    if(trackContributions)Object.assign(g,{trackContributions:true,resetAnnually,contributions:[],autoMatchKeyword:autoMatchKeyword||null,targetDate,annualLimit});
     else Object.assign(g,{current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});
     appData.goals.push(g);
   }
@@ -1159,7 +1213,49 @@ function _renderOneNWCard(card){
   if(subline)subline.textContent=`${fmtM(assets)} assets`+(liabilities>0?` · ${fmtM(liabilities)} liabilities`:'');
   if(x0)x0.textContent=fmtNWDate(data[0].date);
   if(x1)x1.textContent=fmtNWDate(data[data.length-1].date);
+  _renderNWDeltaAlloc(card,hist,accounts,lastVal,hidden);
   _attachNWScrub(svg,card);
+}
+// Month-over-month + year-to-date change, and a cash/investments/retirement/
+// crypto/property allocation bar. Shown under every net-worth card.
+const _RETIREMENT_RE=/roth|\bira\b|401|403b?|457|hsa|retire|pension|pcra|beneficiary/i;
+function _nwAt(hist,daysAgo){
+  const target=new Date();target.setDate(target.getDate()-daysAgo);
+  const ts=target.getTime();
+  let best=null;
+  for(const h of hist){const d=new Date(h.date+'T12:00:00').getTime();if(best===null||Math.abs(d-ts)<Math.abs(new Date(best.date+'T12:00:00').getTime()-ts))best=h;}
+  return best;
+}
+function _renderNWDeltaAlloc(card,hist,accounts,nw,hidden){
+  const dRow=card.querySelector('[data-role="deltaRow"]');
+  const aRow=card.querySelector('[data-role="alloc"]');
+  if(hidden){if(dRow)dRow.innerHTML='';if(aRow)aRow.innerHTML='';return;}
+  if(dRow){
+    const mo=_nwAt(hist,30),yr=hist.find(h=>h.date>=`${new Date().getFullYear()}-01-01`)||hist[0];
+    const seg=(label,from)=>{
+      if(!from||from.netWorth===nw)return `<span class="nw-delta-seg"><span class="nw-delta-lbl">${label}</span> —</span>`;
+      const d=nw-from.netWorth,up=d>=0;
+      const pct=from.netWorth!==0?Math.abs(d/from.netWorth*100):0;
+      return `<span class="nw-delta-seg"><span class="nw-delta-lbl">${label}</span> <span style="color:${up?'var(--green)':'var(--red)'}">${up?'+':'−'}${fmtM(Math.abs(d))} · ${pct.toFixed(1)}%</span></span>`;
+    };
+    dRow.innerHTML=seg('30d',mo)+seg('YTD',yr);
+  }
+  if(aRow){
+    const buckets={Cash:0,Investments:0,Retirement:0,Crypto:0,Property:0};
+    (accounts||[]).forEach(a=>{
+      if(a.type==='debt')return;
+      if(a.type==='crypto'||/crypto/i.test(a.name||''))buckets.Crypto+=a.balance;
+      else if(a.type==='property')buckets.Property+=a.balance;
+      else if(a.type==='checking'||a.type==='savings')buckets.Cash+=a.balance;
+      else if(_RETIREMENT_RE.test(a.name||''))buckets.Retirement+=a.balance;
+      else buckets.Investments+=a.balance;
+    });
+    const COLORS={Cash:'#0a84ff',Investments:'#ff9f0a',Retirement:'#30d158',Crypto:'#bf5af2',Property:'#64d2ff'};
+    const entries=Object.entries(buckets).filter(([,v])=>v>0);
+    const total=entries.reduce((s,[,v])=>s+v,0)||1;
+    aRow.innerHTML=`<div class="nw-alloc-bar">${entries.map(([k,v])=>`<div style="width:${v/total*100}%;background:${COLORS[k]}" title="${k} ${fmtM(v)}"></div>`).join('')}</div>
+      <div class="nw-alloc-legend">${entries.sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span><i style="background:${COLORS[k]}"></i>${k} ${Math.round(v/total*100)}%</span>`).join('')}</div>`;
+  }
 }
 function _attachNWScrub(svg,card){
   if(svg._scrubAttached)return;
@@ -1522,6 +1618,188 @@ function renderRecurringTxns(){
     <span class="txn-amount out" style="margin-left:8px">-${fmtM(s.amount)}</span>
     <button class="txn-del" title="Not a subscription" onclick="dismissSubscription('${s.key.replace(/'/g,"\\'")}')">✕</button>
   </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SPENDING INTELLIGENCE — runway, credit cards, safe-to-spend, anomalies
+// ═══════════════════════════════════════════════════════════════════
+const _shortDate=d=>new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+// Checking accounts that hold spendable money — a checking account linked to
+// a goal (the Wealthfront cash behind the Emergency Fund, say) is savings,
+// not spending money, so it's excluded.
+function spendingAccounts(){
+  const linked=new Set((appData.goals||[]).flatMap(g=>g.linkedAccountIds||(g.linkedAccountId?[g.linkedAccountId]:[])));
+  return (appData.accounts||[]).filter(a=>a.type==='checking'&&!linked.has(a.id));
+}
+
+// Trailing-N-day net discretionary spend (same netSpend def as the card).
+function trailingBurn(days){
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
+  return netSpend((appData.transactions||[]).filter(t=>txnLocalDate(t.date)>=cutoff));
+}
+
+// Next expected payday — assumes a monthly cadence on the same day of month
+// as the most recent paycheck. Null if no paycheck history.
+function nextPaydayInfo(){
+  const checks=(appData.transactions||[]).filter(t=>t.type==='in'&&isPaycheckLike(t.name)).sort((a,b)=>a.date<b.date?1:-1);
+  if(!checks.length)return null;
+  const last=checks[0],ld=txnLocalDate(last.date);
+  const today=new Date();today.setHours(0,0,0,0);
+  let next=new Date(ld.getFullYear(),ld.getMonth()+1,ld.getDate());
+  while(next<=today)next=new Date(next.getFullYear(),next.getMonth()+1,next.getDate());
+  return {last:last.date,lastAmount:last.amount,next,
+    daysUntil:Math.ceil((next-today)/86400000),
+    daysSinceLast:Math.floor((today-ld)/86400000)};
+}
+
+// All recurring outflows (no size cap, unlike detectSubscriptions) — used
+// for runway / committed-spend math. {name, amount, monthlyEquivalent,
+// freq, nextDate (Date), category}.
+function recurringOutflows(){
+  const groups={};
+  (appData.transactions||[]).filter(t=>t.type==='out'&&!isSavingsTransfer(t)).forEach(t=>{
+    const k=_normMerchant(t.name);if(!k)return;(groups[k]=groups[k]||[]).push(t);
+  });
+  const out=[];
+  Object.values(groups).forEach(txns=>{
+    if(txns.length<2)return;
+    txns.sort((a,b)=>a.date<b.date?-1:1);
+    const gaps=[];for(let i=1;i<txns.length;i++)gaps.push((txnLocalDate(txns[i].date)-txnLocalDate(txns[i-1].date))/86400000);
+    const avg=gaps.reduce((s,g)=>s+g,0)/gaps.length;
+    const freq=SUB_FREQS.find(f=>Math.abs(avg-f.days)<=f.tolerance);if(!freq)return;
+    const amts=txns.map(t=>t.amount);
+    let drift=0;for(let i=1;i<amts.length;i++)drift=Math.max(drift,Math.abs(amts[i]-amts[i-1])/Math.max(amts[i-1],1));
+    if(drift>0.25)return;
+    const last=txns[txns.length-1];
+    out.push({name:last.name,category:last.category,amount:last.amount,freq:freq.label,
+      monthlyEquivalent:freq.monthly(last.amount),
+      nextDate:new Date(txnLocalDate(last.date).getTime()+freq.days*86400000)});
+  });
+  return out.sort((a,b)=>b.monthlyEquivalent-a.monthlyEquivalent);
+}
+
+// ── Runway to payday ───────────────────────────────────────────────
+function renderRunway(){
+  const card=document.getElementById('runwayCard');if(!card)return;
+  const accts=spendingAccounts();
+  const pay=nextPaydayInfo();
+  if(!accts.length||!pay){card.style.display='none';return;}
+  const cash=accts.reduce((s,a)=>s+(a.balance||0),0);
+  const dailyBurn=trailingBurn(30)/30;
+  const daysToPayday=pay.daysUntil;
+  // Bills landing before payday that we can see coming
+  const bills=recurringOutflows().filter(b=>b.nextDate>new Date()&&(b.nextDate-new Date())/86400000<=daysToPayday);
+  const billTotal=bills.reduce((s,b)=>s+b.amount,0);
+  const projectedLow=cash-dailyBurn*daysToPayday-billTotal;
+  const runwayDays=dailyBurn>0?Math.floor((cash-billTotal)/dailyBurn):999;
+  card.style.display='';
+  const covered=projectedLow>=0;
+  document.getElementById('runwayNum').textContent=isNumbersHidden()?'••••':`${Math.min(runwayDays,99)} day${runwayDays===1?'':'s'}`;
+  const vEl=document.getElementById('runwayVerdict');
+  vEl.textContent=covered?'✓ covers payday':`⚠ short ~${fmtM(Math.abs(projectedLow))}`;
+  vEl.style.color=covered?'var(--green)':'var(--red)';
+  const fill=document.getElementById('runwayFill');
+  const pct=Math.max(0,Math.min(100,runwayDays/Math.max(daysToPayday,1)*100));
+  fill.style.width=Math.min(pct,100)+'%';
+  fill.style.background=covered?'var(--green)':'var(--red)';
+  const tick=document.getElementById('runwayPaydayTick');
+  tick.style.left=Math.min(100,daysToPayday/Math.max(runwayDays,daysToPayday,1)*100)+'%';
+  document.getElementById('runwaySub').innerHTML=isNumbersHidden()
+    ?'Amounts hidden'
+    :`${fmtM(cash)} in checking · ${fmtM(dailyBurn)}/day burn · payday ${_shortDate(pay.next)} (${daysToPayday}d)`;
+  const bEl=document.getElementById('runwayBills');
+  bEl.innerHTML=bills.length
+    ?`<div class="runway-bills-hdr">Before payday</div>`+bills.slice(0,4).map(b=>
+      `<div class="runway-bill-row"><span>${escHtml(b.name)}</span><span>${_shortDate(b.nextDate)} · -${fmtM(b.amount)}</span></div>`).join('')
+    :'';
+}
+
+// ── Credit cards ──────────────────────────────────────────────────
+function renderCreditCards(){
+  const card=document.getElementById('ccCard');if(!card)return;
+  const debts=(appData.accounts||[]).filter(a=>a.type==='debt');
+  if(!debts.length){card.style.display='none';return;}
+  card.style.display='';
+  const totalOwed=debts.reduce((s,a)=>s+(a.balance||0),0);
+  const withLimit=debts.filter(a=>a.creditLimit>0);
+  const limSum=withLimit.reduce((s,a)=>s+a.creditLimit,0);
+  const owedWithLimit=withLimit.reduce((s,a)=>s+(a.balance||0),0);
+  const overall=limSum>0?owedWithLimit/limSum*100:null;
+  document.getElementById('ccNum').textContent=isNumbersHidden()?'••••':`${fmtM(totalOwed)} owed`;
+  const uEl=document.getElementById('ccUtil');
+  if(overall!=null){
+    uEl.textContent=`${overall.toFixed(0)}% used`;
+    uEl.style.color=overall<10?'var(--green)':overall<30?'var(--yellow)':'var(--red)';
+  } else uEl.textContent='';
+  document.getElementById('ccList').innerHTML=debts.slice().sort((a,b)=>(b.balance||0)-(a.balance||0)).map(a=>{
+    const u=a.creditLimit>0?(a.balance||0)/a.creditLimit*100:null;
+    const c=u==null?'var(--sub)':u<10?'var(--green)':u<30?'var(--yellow)':'var(--red)';
+    return `<div class="cc-row">
+      <div class="cc-row-name">${escHtml(a.name)}${a.mask?` <span class="cc-mask">••${a.mask}</span>`:''}</div>
+      <div class="cc-row-bar"><div class="cc-row-fill" style="width:${u==null?0:Math.min(u,100)}%;background:${c}"></div></div>
+      <div class="cc-row-amt">${isNumbersHidden()?'••••':fmtM(a.balance||0)}${u!=null?` <span style="color:${c}">${u.toFixed(0)}%</span>`:''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Safe-to-spend line + spending anomalies (attach to spending card) ──
+function renderSpendingExtras(){
+  const mt=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===currentMonth&&d.getFullYear()===currentYear;});
+  const now=new Date();
+  const isCurrent=currentMonth===now.getMonth()&&currentYear===now.getFullYear();
+  const budget=spendableBudget(appData.transactions,currentMonth,currentYear);
+  const spent=Math.max(0,netSpend(mt));
+  // Safe-to-spend
+  const safeEl=document.getElementById('spendSafeLine');
+  if(safeEl){
+    if(isCurrent&&budget>0){
+      const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
+      const daysLeft=Math.max(1,daysInMonth-now.getDate()+1);
+      const monthEnd=new Date(currentYear,currentMonth+1,0);
+      const billsDue=recurringOutflows().filter(b=>b.nextDate>now&&b.nextDate<=monthEnd);
+      const billTotal=billsDue.reduce((s,b)=>s+b.amount,0);
+      const free=budget-spent-billTotal;
+      const perDay=free/daysLeft;
+      safeEl.style.display='';
+      safeEl.innerHTML=free>=0
+        ? `<b style="color:var(--green)">${fmtM(perDay)}/day</b> safe for the next ${daysLeft} day${daysLeft===1?'':'s'}${billTotal>0?` · ${fmtM(billTotal)} in bills still due`:''}`
+        : `<b style="color:var(--red)">${fmtM(Math.abs(free))} over</b> after ${fmtM(billTotal)} of bills still due`;
+    } else safeEl.style.display='none';
+  }
+  // Anomalies — this month's category spend vs the average of the prior 3
+  const anomEl=document.getElementById('spendAnomalyRow');
+  if(anomEl){
+    const catThis={},catPrior={};
+    (appData.transactions||[]).forEach(t=>{
+      if(t.type!=='out'||isSavingsTransfer(t))return;
+      const d=txnLocalDate(t.date),k=`${d.getFullYear()}-${d.getMonth()}`,cat=t.category||'Other';
+      if(k===`${currentYear}-${currentMonth}`)catThis[cat]=(catThis[cat]||0)+t.amount;
+      else{
+        const pri=[1,2,3].map(i=>{const p=new Date(currentYear,currentMonth-i,1);return `${p.getFullYear()}-${p.getMonth()}`;});
+        if(pri.includes(k))catPrior[cat]=(catPrior[cat]||0)+t.amount;
+      }
+    });
+    // Prorate the prior 3-month average by how far into the month we are, so
+    // "vs usual" compares like-for-like instead of flagging every category as
+    // "down" on the 3rd of the month.
+    const daysInThisMonth=new Date(currentYear,currentMonth+1,0).getDate();
+    const monthFrac=isCurrent?Math.min(1,now.getDate()/daysInThisMonth):1;
+    // Only flag OVERSPEND ("you spent less on X" isn't actionable), and only
+    // once past a bit of the month so an early big charge isn't over-weighted.
+    const chips=Object.keys(catThis).map(cat=>{
+      const cur=catThis[cat],avg=((catPrior[cat]||0)/3)*monthFrac;
+      if(avg<50||cur<50)return null;
+      const pct=Math.round((cur-avg)/avg*100);
+      if(pct<40)return null;
+      return {cat,pct};
+    }).filter(Boolean).sort((a,b)=>b.pct-a.pct).slice(0,3);
+    if(isCurrent&&monthFrac>=0.15&&chips.length){
+      anomEl.style.display='';
+      anomEl.innerHTML=chips.map(c=>
+        `<span class="spend-anom-chip" style="color:var(--red)">${CATS_EMOJI[c.cat]||''} ${c.cat} +${c.pct}% vs usual pace</span>`).join('');
+    } else anomEl.style.display='none';
+  }
 }
 
 // ── Likely duplicate detector ───────────────────────────────────────

@@ -87,6 +87,25 @@ function buildContext(data) {
   const budget = Math.round(spendableBudget(data, now2.getMonth(), now2.getFullYear()));
   const projects = (data.userProjects || []).filter(p => !p.archived).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '🔨', stage: p.stage, nextAction: p.nextAction || '' }));
   const accounts = (data.accounts || []).map(a => ({ name: a.name, type: a.type, balance: a.balance }));
+  const debts = (data.accounts || []).filter(a => a.type === 'debt');
+  const debtWithLimit = debts.filter(a => a.creditLimit > 0);
+  const creditCards = debts.length ? {
+    totalOwed: Math.round(debts.reduce((s, a) => s + (a.balance || 0), 0)),
+    utilizationPct: debtWithLimit.length
+      ? Math.round(debtWithLimit.reduce((s, a) => s + (a.balance || 0), 0) / debtWithLimit.reduce((s, a) => s + a.creditLimit, 0) * 100)
+      : null,
+  } : null;
+  const nwHist = data.netWorthHistory || [];
+  const nwNow = nwHist.length ? nwHist[nwHist.length - 1].netWorth : null;
+  const nwMonthAgo = (() => {
+    if (nwHist.length < 2) return null;
+    const t = Date.now() - 30 * 86400000;
+    return nwHist.reduce((b, h) => Math.abs(new Date(h.date + 'T12:00:00') - t) < Math.abs(new Date(b.date + 'T12:00:00') - t) ? h : b).netWorth;
+  })();
+  const netWorth = nwNow != null ? {
+    current: Math.round(nwNow),
+    changeMonth: nwMonthAgo != null ? Math.round(nwNow - nwMonthAgo) : null,
+  } : null;
   // Lightweight only — top holdings by value, not the full position list.
   // Real per-position detail (cost basis, gain/loss, every holding) stays
   // behind dashboard chat's get_investment_holdings tool, same "specific
@@ -117,7 +136,13 @@ function buildContext(data) {
     } else {
       current = g.current || 0;
     }
-    return { id: g.id, name: g.name, emoji: g.emoji || '🎯', current, target: g.target, pct: g.target ? Math.round(current / g.target * 100) : 0, trackContributions: !!g.trackContributions };
+    return {
+      id: g.id, name: g.name, emoji: g.emoji || '🎯', current, target: g.target,
+      pct: g.target ? Math.round(current / g.target * 100) : 0,
+      trackContributions: !!g.trackContributions,
+      ...(g.annualLimit ? { annualLimit: g.annualLimit, roomLeft: Math.round(g.annualLimit - current) } : {}),
+      ...(g.targetDate ? { targetDate: g.targetDate } : {}),
+    };
   });
   const profile = data.profile || '';
   const recentNotes = (data.notes || []).filter(n => !n.archived).slice(0, 15).map(n => ({ text: n.text, createdAt: n.createdAt, source: n.source || 'dashboard' }));
@@ -210,7 +235,7 @@ function buildContext(data) {
     budget, spent, income, savedThisMonth, projects, accounts, goals, profile, recentNotes,
     overdueTasks, weeklyHabitCounts, weeklySpend: { thisWeek: Math.round(thisWeekSpend), lastWeek: Math.round(lastWeekSpend) },
     spendingPatterns, spendingTrends, rdoToday, rdoTomorrow, packages,
-    nowPT, reminders, investmentsSummary,
+    nowPT, reminders, investmentsSummary, creditCards, netWorth,
   };
 }
 

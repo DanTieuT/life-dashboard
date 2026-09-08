@@ -83,6 +83,7 @@ async function syncItems(db, itemDocs) {
         const balance = a.balances.current ?? a.balances.available ?? 0;
         // App convention: debt balances stored positive (see plaid-link.js)
         acct.balance = acct.type === 'debt' ? Math.abs(balance) : balance;
+        if (acct.type === 'debt' && a.balances.limit != null) acct.creditLimit = Math.abs(a.balances.limit);
         acct.updatedAt = Date.now();
         balancesUpdated++;
       }

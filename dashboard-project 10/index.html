@@ -155,6 +155,8 @@
           <button class="nw-range-btn" data-range="365" onclick="setNWRange(365,this)">1Y</button>
           <button class="nw-range-btn" data-range="0" onclick="setNWRange(0,this)">All</button>
         </div>
+        <div class="nw-delta-row" data-role="deltaRow"></div>
+        <div class="nw-alloc" data-role="alloc"></div>
       </div>
 
       <!-- Budget (full width — big number + segmented bar) -->
@@ -295,6 +297,8 @@
           <button class="nw-range-btn" data-range="365" onclick="setNWRange(365,this)">1Y</button>
           <button class="nw-range-btn" data-range="0" onclick="setNWRange(0,this)">All</button>
         </div>
+        <div class="nw-delta-row" data-role="deltaRow"></div>
+        <div class="nw-alloc" data-role="alloc"></div>
       </div>
 
       <!-- Month nav + action buttons -->
@@ -333,6 +337,7 @@
           <div class="payday-dates-row"><span id="paydayStart"></span><span id="paydayEnd"></span></div>
           <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
           <div class="payday-extra" id="paydayExtra" style="display:none"></div>
+          <div class="payday-check" id="paydayCheck" style="display:none"></div>
         </div>
       </div>
 
@@ -348,8 +353,38 @@
           <div class="spend-pace-arrow" id="spendingPaceTick" title="On-pace for today" style="display:none"></div>
           <div class="spend-total-track"><div class="spend-total-fill" id="spendingTotalFill"></div></div>
         </div>
+        <div class="spend-safe-line" id="spendSafeLine" style="display:none"></div>
+        <div class="spend-anomaly-row" id="spendAnomalyRow" style="display:none"></div>
         <div id="catBarChart" style="margin-top:14px"></div>
       </div>
+
+      <!-- Runway to payday -->
+      <div class="fin-card runway-card" id="runwayCard" style="display:none">
+        <div class="runway-top">
+          <div>
+            <div class="runway-label">Runway</div>
+            <div class="runway-num" id="runwayNum">—</div>
+          </div>
+          <div class="runway-verdict" id="runwayVerdict"></div>
+        </div>
+        <div class="runway-track"><div class="runway-fill" id="runwayFill"></div><div class="runway-payday-tick" id="runwayPaydayTick" title="Payday"></div></div>
+        <div class="runway-sub" id="runwaySub"></div>
+        <div class="runway-bills" id="runwayBills"></div>
+      </div>
+
+      <!-- Credit cards -->
+      <div class="fin-card cc-card" id="ccCard" style="display:none">
+        <div class="cc-top">
+          <div>
+            <div class="cc-label">Credit cards</div>
+            <div class="cc-num" id="ccNum">—</div>
+          </div>
+          <div class="cc-util" id="ccUtil"></div>
+        </div>
+        <div id="ccList"></div>
+      </div>
+
+      <!-- P2P inflow review — Venmo/Zelle/etc. that could be income OR a
 
       <!-- P2P inflow review — Venmo/Zelle/etc. that could be income OR a
            friend paying Dan back. He classifies each one himself. -->
@@ -877,7 +912,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Type</label>
-      <select class="form-select" id="accountType">
+      <select class="form-select" id="accountType" onchange="updateAcctTypeVis()">
         <option value="checking">Checking</option>
         <option value="savings">Savings</option>
         <option value="investment">Investment</option>
@@ -889,6 +924,10 @@
     <div class="form-group">
       <label class="form-label">Current Balance ($)</label>
       <input class="form-input" id="accountBalance" type="number" placeholder="0">
+    </div>
+    <div class="form-group" id="accountCreditLimitRow" style="display:none">
+      <label class="form-label">Credit Limit ($) <span style="color:var(--sub);font-weight:400">— for utilization %</span></label>
+      <input class="form-input" id="accountCreditLimit" type="number" placeholder="e.g. 10000">
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="accountDeleteBtn" style="display:none;margin-right:auto;color:#ff453a" onclick="deleteAccountFromModal()">Remove</button>
@@ -933,6 +972,16 @@
       <label class="form-label">Auto-detect from bank transfers containing <span style="color:var(--muted);font-weight:400">(optional)</span></label>
       <input class="form-input" id="goalAutoMatchKeyword" placeholder="e.g. schwab">
       <div style="color:var(--muted);font-size:12px;margin-top:4px">Every 6h sync checks outgoing transfers for this text (case-insensitive) and logs a match here automatically — on top of anything you log manually.</div>
+    </div>
+    <div class="form-group" id="goalTargetDateGroup" style="display:none">
+      <label class="form-label">Need it by <span style="color:var(--muted);font-weight:400">(optional — sinking fund)</span></label>
+      <input class="form-input" id="goalTargetDate" type="date">
+      <div style="color:var(--muted);font-size:12px;margin-top:4px">Set a date to pace toward a one-off expense (insurance, registration, a trip) instead of Dec 31. The card shows what to set aside per month.</div>
+    </div>
+    <div class="form-group" id="goalAnnualLimitGroup" style="display:none">
+      <label class="form-label">Annual contribution limit ($) <span style="color:var(--muted);font-weight:400">(optional — IRA/HSA)</span></label>
+      <input class="form-input" id="goalAnnualLimit" type="number" placeholder="e.g. 7500">
+      <div style="color:var(--muted);font-size:12px;margin-top:4px">The IRS cap. The card tracks room left and the Apr 15 deadline, and warns before you over-contribute.</div>
     </div>
     <div class="form-group" id="goalContributionsGroup" style="display:none">
       <label class="form-label">Contributions this year</label>

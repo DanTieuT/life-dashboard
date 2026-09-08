@@ -178,8 +178,11 @@ exports.handler = async (event) => {
         // display adds the minus and net-worth math subtracts liabilities.
         const type = plaid.mapAccountType(a.type, a.subtype);
         const stored = type === 'debt' ? Math.abs(balance) : balance;
+        // Credit accounts report their limit — keep it for utilization math.
+        const creditLimit = type === 'debt' && a.balances.limit != null ? Math.abs(a.balances.limit) : null;
         if (existing) {
           existing.balance = stored;
+          if (creditLimit != null) existing.creditLimit = creditLimit;
           existing.updatedAt = Date.now();
         } else {
           accounts.push({
@@ -188,6 +191,7 @@ exports.handler = async (event) => {
             mask: a.mask || '',
             type,
             balance: stored,
+            ...(creditLimit != null ? { creditLimit } : {}),
             plaidAccountId: a.account_id,
             plaidItemId: ex.item_id,
             source: 'plaid',

@@ -725,6 +725,38 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .payday-fill{height:100%;background:linear-gradient(90deg,var(--green),#5fe085);border-radius:3px;transition:width .4s}
 .payday-pct-label{font-size:11px;color:var(--sub);text-align:right}
 .payday-extra{font-size:11px;color:var(--green);text-align:right;margin-top:4px;font-weight:600}
+.payday-check{font-size:11px;text-align:right;margin-top:3px;font-weight:600}
+/* ── RUNWAY + CREDIT CARDS ───────────────────────────────────────── */
+.runway-top,.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.runway-label,.cc-label{font-size:12px;color:var(--sub);font-weight:600}
+.runway-num,.cc-num{font-size:22px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+.runway-verdict,.cc-util{font-size:12px;font-weight:600;padding-top:2px;white-space:nowrap}
+.runway-track{position:relative;height:6px;background:var(--track);border-radius:3px;overflow:visible;margin:2px 0 8px}
+.runway-fill{height:100%;border-radius:3px;transition:width .4s}
+.runway-payday-tick{position:absolute;top:-2px;width:2px;height:10px;background:var(--text);opacity:.5;transform:translateX(-50%)}
+.runway-sub{font-size:11px;color:var(--sub)}
+.runway-bills{margin-top:8px}
+.runway-bills-hdr{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px}
+.runway-bill-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
+.runway-bill-row span:last-child{color:var(--sub);font-variant-numeric:tabular-nums}
+.cc-row{display:grid;grid-template-columns:1fr 90px auto;align-items:center;gap:10px;padding:5px 0}
+.cc-row-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-mask{color:var(--muted);font-size:11px}
+.cc-row-bar{height:5px;background:var(--track);border-radius:3px;overflow:hidden}
+.cc-row-fill{height:100%;border-radius:3px}
+.cc-row-amt{font-size:12px;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+/* ── NET WORTH DELTA + ALLOCATION ────────────────────────────────── */
+.nw-delta-row{display:flex;gap:16px;margin-top:10px;font-size:12px}
+.nw-delta-seg{display:flex;gap:5px;font-variant-numeric:tabular-nums}
+.nw-delta-lbl{color:var(--muted);font-weight:600}
+.nw-alloc{margin-top:10px}
+.nw-alloc-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:1px}
+.nw-alloc-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;font-size:11px;color:var(--sub)}
+.nw-alloc-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
+.goal-extra{font-size:12px;color:var(--sub);margin-top:6px}
+.spend-safe-line{font-size:12px;color:var(--sub);margin:6px 0 2px}
+.spend-anomaly-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.spend-anom-chip{font-size:11px;font-weight:600;background:var(--card2);border-radius:6px;padding:3px 7px}
 /* ── SPENDING CARD ───────────────────────────────────────────────── */
 .spend-total-row{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}
 .spend-total-num{font-size:26px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
