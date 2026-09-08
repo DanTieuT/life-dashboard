@@ -348,37 +348,22 @@ function renderFinanceTab(){
   const nextPayDay=new Date(currentYear,currentMonth+1,1);
   const daysLeft=Math.max(0,Math.ceil((nextPayDay-now)/(1000*60*60*24)));
   const pct=Math.round((dayOfMonth-1)/(daysInMonth-1)*100);
-  const startLabel=months[currentMonth].slice(0,3)+' 1';
-  const endLabel=months[(currentMonth+1)%12].slice(0,3)+' 1';
   const pEl=id=>document.getElementById(id);
   if(pEl('paydayDays')) pEl('paydayDays').textContent=daysLeft;
   if(pEl('paydayDaysText')) pEl('paydayDaysText').textContent='days';
-  if(pEl('paydayStart')) pEl('paydayStart').textContent=startLabel+' '+currentYear;
-  if(pEl('paydayEnd')) pEl('paydayEnd').textContent=endLabel+' '+currentYear;
   if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
-  if(pEl('paydayPct')) pEl('paydayPct').textContent=pct+'% through pay period';
-  // extraIncome computed above (feeds the spending budget denominator too).
-  // Hidden at $0 so an empty period doesn't read as "you made nothing extra".
-  const extraEl=pEl('paydayExtra');
-  if(extraEl){
-    if(extraIncome>0){
-      extraEl.textContent=`+${fmtM(extraIncome)} extra income this period`;
-      extraEl.style.display='';
-    } else {
-      extraEl.style.display='none';
-    }
-  }
-  // Paycheck watch — confirms the last one landed, flags a missed one.
-  const checkEl=pEl('paydayCheck');
-  if(checkEl){
+  // One status line: paycheck watch + extra income, joined.
+  const statusEl=pEl('paydayStatus');
+  if(statusEl){
     const pay=nextPaydayInfo();
-    if(pay&&pay.daysSinceLast<=10){
-      checkEl.textContent=`✓ Paycheck ${fmtM(pay.lastAmount)} on ${_shortDate(txnLocalDate(pay.last))}`;
-      checkEl.style.color='var(--green)';checkEl.style.display='';
-    } else if(pay&&pay.daysSinceLast>=38){
-      checkEl.textContent=`⚠ No paycheck in ${pay.daysSinceLast} days — expected around ${_shortDate(pay.next)}`;
-      checkEl.style.color='var(--red)';checkEl.style.display='';
-    } else checkEl.style.display='none';
+    let missed=false;
+    const parts=[];
+    if(pay&&pay.daysSinceLast<=10) parts.push(`✓ Paycheck ${fmtM(pay.lastAmount)} on ${_shortDate(txnLocalDate(pay.last))}`);
+    else if(pay&&pay.daysSinceLast>=38){ parts.push(`⚠ No paycheck in ${pay.daysSinceLast} days`); missed=true; }
+    if(extraIncome>0) parts.push(`+${fmtM(extraIncome)} extra`);
+    statusEl.textContent=parts.join('  ·  ');
+    statusEl.style.color=missed?'var(--red)':'var(--green)';
+    statusEl.style.display=parts.length?'':'none';
   }
 
   // ── Spending total + progress (category breakdown renders via #21 below) ──
@@ -386,8 +371,6 @@ function renderFinanceTab(){
   const ofEl=document.getElementById('spendingOf');
   const totalFillEl=document.getElementById('spendingTotalFill');
   if(totalEl) totalEl.textContent=fmtM(spent);
-  const spendHdrSum=document.getElementById('spendingHdrSum');
-  if(spendHdrSum) spendHdrSum.textContent=`${fmtM(spent)}${budget>0?' of '+fmtM(budget):''}`;
   // Was falling back to `spent` when no real budget is set, which made an
   // over-budget month silently render as "$X of $X" — mirroring spend back
   // at you instead of showing there's no limit configured. Match the home
@@ -1791,39 +1774,6 @@ function renderSpendingExtras(){
         ? `<b style="color:var(--green)">${fmtM(perDay)}/day</b> safe for the next ${daysLeft} day${daysLeft===1?'':'s'}${billTotal>0?` · ${fmtM(billTotal)} in bills still due`:''}`
         : `<b style="color:var(--red)">${fmtM(Math.abs(free))} over</b> after ${fmtM(billTotal)} of bills still due`;
     } else safeEl.style.display='none';
-  }
-  // Anomalies — this month's category spend vs the average of the prior 3
-  const anomEl=document.getElementById('spendAnomalyRow');
-  if(anomEl){
-    const catThis={},catPrior={};
-    (appData.transactions||[]).forEach(t=>{
-      if(t.type!=='out'||isSavingsTransfer(t))return;
-      const d=txnLocalDate(t.date),k=`${d.getFullYear()}-${d.getMonth()}`,cat=t.category||'Other';
-      if(k===`${currentYear}-${currentMonth}`)catThis[cat]=(catThis[cat]||0)+t.amount;
-      else{
-        const pri=[1,2,3].map(i=>{const p=new Date(currentYear,currentMonth-i,1);return `${p.getFullYear()}-${p.getMonth()}`;});
-        if(pri.includes(k))catPrior[cat]=(catPrior[cat]||0)+t.amount;
-      }
-    });
-    // Prorate the prior 3-month average by how far into the month we are, so
-    // "vs usual" compares like-for-like instead of flagging every category as
-    // "down" on the 3rd of the month.
-    const daysInThisMonth=new Date(currentYear,currentMonth+1,0).getDate();
-    const monthFrac=isCurrent?Math.min(1,now.getDate()/daysInThisMonth):1;
-    // Only flag OVERSPEND ("you spent less on X" isn't actionable), and only
-    // once past a bit of the month so an early big charge isn't over-weighted.
-    const chips=Object.keys(catThis).map(cat=>{
-      const cur=catThis[cat],avg=((catPrior[cat]||0)/3)*monthFrac;
-      if(avg<50||cur<50)return null;
-      const pct=Math.round((cur-avg)/avg*100);
-      if(pct<40)return null;
-      return {cat,pct};
-    }).filter(Boolean).sort((a,b)=>b.pct-a.pct).slice(0,3);
-    if(isCurrent&&monthFrac>=0.15&&chips.length){
-      anomEl.style.display='';
-      anomEl.innerHTML=chips.map(c=>
-        `<span class="spend-anom-chip" style="color:var(--red)">${CATS_EMOJI[c.cat]||''} ${c.cat} +${c.pct}% vs usual pace</span>`).join('');
-    } else anomEl.style.display='none';
   }
 }
 

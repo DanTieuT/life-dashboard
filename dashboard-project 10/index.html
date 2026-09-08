@@ -334,17 +334,15 @@
           </div>
         </div>
         <div class="payday-right">
-          <div class="payday-dates-row"><span id="paydayStart"></span><span id="paydayEnd"></span></div>
           <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
-          <div class="payday-extra" id="paydayExtra" style="display:none"></div>
-          <div class="payday-check" id="paydayCheck" style="display:none"></div>
+          <div class="payday-status" id="paydayStatus" style="display:none"></div>
         </div>
       </div>
 
       <!-- Spending Card (total + by-category breakdown, merged — was two cards) -->
       <div class="fin-collapsible" data-fin-id="spending">
         <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          <span>Spending <span class="fin-hdr-sum" id="spendingHdrSum"></span></span>
+          <span>Spending</span>
           <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
         <div data-role="finBody">
@@ -358,7 +356,6 @@
             <div class="spend-total-track"><div class="spend-total-fill" id="spendingTotalFill"></div></div>
           </div>
           <div class="spend-safe-line" id="spendSafeLine" style="display:none"></div>
-          <div class="spend-anomaly-row" id="spendAnomalyRow" style="display:none"></div>
           <div id="catBarChart" style="margin-top:14px"></div>
         </div>
       </div>
