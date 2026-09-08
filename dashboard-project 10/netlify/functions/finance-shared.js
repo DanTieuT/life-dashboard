@@ -10,6 +10,17 @@
 const P2P_INFLOW_RE = /venmo|cash ?app|zelle|paypal/i;
 const SPEND_CATEGORIES = new Set(['Food', 'Transport', 'Shopping', 'Entertainment', 'Health & Fitness', 'Housing']);
 
+// Canonical parser for a transaction's "YYYY-MM-DD" date — mirrors
+// js/core.js txnLocalDate(). `new Date("2026-08-01")` parses as UTC midnight,
+// so .getMonth()/.getDate() read on a Netlify box (UTC) or a browser west of
+// UTC roll a first-of-month transaction into the previous month. Read the
+// components directly instead. Use this anywhere a transaction/contribution
+// date is bucketed by month or day.
+function txnLocalDate(dateStr) {
+  const [y, m, d] = (dateStr || '').split('-').map(Number);
+  return new Date(y || 1970, (m || 1) - 1, d || 1);
+}
+
 // A type:'in' transaction is 'income' (real new money), 'refund' (a merchant
 // return — nets against that category), or 'reimbursement' (someone paying
 // you back — nets against a chosen category, default Food). An explicit
@@ -41,14 +52,14 @@ function netSpend(txns) {
 // PLUS contribution-tracked goal contributions dated that month (Roth etc.),
 // which fund via an ACH that never becomes a transaction.
 function monthlySavings(data, month, year) {
-  const inM = (ds) => { const d = new Date(ds); return d.getMonth() === month && d.getFullYear() === year; };
+  const inM = (ds) => { const d = txnLocalDate(ds); return d.getMonth() === month && d.getFullYear() === year; };
   const xfers = (data.transactions || []).filter(t => isSavingsTransfer(t) && inM(t.date)).reduce((s, t) => s + (t.amount || 0), 0);
   const contribs = (data.goals || []).flatMap(g => g.contributions || []).filter(c => inM(c.date)).reduce((s, c) => s + (c.amount || 0), 0);
   return xfers + contribs;
 }
 
 module.exports = {
-  P2P_INFLOW_RE, SPEND_CATEGORIES,
+  P2P_INFLOW_RE, SPEND_CATEGORIES, txnLocalDate,
   inflowKind, isSpendOffset, offsetCategory, isSavingsTransfer,
   netSpend, monthlySavings,
 };

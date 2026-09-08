@@ -12,7 +12,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
   } catch {}
 }
 const calendarSvc = require('./apple-calendar.js');
-const { netSpend, monthlySavings } = require('./finance-shared.js');
+const { netSpend, monthlySavings, txnLocalDate } = require('./finance-shared.js');
 
 function initFirebase() {
   if (admin.apps.length > 0) return;
@@ -179,7 +179,7 @@ exports.handler = async (event) => {
     const calJulia = calToday.filter(e => !calendarSvc.isDanEvent(e));
     const dailyHabits = (data.habits || []).filter(h => h.type === 'daily' || !h.type);
     const now = new Date();
-    const inMonth = t => { const d = new Date(t.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); };
+    const inMonth = t => { const d = txnLocalDate(t.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); };
     // Net discretionary spend — outflows minus Savings transfers minus
     // refunds/reimbursements — matches the dashboard's spending card.
     const monthTxns = (data.transactions || []).filter(inMonth);

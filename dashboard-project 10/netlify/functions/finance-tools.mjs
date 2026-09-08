@@ -35,9 +35,10 @@ function clampLimit(n) {
   return Math.min(v, MAX_TXN_LIMIT);
 }
 
-// Parses "YYYY-MM-DD" at noon local time (matches the convention already
-// used in js/finance.js's suggestBudget — avoids UTC-midnight parsing
-// silently shifting a date back one day in any timezone behind UTC).
+// Parses "YYYY-MM-DD" in local time (same fix as finance-shared.js's
+// txnLocalDate — avoids UTC-midnight parsing shifting a date back a day west
+// of UTC), but null-returning: callers here fall back with `|| <default>`
+// and compare ranges, so an invalid arg must be distinguishable.
 function parseLocalDate(ds) {
   if (!ds) return null;
   const d = new Date(ds + 'T12:00:00');

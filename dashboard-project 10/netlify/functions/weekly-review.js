@@ -11,6 +11,7 @@ try {
 } catch {}
 
 const calendarSvc = require('./apple-calendar.js');
+const { txnLocalDate } = require('./finance-shared.js');
 
 function initFirebase() {
   if (admin.apps.length > 0) return;
@@ -134,7 +135,7 @@ exports.handler = async (event) => {
       t.type === 'out' && t.date >= weekStartStr && t.date <= weekEndStr
     );
     const monthTransactions = (data.transactions || []).filter(t => {
-      const d = new Date(t.date);
+      const d = txnLocalDate(t.date);
       return t.type === 'out' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
     const weekSpent = weekTransactions.reduce((s, t) => s + (t.amount || 0), 0);

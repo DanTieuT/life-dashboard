@@ -14,8 +14,9 @@ const calendarSvc = require('./apple-calendar.js');
 const uidGen = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
 // Money-model helpers (income/refund/reimbursement classification, netSpend,
-// monthlySavings) — shared with finance-tools.mjs and mirrored in js/core.js.
-const { netSpend, monthlySavings } = require('./finance-shared.js');
+// monthlySavings) and the canonical transaction-date parser — shared with
+// finance-tools.mjs and mirrored in js/core.js.
+const { netSpend, monthlySavings, txnLocalDate } = require('./finance-shared.js');
 
 function todayStr() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
@@ -76,7 +77,7 @@ function buildContext(data) {
   const events = (data.events || []).filter(e => e.date === today).sort((a, b) => (a.time || '').localeCompare(b.time || '')).map(e => ({ time: e.time, name: e.name }));
   const now2 = now;
   const monthTxns = (data.transactions || []).filter(t => {
-    const d = new Date(t.date);
+    const d = txnLocalDate(t.date);
     return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear();
   });
   // Net discretionary spend — outflows minus Savings transfers minus
@@ -117,7 +118,7 @@ function buildContext(data) {
       // resetAnnually is set, so the card rolls over to $0 every Jan 1
       // without needing any explicit reset step. See log_contribution below.
       current = (g.contributions || [])
-        .filter(c => !g.resetAnnually || new Date(c.date + 'T12:00:00').getFullYear() === thisYear)
+        .filter(c => !g.resetAnnually || txnLocalDate(c.date).getFullYear() === thisYear)
         .reduce((s, c) => s + (c.amount || 0), 0);
     } else if (ids.length) {
       current = ids.reduce((s, id) => s + ((data.accounts || []).find(a => a.id === id)?.balance || 0), 0);
@@ -195,7 +196,7 @@ function buildContext(data) {
   const catCur = {}, catPrior = {};
   (data.transactions || []).forEach(t => {
     if (t.type !== 'out') return;
-    const d = new Date(t.date);
+    const d = txnLocalDate(t.date);
     if (isNaN(d)) return;
     const k = monthKey(d);
     const cat = t.category || 'Other';
@@ -303,7 +304,7 @@ function applyActions(data, actions) {
         // Spending alert: check if we crossed a budget threshold. Skipped for
         // Savings transfers — those aren't discretionary spend (see 'spent' above).
         const now2 = new Date();
-        const inThisMonth = t => { const d = new Date(t.date); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear(); };
+        const inThisMonth = t => { const d = txnLocalDate(t.date); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear(); };
         const monthSaved = Math.round(monthlySavings(data, now2.getMonth(), now2.getFullYear()));
         const grossBudget = Math.round(data.budget?.monthly || data.budget?.income || 0);
         // Spendable budget — gross minus savings set aside (target or actual, whichever's larger).
@@ -326,7 +327,7 @@ function applyActions(data, actions) {
         g.contributions.push({ id: uidGen(), amount: action.amount, date: action.date || today });
         const thisYear2 = new Date().getFullYear();
         const total = g.contributions
-          .filter(c => !g.resetAnnually || new Date(c.date + 'T12:00:00').getFullYear() === thisYear2)
+          .filter(c => !g.resetAnnually || txnLocalDate(c.date).getFullYear() === thisYear2)
           .reduce((s, c) => s + (c.amount || 0), 0);
         labels.push(`Logged $${action.amount} to ${g.name} (${g.target ? `$${Math.round(total).toLocaleString()} of $${Math.round(g.target).toLocaleString()}` : `$${Math.round(total).toLocaleString()} total`} this year)`);
         break;
