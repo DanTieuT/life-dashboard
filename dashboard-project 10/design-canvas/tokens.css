@@ -1,0 +1,120 @@
+/* ============================================================
+   Editorial direction — design tokens
+   Drop-in replacement for the :root / [data-theme] block in styles.css.
+   Warm monochrome + serif display + one restrained accent.
+   Light is the primary theme; dark is a tuned inversion.
+   ============================================================ */
+
+:root {
+  /* ---- Type families ---- */
+  --font-sans: -apple-system, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+  --font-serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* ---- Type scale ---- */
+  --t-display: 30px;   /* greeting / month label */
+  --t-figure: 34px;    /* the big money number (serif) */
+  --t-title: 19px;     /* section titles (serif) */
+  --t-body: 14px;
+  --t-meta: 13px;
+  --t-cap: 10px;       /* uppercase eyebrows / labels */
+
+  --lh-tight: 1.1;
+  --lh-body: 1.55;
+  --track-tight: -0.02em;
+  --track-cap: 0.13em;
+
+  /* ---- Surfaces (warm monochrome) ---- */
+  --bg:      #f7f6f3;
+  --card:    #ffffff;
+  --card-2:  #fcfcfb;
+  --card-3:  #f2f0ea;
+
+  /* ---- Ink ---- */
+  --text:  #2a2723;   /* never pure black */
+  --sub:   #8a8578;
+  --muted: #b3ae9e;
+
+  /* ---- Lines ---- */
+  --border:  #e6e1d6;
+  --hair:    #ece8de;
+  --divider: rgba(42, 39, 35, 0.10);
+
+  /* ---- Accent (used sparingly: serif accents, links, active nav) ---- */
+  --accent:      #9a3b1b;
+  --accent-weak: #f0e4dc;
+
+  /* ---- Semantic pastels (status tags, deltas) ---- */
+  --pos:      #346538;  --pos-bg: #edf3ec;
+  --neg:      #9f2f2d;  --neg-bg: #fdebec;
+  --warn:     #956400;  --warn-bg:#fbf3db;
+  --info:     #1f6c9f;  --info-bg:#e1f3fe;
+
+  /* ---- Shape ---- */
+  --radius:    10px;   /* cards */
+  --radius-sm: 6px;    /* buttons, inputs, chips */
+  --radius-pill: 999px;/* small status badges only */
+
+  /* ---- Elevation (barely-there) ---- */
+  --shadow: 0 1px 2px rgba(42, 39, 35, 0.03);
+  --shadow-hover: 0 2px 10px rgba(42, 39, 35, 0.05);
+
+  /* ---- Spacing scale ---- */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 44px; --s-12: 64px;
+
+  /* ---- Translucent chrome (nav / tab bar / sheets) ---- */
+  --material-bg: rgba(247, 246, 243, 0.78);
+  --material-blur: blur(20px) saturate(180%);
+  --material-edge: rgba(255, 255, 255, 0.6);   /* bright top edge, light on the material */
+  --scrim: rgba(42, 39, 35, 0.28);             /* dim-to-focus behind modals */
+  --edge-shadow: 0 12px 22px -18px rgba(42, 39, 35, 0.28); /* scroll-edge fade under sticky chrome */
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 200ms;
+  /* springs (Motion/Framer): bounce+duration map to Apple damping+response */
+  --spring-ui: 0;      /* bounce — critically damped default */
+  --spring-momentum: 0.2; /* bounce — only after a flick / drag release */
+  --spring-response: 0.35s;
+}
+
+[data-theme="dark"] {
+  --material-bg: rgba(22, 21, 15, 0.72);
+  --material-edge: rgba(255, 255, 255, 0.08);
+  --scrim: rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root { --material-bg: #f4f2ec; --material-blur: none; }
+  [data-theme="dark"] { --material-bg: #1a1912; }
+}
+@media (prefers-contrast: more) {
+  :root { --border: #b9b2a0; --sub: #6b675c; }
+}
+
+[data-theme="dark"] {
+  --bg:      #16150f;
+  --card:    #1e1c16;
+  --card-2:  #232019;
+  --card-3:  #12110c;
+
+  --text:  #ece7dc;
+  --sub:   #9c9686;
+  --muted: #6a6559;
+
+  --border:  #2c2a22;
+  --hair:    #262319;
+  --divider: rgba(236, 231, 220, 0.12);
+
+  --accent:      #d98a5c;
+  --accent-weak: #33261d;
+
+  --pos: #7fb985; --pos-bg: #1c2a1c;
+  --neg: #d98783; --neg-bg: #2e1c1c;
+  --warn:#d8b25f; --warn-bg:#2b2413;
+  --info:#7bb6d9; --info-bg:#16262f;
+
+  --shadow: none;
+  --shadow-hover: 0 2px 10px rgba(0, 0, 0, 0.3);
+}

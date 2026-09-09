@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1C1C1E">
+<meta name="theme-color" content="#f7f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17150f" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Command Center</title>
@@ -548,14 +549,14 @@
 
 
       <!-- Recent Transactions -->
-      <div style="font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:12px">
-        Recent transactions
+      <div class="txn-list-hdr">
+        <span class="fin-section-title">Recent</span>
         <div class="txn-search-wrap" style="flex:1;margin:0">
           <input class="txn-search" id="txnSearch" placeholder="Search transactions..." oninput="renderFinanceTab()">
           <span class="txn-count" id="txnCount"></span>
         </div>
       </div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:4px 16px" id="txnList"></div>
+      <div id="txnList"></div>
 
       <!-- Hidden legacy elements for JS compat -->
       <div style="display:none">

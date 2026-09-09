@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-09T00:00:00Z",
+  "title": "Design System: Dashboard",
+  "extensions": {
+    "colorMeta": {
+      "accent-rust": { "role": "primary", "displayName": "Rust", "canonical": "#9a3b1b", "darkValue": "#df9163", "tonalRamp": ["#2e1108", "#4a1c0d", "#661f0e", "#7d2f14", "#9a3b1b", "#c0623b", "#d98a63", "#f0d0c0"] },
+      "accent-weak": { "role": "primary", "displayName": "Rust Wash", "canonical": "#f1e6de", "darkValue": "#33261d", "tonalRamp": ["#3a2a20", "#5a4030", "#7d5a44", "#a17f66", "#c2a48f", "#dcc6b8", "#f1e6de", "#faf3ee"] },
+      "bg-bone": { "role": "neutral", "displayName": "Bone", "canonical": "#f7f6f3", "darkValue": "#17150f", "tonalRamp": ["#2a2825", "#4c4842", "#6f6a60", "#928c7e", "#b8b1a1", "#dcd7ca", "#efece4", "#faf9f6"] },
+      "surface-card": { "role": "neutral", "displayName": "Card White", "canonical": "#ffffff", "darkValue": "#201d16", "tonalRamp": ["#201d16", "#2f2b22", "#4a4539", "#6f695c", "#948d7c", "#c2bcac", "#e8e4da", "#ffffff"] },
+      "surface-fold": { "role": "neutral", "displayName": "Fold", "canonical": "#f2f0ea", "darkValue": "#26221a", "tonalRamp": ["#26221a", "#3b352a", "#544d3e", "#736b57", "#9a927c", "#c6bfab", "#e6e1d3", "#f2f0ea"] },
+      "surface-raised": { "role": "neutral", "displayName": "Raised Cream", "canonical": "#fcfcfb", "darkValue": "#141209", "tonalRamp": ["#141209", "#2a2620", "#443f34", "#6b6454", "#948d7b", "#c4bdac", "#e9e5db", "#fcfcfb"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#2a2723", "darkValue": "#ece6da", "tonalRamp": ["#2a2723", "#413d36", "#585349", "#6f695c", "#8a8272", "#a8a08c", "#cbc4b2", "#ece8de"] },
+      "ink-sub": { "role": "neutral", "displayName": "Ink Sub", "canonical": "#6a6153", "darkValue": "#a49c8b", "tonalRamp": ["#241f18", "#3a342a", "#514a3d", "#6a6153", "#8a8272", "#aca492", "#cfc8b6", "#ece7db"] },
+      "ink-muted": { "role": "neutral", "displayName": "Ink Muted", "canonical": "#79715f", "darkValue": "#6d6656", "tonalRamp": ["#2a2519", "#40392b", "#59503e", "#79715f", "#988f7b", "#b8b09a", "#d5cebb", "#ece7da"] },
+      "border": { "role": "neutral", "displayName": "Border", "canonical": "#e6e1d6", "darkValue": "#2f2b22", "tonalRamp": ["#2f2b22", "#454034", "#5f5847", "#7f7660", "#a49a80", "#c7bda3", "#e6e1d6", "#f4f1e9"] },
+      "border-strong": { "role": "neutral", "displayName": "Border Strong", "canonical": "#d8d2c4", "darkValue": "#3d382c", "tonalRamp": ["#3d382c", "#544e3e", "#6f6753", "#8f866c", "#afa587", "#c8bfa4", "#d8d2c4", "#ede9df"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#ece8de", "darkValue": "#282318", "tonalRamp": ["#282318", "#3d382a", "#565040", "#75705d", "#9a927c", "#c5bda6", "#e0dccf", "#ece8de"] },
+      "positive": { "role": "tertiary", "displayName": "Positive", "canonical": "#3f6b43", "darkValue": "#84bd8a", "tonalRamp": ["#142a16", "#1f3f22", "#2b552f", "#3f6b43", "#5c8a60", "#84b088", "#b6d3b8", "#e6efe4"] },
+      "positive-wash": { "role": "tertiary", "displayName": "Positive Wash", "canonical": "#e6efe4", "darkValue": "#1b2a1c", "tonalRamp": ["#1b2a1c", "#2b442d", "#3d5e40", "#557a58", "#7fa082", "#a9c4ab", "#cddfce", "#e6efe4"] },
+      "negative": { "role": "tertiary", "displayName": "Negative", "canonical": "#9f2f2d", "darkValue": "#dd8a86", "tonalRamp": ["#33100f", "#4d1817", "#6d211f", "#9f2f2d", "#c15550", "#d98a86", "#ecc0bd", "#fbe7e6"] },
+      "negative-wash": { "role": "tertiary", "displayName": "Negative Wash", "canonical": "#fbe7e6", "darkValue": "#2e1c1c", "tonalRamp": ["#2e1c1c", "#472827", "#653735", "#8a4b48", "#b5726e", "#d5a19d", "#eec8c5", "#fbe7e6"] },
+      "caution": { "role": "tertiary", "displayName": "Caution", "canonical": "#8a5b12", "darkValue": "#d3ab5e", "tonalRamp": ["#2a1c06", "#40290a", "#5c3d0e", "#8a5b12", "#ab7d2f", "#c9a35e", "#e2c896", "#f7efd8"] },
+      "caution-wash": { "role": "tertiary", "displayName": "Caution Wash", "canonical": "#f7efd8", "darkValue": "#2a2414", "tonalRamp": ["#2a2414", "#413a20", "#5c5230", "#7e7245", "#a89a68", "#ccbf92", "#e4d9ba", "#f7efd8"] },
+      "allocation-clay": { "role": "secondary", "displayName": "Allocation Clay", "canonical": "#c9a37a", "tonalRamp": ["#3a2a19", "#54402a", "#71583d", "#8f7353", "#a98a69", "#c9a37a", "#dcc09e", "#efe0cb"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Serif page headers (.page-hdr-title, 27px; greeting/legacy title 32px)." },
+      "figure": { "displayName": "Figure", "purpose": "Every monetary number, Newsreader 500. Net worth ~37px down to inline ledger amounts at 15px; tabular-nums in columns." },
+      "title": { "displayName": "Title", "purpose": "Section running heads, sentence-case serif (.section-title 20px, collapse headers 18px)." },
+      "body": { "displayName": "Body", "purpose": "Row names, descriptions, general copy in the system sans." },
+      "label": { "displayName": "Label", "purpose": "Uppercase tracked 11px labels: eyebrow labels and the context strip trailing a section title." },
+      "caption": { "displayName": "Caption", "purpose": "Newsreader italic helper text, empty states, and Finance chart sublines." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 1px 2px rgba(42,39,35,.045)", "purpose": "The single elevation for legacy cards on not-yet-rebuilt tabs. Finance carries none." },
+      { "name": "card-hover", "value": "0 2px 10px rgba(42,39,35,.06)", "purpose": "Legacy card hover only." },
+      { "name": "menu", "value": "0 12px 34px -10px rgba(42,39,35,.3)", "purpose": "Overflow (⋯) menu popover." },
+      { "name": "fab-chat", "value": "0 6px 22px -8px rgba(42,39,35,.32)", "purpose": "Ground shadow under the docked JARVIS circle." },
+      { "name": "fab-quick", "value": "0 6px 18px -8px rgba(42,39,35,.26)", "purpose": "Ground shadow under the docked quick-add circle." },
+      { "name": "scroll-edge", "value": "0 12px 22px -18px rgba(42,39,35,.28)", "purpose": "Soft fade under sticky translucent chrome instead of a hard divider." },
+      { "name": "nav-tab-active", "value": "0 1px 3px rgba(42,39,35,.12)", "purpose": "Faint lift under the active desktop nav-tab chip." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Entering/exiting UI, press release." },
+      { "name": "ease-in-out", "value": "cubic-bezier(0.77, 0, 0.175, 1)", "purpose": "On-screen move / morph." },
+      { "name": "ease-drawer", "value": "cubic-bezier(0.32, 0.72, 0, 1)", "purpose": "iOS-like drawer / sheet / materialise." },
+      { "name": "page-fade", "value": "opacity 120ms ease-out", "purpose": "Tab/page switch." },
+      { "name": "row-press", "value": "transform 140ms ease-out to scale(.99)", "purpose": "Ledger row / range chip press feedback." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "768px", "purpose": "Below: transparent floating top bar + docked translucent bottom tab bar; grid rows collapse to one column." }
+    ],
+    "materials": [
+      { "name": "chrome", "value": "background: rgba(247,246,243,.78); backdrop-filter: blur(20px) saturate(180%)", "purpose": "Top nav and bottom tab bar. Dark: rgba(23,21,15,.72). Reduced-transparency: opaque #f4f2ec / #1c1a12, no blur." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink-filled action button; replaces the old iOS-green slab across the app shell.",
+      "html": "<button class=\"ds-btn-primary\">+ Transaction</button>",
+      "css": ".ds-btn-primary { background: var(--text, #2a2723); color: var(--bg, #f7f6f3); border: 1px solid var(--text, #2a2723); border-radius: 8px; padding: 8px 16px; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: filter .1s, transform .08s cubic-bezier(0.23,1,0.32,1); } .ds-btn-primary:hover { filter: brightness(1.12); } .ds-btn-primary:active { transform: scale(.96); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #9a3b1b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Range Chip",
+      "kind": "chip",
+      "refersTo": "chip-range",
+      "description": "Net-worth range selector (30D…All). Selection is an ink outline, never a fill.",
+      "html": "<div class=\"ds-range-bar\"><button class=\"ds-range-chip\">30D</button><button class=\"ds-range-chip is-active\">90D</button><button class=\"ds-range-chip\">1Y</button><button class=\"ds-range-chip\">All</button></div>",
+      "css": ".ds-range-bar { display: flex; gap: 8px; } .ds-range-chip { flex: 0 0 auto; padding: 6px 11px; border: 1px solid var(--border, #e6e1d6); border-radius: 8px; background: none; color: var(--sub, #6a6153); font-family: -apple-system, system-ui, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: transform .1s ease, color .15s, border-color .15s; } .ds-range-chip:active { transform: scale(.96); } .ds-range-chip.is-active { color: var(--text, #2a2723); border-color: var(--text, #2a2723); }"
+    },
+    {
+      "name": "Section Running Head",
+      "kind": "custom",
+      "description": "Sentence-case serif title for a Finance section, with an optional trailing uppercase context strip.",
+      "html": "<div class=\"ds-section-head\"><span class=\"ds-section-title\">Recent transactions</span><span class=\"ds-section-ctx\">synced 9m ago</span></div>",
+      "css": ".ds-section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; } .ds-section-title { font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif; font-optical-sizing: auto; font-size: 20px; font-weight: 500; letter-spacing: -.01em; color: var(--text, #2a2723); } .ds-section-ctx { font-family: -apple-system, system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .11em; text-transform: uppercase; color: var(--sub, #6a6153); }"
+    },
+    {
+      "name": "Ledger Row",
+      "kind": "custom",
+      "description": "The repeating unit of Finance: marker · name · serif figure · optional percent, divided by a hairline.",
+      "html": "<div class=\"ds-ledger\"><div class=\"ds-ledger-row\"><span class=\"ds-ledger-mark\"></span><span class=\"ds-ledger-name\">Investments</span><span class=\"ds-ledger-fig\">$182,400</span><span class=\"ds-ledger-pct\">61%</span></div><div class=\"ds-ledger-row\"><span class=\"ds-ledger-mark\" style=\"background:#c9a37a\"></span><span class=\"ds-ledger-name\">Cash</span><span class=\"ds-ledger-fig\">$24,910</span><span class=\"ds-ledger-pct\">8%</span></div></div>",
+      "css": ".ds-ledger-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hair, #ece8de); transition: transform 140ms cubic-bezier(0.23,1,0.32,1); } .ds-ledger-row:last-child { border-bottom: 0; } .ds-ledger-row:active { transform: scale(.99); } .ds-ledger-mark { width: 7px; height: 7px; border-radius: 1px; flex-shrink: 0; align-self: center; background: var(--accent, #9a3b1b); } .ds-ledger-name { flex: 1; font-family: -apple-system, system-ui, sans-serif; font-size: 14px; color: var(--text, #2a2723); } .ds-ledger-fig { font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif; font-weight: 500; letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: var(--text, #2a2723); } .ds-ledger-pct { width: 34px; text-align: right; font-size: 12px; color: var(--sub, #6a6153); font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Underline Search Input",
+      "kind": "input",
+      "refersTo": "input-underline",
+      "description": "Finance transaction search: a bare bottom rule, no box, no radius.",
+      "html": "<input class=\"ds-input-underline\" type=\"search\" placeholder=\"Search transactions\">",
+      "css": ".ds-input-underline { background: none; border: 0; border-bottom: 1px solid var(--border, #e6e1d6); border-radius: 0; padding: 6px 2px; font-family: -apple-system, system-ui, sans-serif; font-size: 13px; color: var(--text, #2a2723); outline: none; } .ds-input-underline::placeholder { color: var(--muted, #79715f); } .ds-input-underline:focus { border-bottom-color: var(--text, #2a2723); }"
+    },
+    {
+      "name": "Bottom Tab Bar",
+      "kind": "nav",
+      "refersTo": "nav-tab-active",
+      "description": "Mobile primary navigation: translucent blurred material, hairline top edge, active tab in rust.",
+      "html": "<nav class=\"ds-bottom-nav\"><button class=\"ds-bottom-tab is-active\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 12l9-9 9 9M5 10v10h14V10\"/></svg><span>Home</span></button><button class=\"ds-bottom-tab\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M4 7h16M4 12h16M4 17h10\"/></svg><span>Tasks</span></button><button class=\"ds-bottom-tab\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 6l6 6-6 6M13 18h8\"/></svg><span>Finance</span></button></nav>",
+      "css": ".ds-bottom-nav { display: flex; padding: 4px 8px 20px; background: rgba(247,246,243,.78); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-top: 1px solid var(--hair, #ece8de); } .ds-bottom-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: var(--sub, #6a6153); font-family: -apple-system, system-ui, sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; padding: 4px 0; transition: color .15s; } .ds-bottom-tab.is-active { color: var(--accent, #9a3b1b); }"
+    },
+    {
+      "name": "Net-Worth Figure & Delta",
+      "kind": "custom",
+      "description": "The memorable moment: net worth set in Newsreader as a private-ledger headline, with a quiet inline delta note.",
+      "html": "<div class=\"ds-nw\"><span class=\"ds-nw-label\">NET WORTH</span><div><span class=\"ds-nw-fig\">$298,140</span><span class=\"ds-nw-delta\">+$1,204 · 0.41% today</span></div></div>",
+      "css": ".ds-nw-label { font-family: -apple-system, system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; color: var(--sub, #6a6153); } .ds-nw-fig { font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif; font-optical-sizing: auto; font-size: 37px; font-weight: 500; line-height: 1.05; letter-spacing: -.02em; color: var(--text, #2a2723); } .ds-nw-delta { margin-left: 10px; font-family: -apple-system, system-ui, sans-serif; font-size: 12px; font-weight: 500; color: var(--pos, #3f6b43); }"
+    },
+    {
+      "name": "Drawn Status Mark",
+      "kind": "custom",
+      "description": "Inline SVG check / warning marks used wherever a Unicode glyph would otherwise stand in.",
+      "html": "<span class=\"ds-status ds-status--pos\"><svg class=\"ds-ico\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 8.5l3 3 6-7\"/></svg>Paycheck $2,840 on Sep 5</span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; font-family: -apple-system, system-ui, sans-serif; font-size: 12px; } .ds-status--pos { color: var(--green, #3f6b43); } .ds-status--neg { color: var(--red, #9f2f2d); } .ds-ico { width: .95em; height: .95em; display: inline-block; vertical-align: -.14em; margin-right: .35em; flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Private Ledger",
+    "overview": "This is a personal life dashboard set like a well-made page from a household ledger rather than a fintech console. The ground is warm bone paper (#f7f6f3), the ink is a soft near-black (#2a2723, never pure black), and information is organised in document rhythm: hairline rules between sections, not boxes around them. Every monetary figure and every section running head is set in Newsreader, a self-hosted variable display serif; labels, body copy, and controls stay in the system sans stack. One accent — a restrained rust (#9a3b1b in light, a lit #df9163 in dark) — carries links, the active tab, the net-worth trend line, and little else. Status reads as desaturated pastel, closer to a printed annual report than an iOS badge.\n\nThe redesign shipped as a token layer plus shell applied app-wide, with Finance as the first fully-rebuilt surface. The Dashboard, Tasks, Projects, and Calendar tabs inherit the new palette, serif, translucent chrome, and primary-button treatment, but keep their older card-heavy structure until each is separately rebuilt. Where this document describes a de-carded, hairline-ruled composition, that is the Finance model and the target for the rest of the app; it is not yet the state of those tabs.\n\nThe system refuses the stack of glossy, self-contained metric cards that nearly every finance UI ships. It is calm, precise, and consistent from tab to tab; the reader trusts the numbers because the screen looks considered. Light is the default theme (no attribute); [data-theme=\"dark\"] is an opt-in tuned inversion, first-class in every surface.",
+    "keyCharacteristics": [
+      "Warm bone paper ground, soft-black ink, one rust accent used sparingly",
+      "Newsreader serif for every figure and section head; system sans for everything else",
+      "Hairline rules divide sections; near-zero shadow",
+      "Translucent blurred materials for the top nav and bottom tab bar",
+      "Desaturated pastel status, never iOS-bright",
+      "Mobile-primary: transparent floating top bar, docked bottom tab bar"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Rust is the only chromatic color in the interface. It appears on links, the active tab, the trend line, the payday number, and pace ticks — never as a background behind content, never on more than a few glyphs per screen. Its rarity is the signal.", "section": "colors" },
+      { "name": "The Never-Black Rule", "body": "Text ink is #2a2723 and dark-mode ink is #ece6da. Pure #000 / #fff never appear as text or background.", "section": "colors" },
+      { "name": "The Desaturated-Status Rule", "body": "Positive / negative / caution are only ever the pastel wash + muted-ink pairs above. No saturated green/red/amber, no iOS system colors.", "section": "colors" },
+      { "name": "The Serif-for-Figures Rule", "body": "Every monetary figure and every section running head is Newsreader. Everything else — labels, body, buttons, inputs, tab bar — is the system sans. There is no third voice.", "section": "typography" },
+      { "name": "The Tracked-Caps-Is-Secondary Rule", "body": "Uppercase 11px tracked labels are reserved for eyebrow labels and the context strip trailing a section title. Section titles themselves are always sentence-case serif; an uppercase title is wrong.", "section": "typography" },
+      { "name": "The No-Kicker Rule", "body": "The serif page title stands alone. The eyebrow slot above it is permanently removed (.page-hdr-eyebrow { display: none }); do not reintroduce a kicker or eyebrow over a page or section title.", "section": "typography" },
+      { "name": "The Flat Ledger Rule", "body": "Finance surfaces never take a shadow or a box border. If something needs separation there, it gets a 1px --hairline rule and 26px of space, nothing else.", "section": "elevation" },
+      { "name": "The Hairline-Not-Border Rule", "body": "Sections and rows are divided by a single top 1px solid var(--hair). Cards that wrap content in an outline belong to the old system being replaced.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do build new Finance-family surfaces as one scrolling document: hairline-ruled sections (border-top: 1px solid var(--hair), 26px lead), no cards.",
+      "Do set every money figure and section head in Newsreader 500 with -0.02em / -0.01em tracking and tabular-nums in any column of figures.",
+      "Do keep the net-worth trend line rust in every state; put gain/loss in the delta note, not the line color.",
+      "Do keep rust to links, the active tab, the trend line, the payday number, and pace ticks — a few glyphs per screen.",
+      "Do use the pastel wash + muted-ink pairs for all status, and drawn SVG marks (_ICO_CHECK / _ICO_WARN) for check/warning symbols.",
+      "Do dock the quick-add and JARVIS buttons as quiet --card2 paper circles bottom-right, clear of content (they are exempt from any \"no floating button\" rule).",
+      "Do render translucent chrome with var(--material-bg) + blur(20px) saturate(180%) and a 1px --hair edge; honor reduced-transparency and reduced-motion."
+    ],
+    "donts": [
+      "Don't wrap Finance content in bordered or shadowed metric cards, or stack self-contained KPI tiles.",
+      "Don't use pure black/white for text or background, or saturated/iOS status colors.",
+      "Don't use Unicode glyphs (✓ ⚠ ▲ ▼ ●) as icons — draw them as inline SVG.",
+      "Don't put a kicker or eyebrow above a page or section title, and don't set a section title in uppercase — the serif carries it.",
+      "Don't fill the active range chip or active nav-tab-on-Finance with a color block; selection is an ink outline / rust text.",
+      "Don't apply the de-carded Finance treatment to Dashboard, Tasks, Projects, or Calendar until each is rebuilt — they legitimately still use the legacy card + shadow model under the new tokens."
+    ]
+  }
+}

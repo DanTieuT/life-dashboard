@@ -1,0 +1,14 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 1600, "title": "iPhone — Dashboard" },
+    { "file": "Finance.dc.html", "x": 500, "y": 0, "w": 390, "h": 2640, "title": "iPhone — Finance" },
+    { "file": "Tasks.dc.html", "x": 1000, "y": 0, "w": 390, "h": 1420, "title": "iPhone — Tasks" },
+    { "file": "Projects.dc.html", "x": 1500, "y": 0, "w": 390, "h": 1520, "title": "iPhone — Projects" },
+    { "file": "DesktopB.dc.html", "x": 2000, "y": 0, "w": 1040, "h": 1980, "title": "Desktop — reference" }
+  ],
+  "annotations": [
+    { "id": "note-phone", "x": 0, "y": -160, "w": 890, "text": "EDITORIAL DIRECTION — iPhone\nWarm bone canvas, Newsreader serif for headings and figures, thin rules instead of cards, one rust accent, desaturated pastel status tags, translucent nav + tab bar. Sample data. Tokens: design-canvas/tokens.css." },
+    { "id": "note-tasks", "x": 1000, "y": -160, "w": 890, "text": "TASKS + PROJECTS\nTasks: filter as underlined text tabs (not pills), thin-circle checkboxes, day-grouped with sticky headers, due day in serif. Projects: list entries not cards — name in serif, pastel status tag, one hairline progress bar, milestone count + next step. Swipe-to-edit/delete unchanged from the current app." }
+  ],
+  "launch": { "view": "focused", "file": "Tasks.dc.html" }
+}

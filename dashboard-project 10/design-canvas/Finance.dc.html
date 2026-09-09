@@ -1,0 +1,259 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
+    body{margin:0;background:#f7f6f3;font-family:-apple-system,'SF Pro Text','Helvetica Neue',system-ui,sans-serif;color:#2a2723;-webkit-font-smoothing:antialiased}
+    a{color:#9a3b1b}a:hover{color:#7a2d13}
+    *{box-sizing:border-box}
+    .serif{font-family:'Newsreader','Iowan Old Style',Georgia,serif}
+    .cap{font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8a8578}
+    .rule{height:1px;background:#ece8de}
+    .sec{margin-top:34px}
+    .sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+    .sec-ttl{font-size:19px;font-weight:500;font-family:'Newsreader',Georgia,serif}
+    .fig{font-family:'Newsreader',Georgia,serif;font-weight:500;letter-spacing:-.02em}
+    .chip{font-size:11px;color:#8a8578;padding:6px 11px;border:1px solid #e6e1d6;border-radius:6px;transition:transform 120ms cubic-bezier(0.23,1,0.32,1)}
+    .chip:active{transform:scale(0.96)}
+    .chip.on{color:#2a2723;border-color:#2a2723}
+    .tag{font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;white-space:nowrap}
+    .row{transition:transform 140ms cubic-bezier(0.23,1,0.32,1)}
+    .row:active{transform:scale(0.985)}
+    .track{height:2px;background:#ece8de;position:relative;border-radius:2px;overflow:hidden}
+    .track > span{position:absolute;top:0;bottom:0;left:0;background:#2a2723;border-radius:2px}
+    .daygroup{position:sticky;top:52px;background:rgba(247,246,243,.9);backdrop-filter:blur(6px);padding:14px 0 6px;z-index:1}
+  </style>
+</helmet>
+
+<div style="width:390px;margin:0 auto;background:#f7f6f3;min-height:2600px;position:relative;padding-bottom:88px">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;position:sticky;top:0;background:rgba(247,246,243,.78);backdrop-filter:blur(20px) saturate(180%);box-shadow:0 12px 22px -18px rgba(42,39,35,.28);z-index:5">
+    <span class="serif" style="font-size:15px;font-weight:600;letter-spacing:-.01em">Finance</span>
+    <span class="serif" style="font-size:15px;display:flex;align-items:center;gap:12px">
+      <span style="color:#b3ae9e">&#8249;</span> September <span style="color:#b3ae9e">&#8250;</span>
+    </span>
+  </div>
+
+  <div style="padding:22px 20px 0">
+
+    <!-- NET WORTH -->
+    <div class="cap" style="margin-bottom:8px">Net worth</div>
+    <div class="fig" style="font-size:38px">$148,230</div>
+    <div style="font-size:12px;color:#346538;margin:3px 0 14px">&#9650; $2,140 &nbsp;<span style="color:#8a8578">(1.5%) &middot; past 30 days</span></div>
+
+    <svg width="100%" height="118" viewBox="0 0 350 118" preserveAspectRatio="none" style="display:block">
+      <defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#9a3b1b" stop-opacity="0.10"/><stop offset="1" stop-color="#9a3b1b" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path d="M0,94 C40,88 60,90 96,72 C130,57 150,63 192,49 C230,37 260,41 300,23 C320,15 335,17 350,10 L350,118 L0,118 Z" fill="url(#g)"/>
+      <path d="M0,94 C40,88 60,90 96,72 C130,57 150,63 192,49 C230,37 260,41 300,23 C320,15 335,17 350,10" fill="none" stroke="#9a3b1b" stroke-width="1.5"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;margin-top:4px" class="cap"><span>Aug 9</span><span>Sep 8</span></div>
+
+    <div style="display:flex;gap:7px;margin:14px 0 18px">
+      <span class="chip on">30D</span><span class="chip">90D</span><span class="chip">6M</span><span class="chip">1Y</span><span class="chip">All</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:7px;height:7px;background:#9a3b1b;border-radius:2px;flex-shrink:0"></span>
+        <span style="font-size:13px;flex:1">Investments</span>
+        <span class="fig" style="font-size:14px">$96,400</span><span style="font-size:12px;color:#8a8578;width:32px;text-align:right">65%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:7px;height:7px;background:#c9a37a;border-radius:2px;flex-shrink:0"></span>
+        <span style="font-size:13px;flex:1">Cash</span>
+        <span class="fig" style="font-size:14px">$31,830</span><span style="font-size:12px;color:#8a8578;width:32px;text-align:right">22%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:7px;height:7px;background:#d8d2c4;border-radius:2px;flex-shrink:0"></span>
+        <span style="font-size:13px;flex:1">Vehicle equity (981)</span>
+        <span class="fig" style="font-size:14px">$20,000</span><span style="font-size:12px;color:#8a8578;width:32px;text-align:right">13%</span>
+      </div>
+    </div>
+
+    <!-- CASH FLOW -->
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">This month</span><span class="cap">Money in / out</span></div>
+      <div class="rule" style="margin-bottom:14px"></div>
+      <div style="display:flex;gap:28px">
+        <div>
+          <div class="cap" style="margin-bottom:4px">In</div>
+          <div class="fig" style="font-size:20px;color:#346538">+$6,400</div>
+        </div>
+        <div>
+          <div class="cap" style="margin-bottom:4px">Out</div>
+          <div class="fig" style="font-size:20px">&#8722;$4,090</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div class="cap" style="margin-bottom:4px">Net</div>
+          <div class="fig" style="font-size:20px;color:#346538">+$2,310</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#8a8578;margin-top:10px">Runway if income stopped: <span style="color:#2a2723">7.8 months</span></div>
+    </div>
+
+    <!-- PAYDAY -->
+    <div class="sec">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <span class="cap">Next payday</span>
+        <span class="serif" style="font-size:13px;color:#8a8578">Fri, Sep 12 &middot; in 4 days</span>
+      </div>
+      <div class="fig" style="font-size:24px;margin-top:4px">+$3,200</div>
+    </div>
+
+    <!-- BUDGET -->
+    <div class="sec">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+        <span class="sec-ttl">Budget</span>
+        <span class="tag" style="background:#edf3ec;color:#346538">On pace</span>
+      </div>
+      <div class="rule" style="margin-bottom:14px"></div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="fig" style="font-size:30px">$2,310</span>
+        <span class="serif" style="font-size:15px;color:#8a8578">spent of $3,400</span>
+      </div>
+      <div class="track" style="margin:14px 0 4px;height:3px"><span style="width:68%"></span></div>
+      <div style="position:relative;height:12px">
+        <span style="position:absolute;left:71%;top:0;font-size:10px;color:#9a3b1b">on-pace &#8593;</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-size:13px;width:96px">Groceries</span><span class="track" style="flex:1"><span style="width:84%"></span></span><span style="font-size:12px;color:#8a8578;width:64px;text-align:right">$420/500</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-size:13px;width:96px">Eating out</span><span class="track" style="flex:1;background:#fdebec"><span style="width:100%;background:#9f2f2d"></span></span><span style="font-size:12px;color:#9f2f2d;width:64px;text-align:right">$380/300</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-size:13px;width:96px">Car &amp; 981</span><span class="track" style="flex:1"><span style="width:87%"></span></span><span style="font-size:12px;color:#8a8578;width:64px;text-align:right">$610/700</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-size:13px;width:96px">Fun</span><span class="track" style="flex:1"><span style="width:72%"></span></span><span style="font-size:12px;color:#8a8578;width:64px;text-align:right">$180/250</span></div>
+      </div>
+    </div>
+
+    <!-- CREDIT CARDS -->
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">Cards</span><span class="cap">Balance &middot; due</span></div>
+      <div class="rule" style="margin-bottom:4px"></div>
+      <div class="row" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #ece8de">
+        <div style="flex:1">
+          <div style="font-size:14px">Amex Gold</div>
+          <div style="font-size:11px;color:#8a8578">Due Sep 25 &middot; 18% of limit</div>
+        </div>
+        <span class="fig" style="font-size:15px;color:#9f2f2d">&#8722;$1,180</span>
+      </div>
+      <div class="row" style="display:flex;align-items:center;gap:12px;padding:12px 0">
+        <div style="flex:1">
+          <div style="font-size:14px">Chase Freedom</div>
+          <div style="font-size:11px;color:#346538">Paid &middot; statement closes Sep 18</div>
+        </div>
+        <span class="fig" style="font-size:15px;color:#8a8578">$0</span>
+      </div>
+    </div>
+
+    <!-- SINKING FUNDS -->
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">Sinking funds</span><span class="cap">Set aside</span></div>
+      <div class="rule" style="margin-bottom:14px"></div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>981 engine build</span><span style="color:#8a8578">$3,400 / 6,000</span></div>
+          <div class="track"><span style="width:57%"></span></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>Emergency fund</span><span style="color:#8a8578">$18,000 / 20,000</span></div>
+          <div class="track"><span style="width:90%"></span></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>Travel &mdash; Julia</span><span style="color:#8a8578">$650 / 2,500</span></div>
+          <div class="track"><span style="width:26%"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT -->
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">Recent</span><span class="cap">All activity</span></div>
+      <div class="rule"></div>
+
+      <div class="daygroup cap">Sunday, Sep 7</div>
+      <div class="row" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #ece8de">
+        <div style="flex:1"><div style="font-size:14px">FCP Euro</div><div style="font-size:11px;color:#8a8578">Car &amp; 981</div></div>
+        <span class="fig" style="font-size:14px">&#8722;$284.10</span>
+      </div>
+      <div class="row" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #ece8de">
+        <div style="flex:1"><div style="font-size:14px">Trader Joe's</div><div style="font-size:11px;color:#8a8578">Groceries</div></div>
+        <span class="fig" style="font-size:14px">&#8722;$61.80</span>
+      </div>
+
+      <div class="daygroup cap">Saturday, Sep 6</div>
+      <div class="row" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #ece8de">
+        <div style="flex:1"><div style="font-size:14px">Whole Foods</div><div style="font-size:11px;color:#8a8578">Groceries</div></div>
+        <span class="fig" style="font-size:14px">&#8722;$92.40</span>
+      </div>
+      <div class="row" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #ece8de">
+        <div style="flex:1"><div style="font-size:14px">Shell</div><div style="font-size:11px;color:#8a8578">Car &amp; 981</div></div>
+        <span class="fig" style="font-size:14px">&#8722;$58.20</span>
+      </div>
+
+      <div class="daygroup cap">Friday, Sep 5</div>
+      <div class="row" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #ece8de">
+        <div style="flex:1"><div style="font-size:14px">Paycheck</div><div style="font-size:11px;color:#8a8578">Income</div></div>
+        <span class="fig" style="font-size:14px;color:#346538">+$3,200.00</span>
+      </div>
+      <div class="row" style="display:flex;align-items:center;gap:12px;padding:10px 0">
+        <div style="flex:1"><div style="font-size:14px">Blue Bottle</div><div style="font-size:11px;color:#8a8578">Eating out</div></div>
+        <span class="fig" style="font-size:14px">&#8722;$6.75</span>
+      </div>
+
+      <div style="text-align:center;padding:16px 0 0"><span style="font-size:12px;color:#9a3b1b">See all transactions</span></div>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">Accounts</span><span class="cap">Linked &middot; synced 9m ago</span></div>
+      <div class="rule" style="margin-bottom:4px"></div>
+      <div class="row" style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #ece8de">
+        <span style="font-size:14px">Checking <span style="color:#b3ae9e;font-size:12px">&middot;&middot; 4471</span></span>
+        <span class="fig" style="font-size:14px">$8,240</span>
+      </div>
+      <div class="row" style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #ece8de">
+        <span style="font-size:14px">Savings <span style="color:#b3ae9e;font-size:12px">&middot;&middot; 0092</span></span>
+        <span class="fig" style="font-size:14px">$23,590</span>
+      </div>
+      <div class="row" style="display:flex;justify-content:space-between;padding:12px 0">
+        <span style="font-size:14px">Brokerage <span style="color:#b3ae9e;font-size:12px">&middot;&middot; 7708</span></span>
+        <span class="fig" style="font-size:14px">$96,400</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- bottom tab bar -->
+  <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;align-items:center;height:72px;padding-bottom:6px;background:rgba(247,246,243,.8);border-top:1px solid rgba(255,255,255,.6);box-shadow:0 -12px 26px -18px rgba(42,39,35,.18);backdrop-filter:blur(20px) saturate(180%)">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#8a8578">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span style="font-size:9px;letter-spacing:.04em">Today</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#8a8578">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span style="font-size:9px;letter-spacing:.04em">Tasks</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9a3b1b">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span style="font-size:9px;font-weight:600;letter-spacing:.04em">Finance</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#8a8578">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span style="font-size:9px;letter-spacing:.04em">Projects</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#8a8578">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span style="font-size:9px;letter-spacing:.04em">Calendar</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

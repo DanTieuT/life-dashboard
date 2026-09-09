@@ -42,7 +42,7 @@ const HABIT_COLORS_LIGHT = [
   { bg:'#67e8f9',dot:'#164e63',dim:'#22d3ee',btn:'#164e63',ico:'#67e8f9' }, // cyan
 ];
 const HABIT_COLORS=HABIT_COLORS_DARK; // resolved at render time via habitColors()
-function habitColors(){return document.documentElement.getAttribute('data-theme')==='light'?HABIT_COLORS_LIGHT:HABIT_COLORS_DARK;}
+function habitColors(){return document.documentElement.getAttribute('data-theme')==='dark'?HABIT_COLORS_DARK:HABIT_COLORS_LIGHT;}
 const DEFAULT_HABITS = [
   {id:'brush_teeth',name:'Brush Teeth',sub:'Twice a day',emoji:'🪥',colorIdx:0,type:'daily',dailyTarget:2,log:{}},
   {id:'make_bed',name:'Making the Bed',sub:'Every morning',emoji:'🛏️',colorIdx:1,type:'daily',log:{}},
@@ -89,11 +89,12 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
 const todayStr=()=>new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in browser's local timezone
 // ── THEME ──────────────────────────────────────────────────────────────
 (function(){
+  // Editorial redesign: light is the default (no attribute); dark is opt-in.
   const saved=localStorage.getItem('theme');
-  if(saved==='light') document.documentElement.setAttribute('data-theme','light');
+  if(saved==='dark') document.documentElement.setAttribute('data-theme','dark');
 })();
 window.toggleTheme=function(){
-  const isLight=document.documentElement.getAttribute('data-theme')==='light';
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
   // Enable the 300ms colour cross-fade only for the duration of the flip
   // (see .theme-switching in styles.css), then drop it so interactive
   // elements respond at their own speed.
@@ -102,12 +103,12 @@ window.toggleTheme=function(){
   window._themeSwitchTimer=setTimeout(()=>{
     document.documentElement.classList.remove('theme-switching');
   },350);
-  if(isLight){
+  if(isDark){
     document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('theme','dark');
-  }else{
-    document.documentElement.setAttribute('data-theme','light');
     localStorage.setItem('theme','light');
+  }else{
+    document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('theme','dark');
   }
   updateThemeBtn();
   // Re-render habit cards so they pick up the correct color palette
@@ -116,9 +117,9 @@ window.toggleTheme=function(){
   }
 };
 function updateThemeBtn(){
-  const isLight=document.documentElement.getAttribute('data-theme')==='light';
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
   const lbl=document.getElementById('themeLabel');
-  if(lbl) lbl.textContent=isLight?'Dark':'Light';
+  if(lbl) lbl.textContent=isDark?'Light':'Dark';
   updateThemeSwitch();
 }
 // ── HIDE NUMBERS ─────────────────────────────────────────────────────
@@ -158,7 +159,7 @@ const ACCT_TYPE_META={
   investment:{label:'Investment',color:'#ff9f0a'},
   crypto:{label:'Crypto',color:'#bf5af2'},
   property:{label:'Property',color:'#64d2ff'},
-  debt:{label:'Debt',color:'#ff453a'},
+  debt:{label:'Debt',color:'var(--red)'},
 };
 
 const fmt=n=>'$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
@@ -362,7 +363,7 @@ window.pddToggleTheme=function(){
 function updateThemeSwitch(){
   const toggle=document.getElementById('pddThemeToggle');
   if(!toggle)return;
-  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
   toggle.classList.toggle('on',isDark);
 }
 window.pddToggleHideAmounts=function(){

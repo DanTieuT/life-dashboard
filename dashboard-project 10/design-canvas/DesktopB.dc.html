@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Libre+Franklin:wght@400;500;600&display=swap');
+    body{margin:0;background:#f6f3ec;font-family:'Libre Franklin',system-ui,sans-serif;color:#211e18}
+    a{color:#9a3b1b}a:hover{color:#7a2d13}
+    *{box-sizing:border-box}
+    .serif{font-family:'Newsreader',Georgia,serif}
+    .cap{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8a8272}
+    .rule{height:1px;background:#ddd5c4}
+  </style>
+</helmet>
+
+<div style="width:1000px;margin:0 auto;padding:0 0 60px;background:#f6f3ec">
+
+  <div style="display:flex;align-items:baseline;gap:12px;padding:14px 40px;border-bottom:1px solid #ddd5c4">
+    <span class="serif" style="font-size:14px;font-weight:600;color:#9a3b1b;font-style:italic">Editorial — desktop</span>
+    <span style="font-size:12px;color:#8a8272">Reference: the same direction at desktop width. The iPhone layout is the primary target.</span>
+  </div>
+
+  <!-- top nav -->
+  <div style="display:flex;align-items:center;gap:24px;height:60px;padding:0 40px;border-bottom:1px solid #ddd5c4">
+    <span class="serif" style="font-size:17px;font-weight:600;letter-spacing:-.01em">Dashboard</span>
+    <div style="display:flex;gap:20px;flex:1">
+      <span style="font-size:13px;font-weight:600;border-bottom:2px solid #9a3b1b;padding-bottom:2px">Dashboard</span>
+      <span style="font-size:13px;color:#8a8272">Tasks</span>
+      <span style="font-size:13px;color:#8a8272">Finance</span>
+      <span style="font-size:13px;color:#8a8272">Projects</span>
+      <span style="font-size:13px;color:#8a8272">Calendar</span>
+    </div>
+    <span style="font-size:13px;color:#8a8272">9:07 AM</span>
+    <span class="serif" style="font-size:13px;border:1px solid #cfc6b3;border-radius:999px;padding:5px 14px">New entry</span>
+  </div>
+
+  <div style="padding:40px">
+
+    <div class="cap" style="margin-bottom:8px">Monday, the 8th of September</div>
+    <div class="serif" style="font-size:44px;font-weight:500;letter-spacing:-.02em;line-height:1.05;margin-bottom:36px">Good morning, Dan.</div>
+
+    <!-- MONEY -->
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px">
+      <span class="serif" style="font-size:22px;font-weight:500">Money</span>
+      <span class="cap">Net worth &amp; budget</span>
+    </div>
+    <div class="rule" style="margin-bottom:24px"></div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px;margin-bottom:44px">
+      <div>
+        <div class="cap" style="margin-bottom:10px">Net worth</div>
+        <div class="serif" style="font-size:40px;font-weight:500;letter-spacing:-.02em">$148,230</div>
+        <div style="font-size:13px;color:#3a6b3a;margin:2px 0 16px">Up $2,140 over the last thirty days</div>
+        <svg width="100%" height="60" viewBox="0 0 440 60" preserveAspectRatio="none">
+          <polyline points="0,48 40,44 80,46 120,38 160,40 200,32 240,34 280,24 320,26 360,16 400,18 440,8" fill="none" stroke="#9a3b1b" stroke-width="1.25"/>
+        </svg>
+      </div>
+      <div>
+        <div class="cap" style="margin-bottom:10px">This month's budget</div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span class="serif" style="font-size:40px;font-weight:500;letter-spacing:-.02em">$2,310</span>
+          <span class="serif" style="font-size:18px;color:#8a8272">of $3,400</span>
+        </div>
+        <div style="font-size:13px;color:#3a6b3a;margin:2px 0 16px">Comfortably on pace</div>
+        <div style="height:2px;background:#e6ddcb;position:relative;margin-bottom:14px">
+          <div style="position:absolute;inset:0 32% 0 0;background:#211e18"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span>Groceries</span><span style="color:#8a8272">$420 &nbsp;/&nbsp; 500</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span>Eating out</span><span style="color:#9a3b1b">$380 &nbsp;/&nbsp; 300</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span>Car &amp; the 981</span><span style="color:#8a8272">$610 &nbsp;/&nbsp; 700</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODAY + FOCUS -->
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px;margin-bottom:44px">
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+          <span class="serif" style="font-size:22px;font-weight:500">Today</span><span class="cap">Three things</span>
+        </div>
+        <div class="rule" style="margin-bottom:16px"></div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:16px"><span class="serif" style="font-size:15px;color:#9a3b1b;width:76px">9:00 am</span><span style="font-size:14px">RDO — a day off</span></div>
+          <div style="display:flex;gap:16px"><span class="serif" style="font-size:15px;color:#9a3b1b;width:76px">12:30 pm</span><span style="font-size:14px">Lunch with Julia</span></div>
+          <div style="display:flex;gap:16px"><span class="serif" style="font-size:15px;color:#9a3b1b;width:76px">6:00 pm</span><span style="font-size:14px">Garage time — cam install</span></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+          <span class="serif" style="font-size:22px;font-weight:500">In focus</span><span class="cap">Top three</span>
+        </div>
+        <div class="rule" style="margin-bottom:16px"></div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div style="display:flex;gap:12px"><span class="serif" style="color:#9a3b1b;font-size:15px">1</span><span style="font-size:14px">Order ARP head studs for the 981</span></div>
+          <div style="display:flex;gap:12px"><span class="serif" style="color:#9a3b1b;font-size:15px">2</span><span style="font-size:14px">Reconcile August spending</span></div>
+          <div style="display:flex;gap:12px"><span class="serif" style="color:#9a3b1b;font-size:15px">3</span><span style="font-size:14px">Call the machine shop about the valve job</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+      <span class="serif" style="font-size:22px;font-weight:500">Projects</span><span class="cap">Three active</span>
+    </div>
+    <div class="rule" style="margin-bottom:6px"></div>
+    <div style="display:grid;grid-template-columns:1fr 130px 90px;gap:12px;padding:10px 0;align-items:center;border-bottom:1px solid #e6ddcb">
+      <span style="font-size:14px">The 981 engine build</span><span style="font-size:13px;color:#8a8272">In progress</span><span style="font-size:13px;color:#9a3b1b">High</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 130px 90px;gap:12px;padding:10px 0;align-items:center;border-bottom:1px solid #e6ddcb">
+      <span style="font-size:14px">Dashboard, version two</span><span style="font-size:13px;color:#8a8272">In progress</span><span style="font-size:13px;color:#8a8272">Medium</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 130px 90px;gap:12px;padding:10px 0;align-items:center;margin-bottom:44px">
+      <span style="font-size:14px">Garage shelving</span><span style="font-size:13px;color:#8a8272">Backlog</span><span style="font-size:13px;color:#8a8272">Low</span>
+    </div>
+
+    <!-- HABITS -->
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+      <span class="serif" style="font-size:22px;font-weight:500">Habits</span><span class="cap">Week of the 8th</span>
+    </div>
+    <div class="rule" style="margin-bottom:18px"></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:16px"><span style="font-size:14px;width:130px">Gym</span><span style="display:flex;gap:8px">
+        <span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span><span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span>
+      </span></div>
+      <div style="display:flex;align-items:center;gap:16px"><span style="font-size:14px;width:130px">Read 20 minutes</span><span style="display:flex;gap:8px">
+        <span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span>
+      </span></div>
+      <div style="display:flex;align-items:center;gap:16px"><span style="font-size:14px;width:130px">Garage, 30 minutes</span><span style="display:flex;gap:8px">
+        <span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span><span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;background:#9a3b1b"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span><span style="width:14px;height:14px;border-radius:999px;border:1px solid #cfc6b3"></span>
+      </span></div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

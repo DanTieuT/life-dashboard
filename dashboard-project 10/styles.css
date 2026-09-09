@@ -15,57 +15,112 @@
   .page,.modal,.toast,.task-row-swipe-inner,.fin-more-menu,.quick-action-item,
   .modal-overlay.open .modal,.fin-more-menu.open{transform:none!important}
 }
+/* ── Newsreader — self-hosted display serif (variable, latin subset) ── */
+@font-face{font-family:'Newsreader';font-style:normal;font-weight:400 600;font-display:swap;
+  src:url(/fonts/newsreader-var.woff2) format('woff2-variations');}
+@font-face{font-family:'Newsreader';font-style:italic;font-weight:400 500;font-display:swap;
+  src:url(/fonts/newsreader-italic-var.woff2) format('woff2-variations');}
+
 :root{
-  /* System accent colors — Apple HIG palette, same hues in both themes */
-  --green:#34c759;--green-dim:rgba(52,199,89,.15);
-  --blue:#007aff;--blue-dim:rgba(0,122,255,.15);
-  --cyan:#30b0c7;--orange:#ff9500;
-  --red:#ff3b30;--red-dim:rgba(255,59,48,.15);
-  --yellow:#ffd60a;--yellow-dim:rgba(255,214,10,.12);
-  --purple:#af52de;--indigo:#5856d6;
-  --card-shadow:0 1px 3px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.24);
-  --radius:20px;--radius-lg:26px;--radius-sm:10px;
+  /* ── Editorial world — warm monochrome, one rust accent, pastel status ── */
+  /* Legacy hue names remapped to the editorial palette so existing markup
+     inherits it. Positive/negative/caution are desaturated, not iOS-bright. */
+  --green:#3f6b43;--green-dim:#e6efe4;
+  --blue:#9a3b1b;--blue-dim:#f1e6de;      /* --blue is the single accent */
+  --cyan:#3a6b7a;--orange:#a4631d;
+  --red:#9f2f2d;--red-dim:#fbe7e6;
+  --yellow:#8a5b12;--yellow-dim:#f7efd8;
+  --purple:#6d5296;--indigo:#3f4d8a;
+
+  --accent:#9a3b1b;--accent-weak:#f1e6de;
+
+  --card-shadow:0 1px 2px rgba(42,39,35,.045);
+  --card-shadow-hover:0 2px 10px rgba(42,39,35,.06);
+  --radius:14px;--radius-lg:16px;--radius-sm:8px;--radius-pill:999px;
+
   /* Motion curves — strong custom easings (default CSS easings are too weak) */
   --ease-out:cubic-bezier(0.23, 1, 0.32, 1);      /* entering/exiting UI, press release */
   --ease-in-out:cubic-bezier(0.77, 0, 0.175, 1);  /* on-screen move / morph */
   --ease-drawer:cubic-bezier(0.32, 0.72, 0, 1);   /* iOS-like drawer / sheet / materialise */
 
-  --bg:#000;--card:#1c1c1e;--card2:#232326;--card3:#0d0d0f;
-  --border:#232327;--border2:#1f1f23;
-  --text:#fff;--sub:rgba(235,235,245,.6);--muted:#48484a;
-  --track:rgba(120,120,128,.28);--seg-active:#38383c;
-  --divider:rgba(84,84,88,.65);--pill-bg:rgba(120,120,128,.28);
-  --invert-bg:#fff;--invert-text:#000;}
-[data-theme="light"]{
-  --card-shadow:0 1px 2px rgba(0,0,0,.06), 0 4px 14px rgba(0,0,0,.07);
+  --font-serif:'Newsreader','Iowan Old Style',Georgia,'Times New Roman',serif;
 
-  --bg:#e7e7ec;--card:#fff;--card2:#f2f2f7;--card3:#f9f9fb;
-  --border:#e5e5ea;--border2:#d1d1d6;
-  --text:#000;--sub:rgba(60,60,67,.6);--muted:#aeaeb2;
-  --track:rgba(120,120,128,.16);--seg-active:#fff;
-  --divider:rgba(60,60,67,.12);--pill-bg:rgba(120,120,128,.12);
-  --invert-bg:#000;--invert-text:#fff;}
-[data-theme="light"] .auth-logo-gem{background:#d1f2e0;}
-[data-theme="light"] .mc-today .mc-num{color:#fff;}
-[data-theme="light"] .chat-panel{box-shadow:0 12px 48px rgba(0,0,0,.15);}
-[data-theme="light"] .modal-overlay{background:rgba(0,0,0,0.35);}
-[data-theme="light"] input::placeholder,[data-theme="light"] textarea::placeholder{color:#aaa;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased}
+  /* Surfaces — warm bone */
+  --bg:#f7f6f3;--card:#ffffff;--card2:#f2f0ea;--card3:#fcfcfb;
+  --border:#e6e1d6;--border2:#d8d2c4;
+  --text:#2a2723;--sub:#6a6153;--muted:#79715f;
+  --track:#ece8de;--seg-active:#ffffff;
+  --divider:rgba(42,39,35,.10);--pill-bg:#f2f0ea;
+  --hair:#ece8de;
+  --invert-bg:#2a2723;--invert-text:#f7f6f3;
+
+  /* Translucent chrome */
+  --material-bg:rgba(247,246,243,.78);
+  --material-blur:blur(20px) saturate(180%);
+  --material-edge:rgba(255,255,255,.6);
+  --edge-shadow:0 12px 22px -18px rgba(42,39,35,.28);
+  --scrim:rgba(42,39,35,.28);
+}
+[data-theme="dark"]{
+  /* Editorial after dark — warm ink, the accent lifts to a lit rust */
+  --green:#84bd8a;--green-dim:#1b2a1c;
+  --blue:#df9163;--blue-dim:#33261d;
+  --cyan:#7bb6c8;--orange:#df9163;
+  --red:#dd8a86;--red-dim:#2e1c1c;
+  --yellow:#d3ab5e;--yellow-dim:#2a2414;
+  --purple:#a996c9;--indigo:#8f9bd0;
+
+  --accent:#df9163;--accent-weak:#33261d;
+
+  --card-shadow:0 1px 2px rgba(0,0,0,.3);
+  --card-shadow-hover:0 2px 12px rgba(0,0,0,.4);
+
+  --bg:#17150f;--card:#201d16;--card2:#26221a;--card3:#141209;
+  --border:#2f2b22;--border2:#3d382c;
+  --text:#ece6da;--sub:#a49c8b;--muted:#6d6656;
+  --track:#282318;--seg-active:#2f2b22;
+  --divider:rgba(236,230,218,.12);--pill-bg:#26221a;
+  --hair:#282318;
+  --invert-bg:#ece6da;--invert-text:#17150f;
+
+  --material-bg:rgba(23,21,15,.72);
+  --material-edge:rgba(255,255,255,.07);
+  --edge-shadow:0 12px 22px -18px rgba(0,0,0,.55);
+  --scrim:rgba(0,0,0,.5);
+}
+@media (prefers-reduced-transparency: reduce){
+  :root{--material-bg:#f4f2ec;--material-blur:none}
+  [data-theme="dark"]{--material-bg:#1c1a12}
+}
+.auth-logo-gem{background:var(--accent-weak);}
+.mc-today .mc-num{color:#fff;}
+.chat-panel{box-shadow:0 12px 48px rgba(42,39,35,.16);}
+.modal-overlay{background:var(--scrim);}
+[data-theme="dark"] .modal-overlay{background:rgba(0,0,0,.6);}
+input::placeholder,textarea::placeholder{color:var(--muted);}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Text','Helvetica Neue',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit}
+/* Browser surfaces carry the palette too */
+::selection{background:var(--accent-weak);color:var(--text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+*{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:5px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
 
 /* ── TOP NAV ─────────────────────────────────────────────────────── */
 .app-layout{display:flex;flex-direction:column;min-height:100vh}
-.top-nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;gap:16px}
-[data-theme="light"] .top-nav{background:rgba(245,245,247,.82);}
-.nav-logo{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--text);text-decoration:none;flex-shrink:0}
-.nav-logo-gem{width:28px;height:28px;background:rgba(48,209,88,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.top-nav{position:sticky;top:0;z-index:100;background:var(--material-bg);backdrop-filter:var(--material-blur);-webkit-backdrop-filter:var(--material-blur);border-bottom:1px solid var(--hair);padding:0 28px;height:56px;display:flex;align-items:center;gap:16px}
+.nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-serif);font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--text);text-decoration:none;flex-shrink:0}
+.nav-logo-gem{width:26px;height:26px;background:var(--accent-weak);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-logo-gem svg{color:var(--accent)}
 .nav-logo-gem svg{width:15px;height:15px}
 .nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
 .nav-tabs::-webkit-scrollbar{display:none}
 .nav-tab{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:9px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;border:none;background:none;white-space:nowrap;transition:background-color .15s var(--ease-out),color .15s var(--ease-out),box-shadow .15s var(--ease-out);font-family:inherit;flex-shrink:0}
 .nav-tab:hover{color:var(--text);background:var(--card2)}
-.nav-tab.active{background:var(--seg-active);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.nav-tab.active{background:var(--seg-active);color:var(--text);box-shadow:0 1px 3px rgba(42,39,35,.12)}
 .nav-tab svg{width:14px;height:14px;opacity:.7;flex-shrink:0}
 .nav-tab.active svg{opacity:1}
 .nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto}
@@ -85,25 +140,27 @@ input,select,textarea{font-family:inherit}
 
 /* ── PAGE SUB-HEADER ─────────────────────────────────────────────── */
 .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
-.page-title{font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1.1}
+.page-title{font-family:var(--font-serif);font-size:32px;font-weight:500;letter-spacing:-.02em;line-height:1.08}
 .page-sub{font-size:14px;color:var(--sub);margin-top:4px}
 
 /* ── PAGE HEADER v2 (design sync — eyebrow + title + icon cluster) ── */
 .page-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 4px 6px;margin-bottom:16px}
 .page-hdr-text{min-width:0}
-.page-hdr-eyebrow{font-size:15px;font-weight:500;color:var(--sub);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.page-hdr-title{font-size:25px;font-weight:700;letter-spacing:.2px;line-height:1.2;white-space:nowrap}
+/* Eyebrow removed — the serif title carries its own weight (craft floor). */
+.page-hdr-eyebrow{display:none}
+.page-hdr-title{font-family:var(--font-serif);font-size:27px;font-weight:500;letter-spacing:-.02em;line-height:1.1;white-space:nowrap}
 .page-hdr-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.hdr-avatar{width:38px;height:38px;border-radius:19px;background:linear-gradient(160deg,#8e8e93,#48484a);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;flex-shrink:0;cursor:pointer}
+.hdr-avatar{width:36px;height:36px;border-radius:18px;background:linear-gradient(160deg,#c9a37a,var(--accent));display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:15px;font-weight:500;color:#fff;flex-shrink:0;cursor:pointer}
 
 /* ── AUTH SCREEN ─────────────────────────────────────────────────── */
 #auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:24px}
-.auth-logo{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:700}
-.auth-logo-gem{width:48px;height:48px;background:rgba(48,209,88,.15);border-radius:14px;display:flex;align-items:center;justify-content:center}
-.auth-logo-gem svg{width:26px;height:26px}
-.auth-sub{color:var(--sub);font-size:15px;text-align:center}
-.btn-google{background:#fff;color:#000;border:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px;margin-top:8px}
-.btn-google:hover{background:#f0f0f0}
+.auth-logo{display:flex;align-items:center;gap:14px;font-family:var(--font-serif);font-size:26px;font-weight:500;letter-spacing:-.02em;color:var(--text);text-transform:none}
+.auth-logo-gem{width:46px;height:46px;background:var(--accent-weak);border-radius:12px;display:flex;align-items:center;justify-content:center}
+.auth-logo-gem svg{width:24px;height:24px;color:var(--accent)}
+.auth-sub{color:var(--sub);font-size:14px;text-align:center;letter-spacing:.01em}
+.btn-google{background:var(--card);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px 22px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;margin-top:8px;transition:transform .1s var(--ease-out),border-color .15s}
+.btn-google:hover{border-color:var(--text)}
+.btn-google:active{transform:scale(.98)}
 .btn-google svg{width:20px;height:20px}
 
 /* ── HERO CARD ───────────────────────────────────────────────────── */
@@ -123,7 +180,7 @@ input,select,textarea{font-family:inherit}
 
 /* ── GREETING (legacy, used in sub-pages) ────────────────────────── */
 .greeting-wrap{margin-bottom:22px}
-.greeting{font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1.1;margin-bottom:5px}
+.greeting{font-family:var(--font-serif);font-size:32px;font-weight:500;letter-spacing:-.02em;line-height:1.08;margin-bottom:5px}
 .greeting-sub{color:var(--sub);font-size:14px}
 
 /* ── INTENTION (legacy fallback) ────────────────────────────────── */
@@ -198,7 +255,7 @@ input,select,textarea{font-family:inherit}
 /* ── HABIT TRACKER ───────────────────────────────────────────────── */
 .habits-section{margin-bottom:20px}
 .section-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
-.section-title{font-size:22px;font-weight:700;margin-bottom:3px}
+.section-title{font-family:var(--font-serif);font-size:20px;font-weight:500;letter-spacing:-.01em;margin-bottom:3px}
 .section-sub{font-size:13px;color:var(--sub)}
 .habits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
 .habit-card{border-radius:var(--radius);padding:16px;position:relative}
@@ -454,13 +511,14 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .color-swatch.selected{border-color:#fff}
 
 /* ── AI CHAT ─────────────────────────────────────────────────────── */
-.chat-fab{position:fixed;bottom:28px;right:28px;width:54px;height:54px;border-radius:50%;background:var(--green);border:none;color:#000;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(55,217,154,.35);z-index:150;transition:transform .2s var(--ease-out),background-color .2s;cursor:pointer}
-.chat-fab:hover{transform:scale(1.08);background:#27c24e}
+.chat-fab{position:fixed;bottom:28px;right:28px;width:50px;height:50px;border-radius:50%;background:var(--card2);border:0;color:var(--accent);font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 22px -8px rgba(42,39,35,.32);z-index:150;transition:transform .15s var(--ease-out);cursor:pointer}
+.chat-fab:hover{transform:scale(1.06)}
+.chat-fab:active{transform:scale(.96)}
 .chat-panel{position:fixed;bottom:96px;right:28px;width:360px;max-width:calc(100vw - 56px);background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,.6);z-index:150;display:none;flex-direction:column;height:480px}
 .chat-panel.open{display:flex}
 .chat-panel-hdr{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .chat-panel-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
-.ai-status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:aipulse 2s infinite}
+.ai-status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.7}
 @keyframes aipulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 .chat-close-btn{background:none;border:none;color:var(--muted);font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
 .chat-close-btn:hover{color:var(--text);background:var(--card2)}
@@ -937,8 +995,9 @@ html.theme-switching *{
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* ── FAB QUICK ADD ───────────────────────────────────────────────── */
-.quick-fab{position:fixed;bottom:96px;right:28px;width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.4);z-index:149;transition:transform .2s var(--ease-out),background-color .2s;cursor:pointer}
-.quick-fab:hover{transform:scale(1.08);background:var(--card2)}
+.quick-fab{position:fixed;bottom:90px;right:28px;width:44px;height:44px;border-radius:50%;background:var(--card2);border:0;color:var(--sub);font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px -8px rgba(42,39,35,.26);z-index:149;transition:transform .15s var(--ease-out);cursor:pointer}
+.quick-fab:hover{transform:scale(1.06)}
+.quick-fab:active{transform:scale(.96)}
 .quick-action-sheet{position:fixed;bottom:152px;right:28px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:6px;display:none;flex-direction:column;gap:2px;z-index:149;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:160px}
 .quick-action-sheet.open{display:flex}
 .quick-action-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;border:none;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit;text-align:left;transition:background .12s}
@@ -1178,14 +1237,13 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   .bottom-nav{
     display:flex;position:fixed;bottom:0;left:0;right:0;
     padding:4px 8px calc(20px + env(safe-area-inset-bottom));
-    background:rgba(18,18,18,.95);backdrop-filter:blur(20px) saturate(180%);
-    -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border-top:.5px solid var(--divider);z-index:200;
+    background:var(--material-bg);backdrop-filter:var(--material-blur);
+    -webkit-backdrop-filter:var(--material-blur);
+    border-top:1px solid var(--hair);z-index:200;
   }
-  [data-theme="light"] .bottom-nav{background:rgba(245,245,247,.95)}
   .bottom-tab{
     flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;background:none;border:none;color:var(--sub);font-size:10px;font-weight:600;
+    gap:3px;background:none;border:none;color:var(--sub);font-size:11px;font-weight:600;
     cursor:pointer;padding:4px 0;font-family:inherit;transition:color .15s;min-width:0;
   }
   .bottom-tab svg{flex-shrink:0;transition:opacity .15s}
@@ -1394,10 +1452,9 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
    collapses by default to keep the page shorter. ────────────────── */
 
 .dash-section-label{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--sub);margin:2px 2px 8px;display:flex;align-items:center;gap:6px}
-.dash-section-label::before{content:'';width:6px;height:6px;border-radius:3px;background:var(--green);display:inline-block}
+.dash-section-label::before{content:'';width:5px;height:5px;border-radius:1px;background:var(--accent);display:inline-block}
 
 .money-hero{position:relative;background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:18px}
-.money-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),rgba(52,199,89,0));z-index:1}
 .money-hero .nw-chart-card,.money-hero .budget-wide-card{background:none;box-shadow:none;border-radius:0;margin-bottom:0;padding-left:18px;padding-right:18px}
 .money-hero .nw-chart-card{padding-bottom:12px}
 .money-hero .budget-wide-card{padding-top:14px;border-top:1px solid var(--border2)}
@@ -1514,4 +1571,276 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 .fin-card,.fin-collapsible,.jarvis-history-wrap,.pkg-card,.payday-card,
 .spending-card,.nw-chart-card,.brain-dump-input-row,.cal-week-view{
   border:0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   EDITORIAL — Finance tab
+   The ledger, not the dashboard. Cards dissolve into hairline-ruled
+   sections in document rhythm; every figure is set in the display serif.
+   Scoped to #page-finance so the other tabs keep their current structure
+   until they're rebuilt. See .impeccable/surfaces/js-finance-js.md.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Sections, not cards */
+#page-finance .fin-card,
+#page-finance .nw-chart-card,
+#page-finance .budget-wide-card,
+#page-finance .payday-card,
+#page-finance .fin-collapsible,
+#page-finance .goal-card,
+#page-finance .spending-card{
+  background:none;box-shadow:none;border:0;border-radius:0;
+  padding:26px 0 0;margin:0;
+  border-top:1px solid var(--hair);
+}
+#page-finance .money-hero{display:block}
+#page-finance .money-hero > .nw-chart-card:first-child,
+#page-finance > .fin-card:first-of-type{border-top:0;padding-top:6px}
+#page-finance .fin-collapsible{overflow:visible}
+#page-finance .fin-collapsible:not(.collapsed) .fin-collapse-hdr{border-bottom:0}
+#page-finance .fin-collapse-hdr{padding:0 0 12px;background:none}
+#page-finance .fin-collapse-hdr:active{background:none}
+#page-finance .fin-collapse-body{padding:0}
+
+/* Section titles — Newsreader, sentence case: the editorial running head.
+   The small tracked-caps treatment is reserved for the secondary right-side
+   context label only. */
+#page-finance .fin-section-title,
+#page-finance .fin-collapse-hdr{
+  font-family:var(--font-serif);font-optical-sizing:auto;
+  font-size:18px;font-weight:500;letter-spacing:-.01em;text-transform:none;
+  color:var(--text);
+}
+#page-finance .fin-section-title{margin-bottom:14px;align-items:baseline}
+/* the "view all / synced 9m ago / status" bit that trails a section title */
+#page-finance .fin-section-title > *:not(:first-child),
+#page-finance .fin-collapse-hdr > .fin-collapse-sub,
+#page-finance .fin-collapse-hdr > span:last-child:not(:first-child){
+  font-family:-apple-system,system-ui,sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--sub);
+}
+#page-finance .payday-label,
+#page-finance .runway-bills-hdr,
+#page-finance .spend-safe-line{
+  font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--sub);
+}
+
+/* Figures — display serif, medium weight, optical tightening */
+#page-finance .nw-chart-val,
+#page-finance .budget-c-num,
+#page-finance .spend-total-num,
+#page-finance .payday-days-num,
+#page-finance .runway-num,
+#page-finance .cc-num,
+#page-finance .txn-amount,
+#page-finance .accounts-table-bal,
+#page-finance .goal-bar-current,
+#page-finance .goal-bar-target,
+#page-finance .month-label-big{
+  font-family:var(--font-serif);
+  font-weight:500;
+  letter-spacing:-.02em;
+  font-variant-numeric:normal;
+}
+#page-finance .nw-chart-val{font-size:37px;line-height:1.05}
+#page-finance .budget-c-num{font-size:31px}
+#page-finance .spend-total-num{font-size:29px}
+#page-finance .payday-days-num,
+#page-finance .runway-num,
+#page-finance .cc-num{font-size:22px;color:var(--text)}
+#page-finance .txn-amount,
+#page-finance .accounts-table-bal{font-size:15px}
+#page-finance .cat-bar-amt,#page-finance .budget-c-catrow-amt{font-family:var(--font-serif);font-weight:500;letter-spacing:-.01em;font-variant-numeric:normal}
+#page-finance .cat-bar-limit-txt{color:var(--muted)}
+
+/* Accounts — no redundant type column (name already says it) */
+#page-finance .accounts-table-type{display:none}
+#page-finance .accounts-table-row{grid-template-columns:1fr auto}
+
+/* Runway — drop the overlapping "PAYDAY" end label; verdict headline in serif */
+#page-finance .runway-payday-lbl{display:none}
+#page-finance .runway-top{display:flex;align-items:baseline;gap:8px}
+#page-finance .runway-num{font-size:19px;line-height:1.25}
+#page-finance .runway-verdict{font-family:inherit;font-weight:400;font-size:12px;color:var(--sub)}
+
+/* Money-in / money-out keep the pastel semantics, lose the iOS saturation */
+#page-finance .txn-amount.in,#page-finance .accounts-table-bal:not(.red){color:var(--text)}
+#page-finance .txn-amount.out{color:var(--text)}
+#page-finance .payday-days-num{color:var(--accent)}
+
+/* Delta pill → quiet inline note. Keep the direction colour the JS sets
+   (green up / red down); only strip the filled-pill background. */
+#page-finance .nw-delta-pill{
+  background:none!important;
+  font-family:inherit;font-weight:500;font-size:12px;padding:0;margin-left:10px;
+  letter-spacing:0;
+}
+#page-finance .nw-delta-pill .fin-ico{margin-right:.3em}
+#page-finance .nw-chart-subline{font-size:12px}
+
+/* Month nav — serif, chromeless arrows */
+#page-finance .fin-header-row .month-nav{margin:0}
+#page-finance .month-nav-btn{
+  background:none;border:0;color:var(--muted);font-size:17px;padding:4px 8px;border-radius:6px;
+}
+#page-finance .month-nav-btn:hover{color:var(--accent);border-color:transparent}
+#page-finance .month-label-big{font-size:16px;color:var(--text)}
+
+/* Range chips — press feedback, active = ink underline not a filled pill */
+#page-finance .nw-range-bar{gap:8px;margin-top:14px}
+#page-finance .nw-range-btn{
+  flex:0 0 auto;padding:6px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--sub);font-weight:500;background:none;
+}
+#page-finance .nw-range-btn.active{
+  background:none;color:var(--text);border-color:var(--text);
+}
+#page-finance .nw-range-btn:active{transform:scale(.96)}
+
+/* Hairline tracks everywhere — 2px, no gradients, ink fill */
+#page-finance .budget-c-segbar,
+#page-finance .payday-track,
+#page-finance .runway-track,
+#page-finance .spend-total-track,
+#page-finance .cat-bar-track,
+#page-finance .budget-c-catrow-track,
+#page-finance .cc-row-bar,
+#page-finance .goal-bar-track{
+  height:2px;border-radius:2px;background:var(--track);overflow:visible;
+}
+#page-finance .budget-c-segbar{gap:0;height:3px}
+#page-finance .payday-fill{background:var(--text)}
+#page-finance .cat-bar-fill,
+#page-finance .budget-c-catrow-fill,
+#page-finance .cc-row-fill,
+#page-finance .runway-fill,
+#page-finance .spend-total-fill{background:var(--text)}
+#page-finance .cat-bar-fill[style*="var(--red)"],
+#page-finance .budget-c-catrow-fill[style*="--red"]{background:var(--red)!important}
+
+/* Transactions — drop the emoji tile, let the row breathe */
+#page-finance .txn-icon{display:none}
+#page-finance .txn-item{
+  padding:12px 0;border-bottom:1px solid var(--hair);gap:14px;
+  transition:transform 140ms var(--ease-out);
+}
+#page-finance .txn-item:hover,#page-finance .txn-item:active{background:none}
+#page-finance .txn-item:active{transform:scale(.99)}
+#page-finance .txn-name{font-size:14px}
+#page-finance .txn-cat{font-size:11px;color:var(--sub);margin-top:2px}
+
+/* Accounts — same ruled-row treatment */
+#page-finance .accounts-table,
+#page-finance .accounts-table-wrap{background:none;border:0;box-shadow:none;padding:0}
+#page-finance .accounts-table-row{
+  padding:12px 0;border-bottom:1px solid var(--hair);background:none;
+}
+#page-finance .accounts-table-row:hover,#page-finance .accounts-table-row:active{background:none}
+
+/* Credit-card / runway rows */
+#page-finance .cc-row{padding:9px 0;border-bottom:1px solid var(--hair)}
+#page-finance .cc-row:last-child{border-bottom:0}
+
+/* Segmented budget bar → single ink bar with an on-pace tick */
+#page-finance .budget-c-segbar > *{opacity:1}
+#page-finance .budget-c-pace-tick,
+#page-finance .spend-pace-arrow{background:var(--accent);border-top-color:var(--accent)}
+
+/* The "⋯" menu + its buttons */
+#page-finance .fin-more-btn{background:none;border:1px solid var(--border);color:var(--sub)}
+#page-finance .fin-more-menu{border:0;border-radius:var(--radius-sm);box-shadow:0 12px 34px -10px rgba(42,39,35,.3)}
+
+/* + Transaction button — filled ink, editorial radius */
+#page-finance .btn-new{border-radius:var(--radius-sm);font-weight:500}
+
+/* Allocation — a ruled list (markup in finance.js): marker · name · figure · % */
+#page-finance .nw-alloc{margin-top:18px}
+#page-finance .nw-alloc-list{display:flex;flex-direction:column}
+#page-finance .nw-alloc-item{display:flex;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--hair)}
+#page-finance .nw-alloc-item:last-child{border-bottom:0}
+#page-finance .nw-alloc-mark{width:7px;height:7px;border-radius:1px;flex-shrink:0;align-self:center}
+#page-finance .nw-alloc-name{flex:1;font-size:13px}
+#page-finance .nw-alloc-val{font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;font-size:14px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+#page-finance .nw-alloc-pct{font-size:12px;color:var(--sub);width:34px;text-align:right;font-variant-numeric:tabular-nums}
+#page-finance .nw-delta-row{gap:22px;margin-top:12px}
+#page-finance .nw-range-bar{margin-bottom:2px}
+
+/* Collapse chevrons — hairline, quiet, small regardless of the serif header */
+#page-finance .fin-collapse-btn,#page-finance .nw-collapse-btn,
+#page-finance [data-role="collapseBtn"],#page-finance [data-role="hideBtn"]{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-family:-apple-system,system-ui,sans-serif;font-size:13px;font-weight:400;
+}
+#page-finance .fin-collapse-hdr{align-items:center;gap:10px}
+
+/* Payday — a quiet countdown line: "in 22 days" + the pay date, no track rule */
+#page-finance .payday-card{display:block}
+#page-finance .payday-left,#page-finance .payday-right{min-width:0;width:auto}
+#page-finance .payday-label{margin-bottom:8px}
+#page-finance .payday-days-line{display:flex;align-items:baseline;gap:6px;margin:0}
+#page-finance .payday-days-num{font-size:21px;color:var(--text)}
+#page-finance .payday-days-text{font-size:14px;color:var(--sub)}
+#page-finance .payday-pay-date{font-size:13px;color:var(--sub);margin-top:3px}
+#page-finance .payday-track{display:none}
+#page-finance .payday-status{text-align:left;margin-top:6px;font-weight:400;font-size:12px;color:var(--sub)}
+
+/* Recent transactions header + de-carded list */
+#page-finance .txn-list-hdr{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+#page-finance .txn-list-hdr .fin-section-title{margin:0;white-space:nowrap}
+#page-finance #txnList{background:none;border:0;border-radius:0;padding:0}
+#page-finance .txn-search{background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:6px 2px;font-size:13px}
+#page-finance .txn-search:focus{border-bottom-color:var(--text);outline:none}
+
+/* Account rows: drop the coloured type dot (mockup has none) */
+#page-finance .accounts-table-dot{display:none}
+#page-finance .accounts-table-name{font-weight:400}
+#page-finance .accounts-table-synced{color:var(--green)}
+
+/* Savings-rate figure joins the serif family; gauge is thinner */
+#page-finance .savings-rate-excess{font-family:var(--font-serif);font-weight:500;font-size:22px;letter-spacing:-.02em}
+#page-finance .savings-rate-gauge-fill,#page-finance .savings-rate-gauge-track{stroke-width:7}
+#page-finance .savings-rate-pct{font-family:var(--font-serif);font-weight:500}
+
+/* Outline action buttons never wrap */
+#page-finance .btn-new,#page-finance .nw-add-btn{white-space:nowrap}
+#page-finance .trend-chart{margin-bottom:10px}
+#page-finance .watchlist-input,#page-finance #watchlistTicker{
+  background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;
+}
+
+
+/* ═══ EDITORIAL — shell: primary action buttons ═══
+   Ink fill, not the iOS-green slab. Placed last so it wins the cascade over
+   the per-component base rules without raising specificity. */
+.btn-new,.tasks-add-btn,.btn-save,.proj-new-btn,.brain-dump-send,.note-save-btn,
+.chat-send-btn{
+  background:var(--text);color:var(--bg);border:1px solid var(--text);
+}
+.btn-new:hover,.tasks-add-btn:hover,.btn-save:hover,.proj-new-btn:hover,
+.brain-dump-send:hover,.note-save-btn:hover,.chat-send-btn:hover{
+  filter:brightness(1.12);background:var(--text);
+}
+#page-finance .btn-new{border-radius:var(--radius-sm)}
+
+/* Drawn status marks (replacing ✓ / ⚠ glyphs) + the meta-dot separator */
+.fin-ico{width:.95em;height:.95em;display:inline-block;vertical-align:-.14em;margin-right:.35em;flex-shrink:0}
+.fin-dot{margin:0 .5em;color:var(--muted)}
+#page-finance .payday-status,#page-finance .goal-extra{display:flex;align-items:center;flex-wrap:wrap}
+#page-finance .runway-verdict .fin-ico,#page-finance #runwayHdrSum .fin-ico{margin-right:0}
+
+/* Ledger figures — tabular lining numerals so columns align vertically */
+#page-finance .accounts-table-bal,
+#page-finance .cat-bar-amt,
+#page-finance .txn-amount,
+#page-finance .budget-c-catrow-amt{font-variant-numeric:tabular-nums}
+
+/* Editorial captions — Newsreader italic for helper/empty-state copy */
+#page-finance .nw-chart-subline,
+#page-finance .section-sub,
+#page-finance .watchlist-empty,
+#page-finance .goal-empty,
+#page-finance #goalsSub{
+  font-family:var(--font-serif);font-style:italic;font-optical-sizing:auto;
+  font-size:14px;color:var(--sub);letter-spacing:0;
 }

@@ -1,6 +1,12 @@
 // ── Holdings table sort state (persists across re-renders, not across
 //    reloads — resets to the value-descending default each session) ──
 let holdingsSortCol=null,holdingsSortDir='desc';
+
+// Small drawn status marks (the craft floor bans Unicode glyphs as icons).
+const _ICO_CHECK='<svg class="fin-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+const _ICO_WARN='<svg class="fin-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3.2"/><circle cx="8" cy="11.6" r=".1"/></svg>';
+const _ICO_UP='<svg class="fin-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12.5v-9M4 7l4-4 4 4"/></svg>';
+const _ICO_DOWN='<svg class="fin-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3.5v9M4 9l4 4 4-4"/></svg>';
 window.sortHoldingsBy=function(col){
   if(holdingsSortCol===col){holdingsSortDir=holdingsSortDir==='desc'?'asc':'desc';}
   else{holdingsSortCol=col;holdingsSortDir=col==='ticker'?'asc':'desc';}
@@ -358,11 +364,13 @@ function renderFinanceTab(){
     const pay=nextPaydayInfo();
     let missed=false;
     const parts=[];
-    if(pay&&pay.daysSinceLast<=10) parts.push(`✓ Paycheck ${fmtM(pay.lastAmount)} on ${_shortDate(txnLocalDate(pay.last))}`);
-    else if(pay&&pay.daysSinceLast>=38){ parts.push(`⚠ No paycheck in ${pay.daysSinceLast} days`); missed=true; }
+    if(pay&&pay.daysSinceLast<=10) parts.push(`${_ICO_CHECK}Paycheck ${fmtM(pay.lastAmount)} on ${_shortDate(txnLocalDate(pay.last))}`);
+    else if(pay&&pay.daysSinceLast>=38){ parts.push(`${_ICO_WARN}No paycheck in ${pay.daysSinceLast} days`); missed=true; }
     if(extraIncome>0) parts.push(`+${fmtM(extraIncome)} extra`);
-    statusEl.textContent=parts.join('  ·  ');
-    statusEl.style.color=missed?'var(--red)':'var(--green)';
+    statusEl.innerHTML=parts.join('<span class="fin-dot">·</span>');
+    // Editorial: a missed paycheck stays red; the healthy case is quiet
+    // (the CSS sets --sub) — no green wash on a routine "got paid" line.
+    statusEl.style.color=missed?'var(--red)':'';
     statusEl.style.display=parts.length?'':'none';
   }
 
@@ -877,7 +885,7 @@ function renderGoals(){
       const monthsLeft=Math.max(0,(due.getFullYear()-now.getFullYear())*12+(due.getMonth()-now.getMonth())+(due.getDate()>=now.getDate()?0:-1));
       const remaining=Math.max(0,target-current);
       if(due<now){
-        extraLine=`<div class="goal-extra" style="color:${remaining>0?'var(--red)':'var(--green)'}">${remaining>0?`${fmtM(remaining)} short — due ${_shortDate(due)}`:`Ready ✓ (due ${_shortDate(due)})`}</div>`;
+        extraLine=`<div class="goal-extra" style="color:${remaining>0?'var(--red)':'var(--green)'}">${remaining>0?`${fmtM(remaining)} short — due ${_shortDate(due)}`:`${_ICO_CHECK}Ready (due ${_shortDate(due)})`}</div>`;
       }else{
         const perMonth=monthsLeft>0?remaining/monthsLeft:remaining;
         extraLine=`<div class="goal-extra">Set aside <b>${fmtM(perMonth)}/mo</b> to be ready by ${_shortDate(due)}</div>`;
@@ -888,7 +896,7 @@ function renderGoals(){
       const room=g.annualLimit-current;
       const y=new Date().getFullYear();
       if(room<=0){
-        extraLine=`<div class="goal-extra" style="color:${current>g.annualLimit?'var(--red)':'var(--green)'}">${current>g.annualLimit?`⚠ ${fmtM(current-g.annualLimit)} over the ${fmtM(g.annualLimit)} limit`:`Maxed ✓ ${fmtM(g.annualLimit)} for ${y}`}</div>`;
+        extraLine=`<div class="goal-extra" style="color:${current>g.annualLimit?'var(--red)':'var(--green)'}">${current>g.annualLimit?`${_ICO_WARN}${fmtM(current-g.annualLimit)} over the ${fmtM(g.annualLimit)} limit`:`${_ICO_CHECK}Maxed · ${fmtM(g.annualLimit)} for ${y}`}</div>`;
       }else{
         extraLine=`<div class="goal-extra"><b>${fmtM(room)}</b> room left of ${fmtM(g.annualLimit)} · deadline Apr 15 ${y+1}</div>`;
       }
@@ -1166,7 +1174,9 @@ function _renderOneNWCard(card){
   const line=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const lastVal=vals[vals.length-1];
   const up=lastVal>=vals[0];
-  const color=up?'var(--green)':'var(--red)';
+  // Editorial: the trend line is always the accent — direction is carried by
+  // the delta note, not by recolouring the whole chart.
+  const color='var(--accent)';
   const gradId='nwFill-'+id;
   // Gridline lines still sit at the real max/mid/min y-positions, but the
   // printed label rounds to a clean step (half a power-of-ten of the span)
@@ -1176,8 +1186,8 @@ function _renderOneNWCard(card){
   const gy=[max,(max+min)/2,min].map(v=>({v:niceRound(v),y:xy(v,0).y}));
   svg.innerHTML=`
     <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="${up?'#30d158':'#ff453a'}" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="${up?'#30d158':'#ff453a'}" stop-opacity="0"/>
+      <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
     </linearGradient></defs>
     ${gy.map(g=>`<line x1="0" y1="${g.y.toFixed(1)}" x2="${W}" y2="${g.y.toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
       <text x="4" y="${(g.y-4).toFixed(1)}" font-size="10" fill="var(--muted)">${fmtM(g.v)}</text>`).join('')}
@@ -1194,7 +1204,7 @@ function _renderOneNWCard(card){
   const deltaUp=todayDelta>=0;
   const deltaColor=deltaUp?'var(--green)':'var(--red)';
   const deltaBg=deltaUp?'var(--green-dim)':'var(--red-dim)';
-  if(readout)readout.innerHTML=`<span class="nw-chart-val">${fmtM(lastVal)}</span> <span class="nw-delta-pill" style="background:${deltaBg};color:${deltaColor}">${deltaUp?'▲':'▼'} ${fmtM(Math.abs(todayDelta))} · ${Math.abs(todayPct).toFixed(2)}%</span>`;
+  if(readout)readout.innerHTML=`<span class="nw-chart-val">${fmtM(lastVal)}</span> <span class="nw-delta-pill" style="background:${deltaBg};color:${deltaColor}">${deltaUp?_ICO_UP:_ICO_DOWN}${fmtM(Math.abs(todayDelta))} · ${Math.abs(todayPct).toFixed(2)}%</span>`;
   // Subline: assets/liabilities breakdown (was the old separate "hero" text)
   const assets=accounts.filter(a=>a.type!=='debt').reduce((s,a)=>s+a.balance,0);
   const liabilities=accounts.filter(a=>a.type==='debt').reduce((s,a)=>s+a.balance,0);
@@ -1244,11 +1254,16 @@ function _renderNWDeltaAlloc(card,hist,accounts,nw,hidden){
       }
       if(buckets[b]!=null)buckets[b]+=a.balance;
     });
-    const COLORS={Cash:'#0a84ff',Investments:'#ff9f0a',Retirement:'#30d158',Crypto:'#bf5af2',Property:'#64d2ff'};
-    const entries=Object.entries(buckets).filter(([,v])=>v>0);
+    // Editorial: a ruled list — marker + label + serif figure + percent —
+    // not a stacked colour bar. Markers are an ink→bone tonal ramp, not hues.
+    const MARK=['#2a2723','#847c6c','#c9a37a','#d8d2c4','#e6e1d6'];
+    const entries=Object.entries(buckets).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
     const total=entries.reduce((s,[,v])=>s+v,0)||1;
-    aRow.innerHTML=`<div class="nw-alloc-bar">${entries.map(([k,v])=>`<div style="width:${v/total*100}%;background:${COLORS[k]}" title="${k} ${fmtM(v)}"></div>`).join('')}</div>
-      <div class="nw-alloc-legend">${entries.sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span><i style="background:${COLORS[k]}"></i>${k} ${Math.round(v/total*100)}%</span>`).join('')}</div>`;
+    aRow.innerHTML=`<div class="nw-alloc-list">${entries.map(([k,v],i)=>
+      `<div class="nw-alloc-item"><span class="nw-alloc-mark" style="background:${MARK[i%MARK.length]}"></span>`
+      +`<span class="nw-alloc-name">${k}</span>`
+      +`<span class="nw-alloc-val">${fmtM(v)}</span>`
+      +`<span class="nw-alloc-pct">${Math.round(v/total*100)}%</span></div>`).join('')}</div>`;
   }
 }
 function _attachNWScrub(svg,card){
@@ -1363,8 +1378,8 @@ function renderSavingsRate(mt){
     return;
   }
   if(ratePct)ratePct.textContent=rate+'%';
-  const color=rate>=20?'var(--green)':rate>=10?'var(--yellow)':'var(--red)';
-  if(ratePct)ratePct.style.color=color;
+  const color=rate>=20?'var(--text)':rate>=10?'var(--yellow)':'var(--red)';
+  if(ratePct)ratePct.style.color='var(--text)';
   setGauge(Math.max(0,Math.min(rate,100)),color);
   const excess=income-expenses;
   if(excessEl){
@@ -1378,7 +1393,7 @@ function renderSavingsRate(mt){
 function renderCatBarChart(mt){
   const el=document.getElementById('catBarChart');
   if(!el)return;
-  const DONUT_COLORS=['#ff453a','#ff9f0a','#30d158','#bf5af2','#0a84ff','#64d2ff','#ffd60a','#ff6b35'];
+  const DONUT_COLORS=['var(--accent)','#c9a37a','#6d6656','#9a8c73','#b3a17e','#847c6c','#d8d2c4','#a89a7d'];
   const spent=mt.filter(t=>t.type==='out');
   // Group by category, then net out refunds (against their own category) and
   // reimbursements (against the category Dan picked). A category that ends up
@@ -1410,7 +1425,9 @@ function renderCatBarChart(mt){
   const isCurrentMonth=currentMonth===now.getMonth()&&currentYear===now.getFullYear();
   const pacePct=isCurrentMonth?Math.min(now.getDate()/daysInMonth,1)*100:null;
   const rows=cats.map(([cat,amt],i)=>{
-    const color=DONUT_COLORS[i%DONUT_COLORS.length];
+    // Editorial: every category bar is ink; the label and amount carry the
+    // difference, not a rainbow. Over-budget still flips to red below.
+    const color='var(--text)';
     const limit=catBudgets[cat]||0;
     const overBudget=limit>0&&amt>limit;
     // Savings is the one category where going over the budgeted amount is
@@ -1453,7 +1470,7 @@ function renderMonthlyTrend(){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     months.push({m:d.getMonth(),y:d.getFullYear(),label:d.toLocaleDateString('en-US',{month:'short'})});
   }
-  const DONUT_COLORS=['#ff453a','#ff9f0a','#30d158','#bf5af2','#0a84ff','#64d2ff'];
+  const DONUT_COLORS=['var(--accent)','#c9a37a','#6d6656','#9a8c73','#b3a17e','#847c6c'];
   const data=months.map((mo,i)=>{
     const txns=(appData.transactions||[]).filter(t=>{const d=txnLocalDate(t.date);return d.getMonth()===mo.m&&d.getFullYear()===mo.y;});
     const spent=Math.max(0,netSpend(txns));
@@ -1471,10 +1488,10 @@ function renderMonthlyTrend(){
     const h=d.spent>0?Math.max(Math.round(d.spent/maxSpent*70),4):1;
     return`<div class="trend-bar-wrap">
       <div class="trend-bar-val">${d.spent>0?fmtM(d.spent):''}</div>
-      <div class="trend-bar" style="height:${h}px;background:${d.spent>0?(d.isCurrent?'var(--green)':d.color+'66'):'var(--border)'}"></div>
+      <div class="trend-bar" style="height:${h}px;background:${d.spent>0?(d.isCurrent?'var(--text)':'var(--border2)'):'var(--border)'}"></div>
     </div>`;
   }).join('');
-  if(lblEl)lblEl.innerHTML=data.map(d=>`<div class="trend-bar-label" style="flex:1;text-align:center;color:${d.isCurrent?'var(--green)':'var(--muted)'}">${d.label}</div>`).join('');
+  if(lblEl)lblEl.innerHTML=data.map(d=>`<div class="trend-bar-label" style="flex:1;text-align:center;color:${d.isCurrent?'var(--text)':'var(--muted)'}">${d.label}</div>`).join('');
 }
 
 // ── Subscription detection ──────────────────────────────────────
@@ -1705,10 +1722,10 @@ function renderRunway(){
     :`Runs low ~${_shortDate(runOutDate)}`;
   numEl.style.color=covered?'var(--text)':'var(--red)';
   const vEl=document.getElementById('runwayVerdict');
-  vEl.textContent=covered?'✓':`${Math.max(1,daysToPayday-runwayDays)}d short`;
-  vEl.style.color=covered?'var(--green)':'var(--red)';
+  if(covered){vEl.innerHTML=_ICO_CHECK;}else{vEl.textContent=`${Math.max(1,daysToPayday-runwayDays)}d short`;}
+  vEl.style.color=covered?'var(--text)':'var(--red)';
   const hs=document.getElementById('runwayHdrSum');
-  if(hs)hs.textContent=covered?'✓':'⚠';
+  if(hs)hs.innerHTML=covered?_ICO_CHECK:_ICO_WARN;
   const fill=document.getElementById('runwayFill');
   fill.style.transform='scaleX('+(Math.max(3,Math.min(100,runwayDays/daysToPayday*100))/100)+')';
   fill.style.background=covered?'var(--green)':'var(--red)';
@@ -1830,7 +1847,7 @@ function renderTxnListFiltered(mt){
       const acct=byPlaidId[t.plaidAccountId];
       const acctLabel=acct?acct.name+(acct.mask?' ••'+acct.mask:''):'';
       const isManual=t.source!=='plaid';
-      const dupMark=dupIds.has(t.id)?' <span class="txn-dup-mark" title="Closely matches another entry within a few days — might be the same real transfer counted twice. Tap to review.">⚠</span>':'';
+      const dupMark=dupIds.has(t.id)?` <span class="txn-dup-mark" title="Closely matches another entry within a few days — might be the same real transfer counted twice. Tap to review.">${_ICO_WARN}</span>`:'';
       const pendMark=t.pending?' <span class="txn-pending-mark" title="Pending — not yet posted by the bank. Amount and date may still change.">pending</span>':'';
       return`<div class="txn-item${t.pending?' txn-pending':''}" onclick="openEditTxnModal('${t.id}')">
       <div class="txn-icon">${CATS_EMOJI[t.category]||'📦'}</div>

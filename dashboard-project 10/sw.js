@@ -2,12 +2,14 @@
 // Caches the app shell for offline use
 // NOTE: bump CACHE_NAME on every deploy so clients pick up the new shell.
 
-const CACHE_NAME = 'cc-shell-v32';
+const CACHE_NAME = 'cc-shell-v33';
 const SHELL_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/styles.css',
+  '/fonts/newsreader-var.woff2',
+  '/fonts/newsreader-italic-var.woff2',
   '/js/main.js',
   '/js/core.js',
   '/js/habits.js',

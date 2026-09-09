@@ -3,3 +3,7 @@ node_modules/
 .netlify/
 netlify/functions/service-account.json
 backups/
+
+# Impeccable — throwaway review captures + seeded canvas payload
+.impeccable/review/
+design-canvas/dashboard-redesign-directions.html
