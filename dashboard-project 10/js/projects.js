@@ -157,7 +157,7 @@ function projectCardHTML(p){
       ${nextDueHTML}
       ${notesSnip}
       <div class="proj-prog-row"><span style="font-weight:600;color:var(--sub)">Progress</span><span class="proj-prog-pct">${pct}%</span></div>
-      <div class="proj-prog-track"><div class="proj-prog-fill" style="width:${pct}%;background:${s.accent}"></div></div>
+      <div class="proj-prog-track"><div class="proj-prog-fill" style="transform:scaleX(${Math.min(pct,100)/100});background:${s.accent}"></div></div>
       <div class="proj-task-section">
         <div class="proj-task-toggle" onclick="event.stopPropagation();toggleProjTasks('${p.id}')">
           <span>${taskMeta}</span>

@@ -490,6 +490,7 @@ function attachTaskTouchGestures(row,sectionBodyEl){
   row._gesturesAttached=true;
   const SWIPE_THRESHOLD=70, MOVE_SLOP=10, HOLD_MS=650;
   let sx=0,sy=0,state='idle',lpTimer=null,clone=null,moved=false;
+  let lastX=0,lastT=0,vx=0; // recent pointer x + time, for release velocity (px/ms)
   const onButton=el=>el.closest('.task-check,.task-row-edit,.task-row-del,.task-notes-indicator,.subtask-check,.subtask-row,.task-notes-expand');
 
   function startDrag(){
@@ -527,6 +528,7 @@ function attachTaskTouchGestures(row,sectionBodyEl){
   row.addEventListener('touchstart',e=>{
     if(onButton(e.target))return; // let the tapped button do its thing
     sx=e.touches[0].clientX;sy=e.touches[0].clientY;
+    lastX=sx;lastT=e.timeStamp;vx=0;
     state='pending';moved=false;
     lpTimer=setTimeout(()=>{ if(state==='pending')startDrag(); },HOLD_MS);
   },{passive:true});
@@ -540,6 +542,9 @@ function attachTaskTouchGestures(row,sectionBodyEl){
     }
     if(state==='swipe'){
       moved=true;e.preventDefault();
+      const now=e.timeStamp;
+      if(now>lastT)vx=(e.touches[0].clientX-lastX)/(now-lastT);
+      lastX=e.touches[0].clientX;lastT=now;
       if(Math.abs(dx)<120){
         row.style.transition='none';
         row.style.transform=`translateX(${dx}px)`;
@@ -562,15 +567,25 @@ function attachTaskTouchGestures(row,sectionBodyEl){
     clearTimeout(lpTimer);
     const dx=e.changedTouches[0].clientX-sx;
     if(state==='swipe'){
-      row.style.transition='transform .2s ease';
-      if(dx<-SWIPE_THRESHOLD){
+      // Snap back / settle with a strong ease-out (system response to a release)
+      row.style.transition='transform 200ms cubic-bezier(0.23, 1, 0.32, 1)';
+      // Commit on distance OR a quick flick in the same direction (velocity in px/ms)
+      const flick=Math.abs(vx)>0.11;
+      const goDelete=dx<0 && (dx<-100 || (flick && vx<0 && dx<-MOVE_SLOP));
+      const goEdit  =dx>0 && (dx> 100 || (flick && vx>0 && dx> MOVE_SLOP));
+      if(goDelete){
+        haptic(25);resetSwipe();
+        if(row.dataset.taskId)deleteTask(row.dataset.taskId);
+      } else if(goEdit){
+        haptic(25);resetSwipe();
+        if(row.dataset.taskId)openEditTaskModal(row.dataset.taskId);
+      } else if(dx<-SWIPE_THRESHOLD){
         haptic(25);
         row.style.transform='translateX(-80px)';
         if(delPanel)delPanel.classList.add('armed');
         const r=()=>{resetSwipe();document.removeEventListener('touchstart',r);};
         setTimeout(r,2000);
         document.addEventListener('touchstart',r,{once:true,passive:true});
-        if(dx<-100){resetSwipe();if(row.dataset.taskId)deleteTask(row.dataset.taskId);}
       } else if(dx>SWIPE_THRESHOLD){
         haptic(25);
         row.style.transform='translateX(80px)';
@@ -578,7 +593,6 @@ function attachTaskTouchGestures(row,sectionBodyEl){
         const r=()=>{resetSwipe();document.removeEventListener('touchstart',r);};
         setTimeout(r,2000);
         document.addEventListener('touchstart',r,{once:true,passive:true});
-        if(dx>100){resetSwipe();if(row.dataset.taskId)openEditTaskModal(row.dataset.taskId);}
       } else resetSwipe();
     } else if(state==='drag'){
       const under=rowUnder(e.changedTouches[0].clientX,e.changedTouches[0].clientY);

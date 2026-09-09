@@ -94,6 +94,14 @@ const todayStr=()=>new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in brow
 })();
 window.toggleTheme=function(){
   const isLight=document.documentElement.getAttribute('data-theme')==='light';
+  // Enable the 300ms colour cross-fade only for the duration of the flip
+  // (see .theme-switching in styles.css), then drop it so interactive
+  // elements respond at their own speed.
+  document.documentElement.classList.add('theme-switching');
+  clearTimeout(window._themeSwitchTimer);
+  window._themeSwitchTimer=setTimeout(()=>{
+    document.documentElement.classList.remove('theme-switching');
+  },350);
   if(isLight){
     document.documentElement.removeAttribute('data-theme');
     localStorage.setItem('theme','dark');

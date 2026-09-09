@@ -383,7 +383,7 @@ function renderFinanceTab(){
   }
   if(totalFillEl){
     const pct=budget>0?Math.min(spent/budget,1)*100:(spent>0?100:0);
-    totalFillEl.style.width=pct+'%';
+    totalFillEl.style.transform='scaleX('+(pct/100)+')';
     totalFillEl.style.background=!budget?'var(--green)':spent>budget?'var(--red)':spent>budget*.8?'var(--yellow)':'var(--green)';
   }
   // Pace arrow — where spend "should" be today if it tracked evenly across
@@ -909,7 +909,7 @@ function renderGoals(){
       <div class="goal-bar-track-wrap">
         ${paceArrow}
         <div class="goal-bar-track">
-          <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
+          <div class="goal-bar-fill" style="transform:scaleX(${pct/100});background:${color}"></div>
         </div>
       </div>
       <div class="goal-foot-row">
@@ -1429,7 +1429,7 @@ function renderCatBarChart(mt){
       barW=Math.round(amt/total*100);
     }
     return`<span class="cat-bar-label" title="${cat}">${cat}</span>
-    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${barW}%;background:${overBudget?overColor:color}"></div></div>
+    <div class="cat-bar-track"><div class="cat-bar-fill" style="transform:scaleX(${Math.min(barW,100)/100});background:${overBudget?overColor:color}"></div></div>
     <span class="cat-bar-amt" style="color:${overBudget?overColor:'var(--text)'}">${amtLabel}</span>`;
   }).join('');
   // Position in plain calc() math (label column + gap, then a fraction of the
@@ -1710,7 +1710,7 @@ function renderRunway(){
   const hs=document.getElementById('runwayHdrSum');
   if(hs)hs.textContent=covered?'✓':'⚠';
   const fill=document.getElementById('runwayFill');
-  fill.style.width=Math.max(3,Math.min(100,runwayDays/daysToPayday*100))+'%';
+  fill.style.transform='scaleX('+(Math.max(3,Math.min(100,runwayDays/daysToPayday*100))/100)+')';
   fill.style.background=covered?'var(--green)':'var(--red)';
   document.getElementById('runwaySub').textContent=hidden?'Amounts hidden'
     :`${fmtM(cash)} in checking · ${fmtM(dailyBurn)}/day recent pace · payday ${_shortDate(pay.next)} (${pay.daysUntil}d)`;
