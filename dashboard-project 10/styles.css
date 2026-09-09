@@ -514,9 +514,8 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .color-swatch.selected{border-color:#fff}
 
 /* ── AI CHAT ─────────────────────────────────────────────────────── */
-.chat-fab{position:fixed;bottom:28px;right:28px;width:50px;height:50px;border-radius:50%;background:var(--card2);border:0;color:var(--accent);font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 22px -8px rgba(42,39,35,.32);z-index:150;transition:transform .15s var(--ease-out);cursor:pointer}
-.chat-fab:hover{transform:scale(1.06)}
-.chat-fab:active{transform:scale(.96)}
+/* .chat-fab / .quick-fab removed — no floating action buttons. The chat panel
+   and quick-add sheet markup were removed with them; their CSS below is inert. */
 .chat-panel{position:fixed;bottom:96px;right:28px;width:360px;max-width:calc(100vw - 56px);background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,.6);z-index:150;display:none;flex-direction:column;height:480px}
 .chat-panel.open{display:flex}
 .chat-panel-hdr{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
@@ -998,18 +997,10 @@ html.theme-switching *{
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* ── FAB QUICK ADD ───────────────────────────────────────────────── */
-.quick-fab{position:fixed;bottom:90px;right:28px;width:44px;height:44px;border-radius:50%;background:var(--card2);border:0;color:var(--sub);font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px -8px rgba(42,39,35,.26);z-index:149;transition:transform .15s var(--ease-out);cursor:pointer}
-.quick-fab:hover{transform:scale(1.06)}
-.quick-fab:active{transform:scale(.96)}
 .quick-action-sheet{position:fixed;bottom:152px;right:28px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:6px;display:none;flex-direction:column;gap:2px;z-index:149;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:160px}
 .quick-action-sheet.open{display:flex}
 .quick-action-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;border:none;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit;text-align:left;transition:background .12s}
 .quick-action-item:hover{background:var(--card2)}
-@media(max-width:768px){
-  /* chat-fab sits at bottom:64px (46px tall → top ~110px); stack quick-fab above it */
-  .quick-fab{bottom:calc(120px + env(safe-area-inset-bottom));right:14px}
-  .quick-action-sheet{bottom:calc(176px + env(safe-area-inset-bottom));right:14px}
-}
 
 /* ── OFFLINE BANNER ──────────────────────────────────────────────── */
 .offline-banner{position:fixed;top:56px;left:0;right:0;background:var(--yellow);color:#000;font-size:13px;font-weight:600;text-align:center;padding:6px;z-index:199;display:none}
@@ -1085,12 +1076,15 @@ html.theme-switching *{
 .cat-bar-amt{font-size:12px;font-weight:600;text-align:right;white-space:nowrap;align-self:center}
 .cat-bar-limit-txt{font-weight:400;color:var(--muted)}
 .cat-bar-pace-line{position:absolute;top:2px;bottom:2px;width:1px;background:var(--text);opacity:.16;transform:translateX(-50%);pointer-events:none}
-/* 6-month trend (#22) */
-.trend-chart{height:80px;display:flex;align-items:flex-end;gap:8px;margin-bottom:8px}
-.trend-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
-.trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .4s}
+/* 6-month trend (#22) — value labels ride a fixed top row (not each bar's
+   top), so a short bar next to a tall one never drifts its label under the
+   neighbour. Bars grow from a shared baseline; empty months render no bar. */
+.trend-chart{height:92px;display:flex;align-items:stretch;gap:8px;margin-bottom:8px}
+.trend-col{flex:1;display:flex;flex-direction:column;min-width:0}
+.trend-col-val{height:14px;line-height:14px;font-size:10px;color:var(--sub);text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden}
+.trend-col-plot{flex:1;display:flex;align-items:flex-end;border-bottom:1px solid var(--border)}
+.trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .4s var(--ease-out)}
 .trend-bar-label{font-size:10px;color:var(--muted);white-space:nowrap}
-.trend-bar-val{font-size:10px;color:var(--sub);white-space:nowrap}
 /* Recurring transactions (#23) */
 .recur-txn-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .recur-txn-row:last-child{border-bottom:none}
@@ -1229,7 +1223,11 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 
 @media(max-width:768px){
   /* ── Top nav: transparent floating bar, avatar only ── */
-  .top-nav{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-bottom:none!important;height:52px;padding:0 14px;pointer-events:none}
+  /* Every child of .top-nav (.nav-logo/.nav-tabs/.nav-clock/.nav-theme-btn) is
+     display:none on mobile — the page title + avatar live in each page's own
+     .page-hdr now. So the bar is a 52px empty sticky band pushing all content
+     down. Drop it; .main's own top padding carries the status-bar clearance. */
+  .top-nav{display:none}
   .nav-logo{display:none}
   .nav-tabs{display:none}
   .nav-clock{display:none}
@@ -1254,11 +1252,10 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   .bottom-tab.active{color:var(--blue)}
 
   /* ── Main content: account for top + bottom nav + safe areas ── */
-  .main{padding:14px 14px calc(84px + env(safe-area-inset-bottom));padding-top:calc(14px + env(safe-area-inset-top))}
+  .main{padding:14px 14px calc(84px + env(safe-area-inset-bottom));padding-top:calc(18px + env(safe-area-inset-top))}
   .cal-fullpage{top:48px;padding:12px 10px calc(84px + env(safe-area-inset-bottom))}
 
   .chat-panel{left:10px;right:10px;width:auto;bottom:calc(64px + env(safe-area-inset-bottom))}
-  .chat-fab{bottom:calc(64px + env(safe-area-inset-bottom));right:14px;width:46px;height:46px;font-size:19px}
   /* .toast mobile position handled by #79 rule (top of screen) */
 
   /* ── Stats / grid rows ── */
@@ -1269,7 +1266,7 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   .evt-row{padding:8px 4px}
 
   /* All pages fill the full scrollable height so bottom nav always looks consistent */
-  .page.active{min-height:calc(100vh - 52px - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+  .page.active{min-height:calc(100vh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
 
   /* ── Habits ── */
   .habits-grid{grid-template-columns:1fr}
@@ -1601,9 +1598,12 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 #page-finance > .fin-card:first-of-type{border-top:0;padding-top:6px}
 #page-finance .fin-collapsible{overflow:visible}
 #page-finance .fin-collapsible:not(.collapsed) .fin-collapse-hdr{border-bottom:0}
-#page-finance .fin-collapse-hdr{padding:0 0 12px;background:none}
+#page-finance .fin-collapse-hdr{padding:0 0 14px;background:none}
 #page-finance .fin-collapse-hdr:active{background:none}
-#page-finance .fin-collapse-body{padding:0}
+/* the body element is [data-role="finBody"], not .fin-collapse-body — its base
+   rule adds 14px/16px padding that indented every collapsible section's content
+   and opened a gap under the header. Flush it to the section's own edge. */
+#page-finance [data-role="finBody"]{padding:0}
 
 /* Section titles — Newsreader, sentence case: the editorial running head.
    The small tracked-caps treatment is reserved for the secondary right-side
@@ -1680,13 +1680,18 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 #page-finance .nw-delta-pill .fin-ico{margin-right:.3em}
 #page-finance .nw-chart-subline{font-size:12px}
 
-/* Month nav — serif, chromeless arrows */
-#page-finance .fin-header-row .month-nav{margin:0}
+/* Month nav — serif, chromeless arrows, flush-left with the section edge
+   (the label carries an inline min-width:120px;text-align:center from the
+   markup — neutralise it so "September 2026" sits next to the ‹ arrow rather
+   than floating in a centred 120px box). */
+#page-finance .fin-header-row{margin-bottom:0}
+#page-finance .fin-header-row .month-nav{margin:0;gap:4px}
 #page-finance .month-nav-btn{
   background:none;border:0;color:var(--muted);font-size:17px;padding:4px 8px;border-radius:6px;
 }
+#page-finance .month-nav-btn:first-child{padding-left:0}
 #page-finance .month-nav-btn:hover{color:var(--accent);border-color:transparent}
-#page-finance .month-label-big{font-size:16px;color:var(--text)}
+#page-finance .month-label-big{font-size:16px;color:var(--text);min-width:0;text-align:left}
 
 /* Range chips — press feedback, active = ink underline not a filled pill */
 #page-finance .nw-range-bar{gap:8px;margin-top:14px}
@@ -1734,6 +1739,9 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 /* Accounts — same ruled-row treatment */
 #page-finance .accounts-table,
 #page-finance .accounts-table-wrap{background:none;border:0;box-shadow:none;padding:0}
+/* #acctCardsRow bleeds -16px each side to cancel the old finBody padding —
+   that padding is gone now, so the bleed just overflows the page. */
+#page-finance #acctCardsRow{margin:0}
 #page-finance .accounts-table-row{
   padding:12px 0;border-bottom:1px solid var(--hair);background:none;
 }
@@ -1808,8 +1816,11 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 #page-finance .goal-foot-row{margin-top:9px;font-size:12px;color:var(--sub);gap:6px 14px}
 #page-finance .goal-pct{color:var(--sub)}
 
-/* Recent transactions header + de-carded list */
-#page-finance .txn-list-hdr{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+/* Recent transactions header + de-carded list.
+   Recent is a bare div, not a .fin-collapsible, so it doesn't pick up the
+   section rule above — give it the same top hairline + 26px lead so it reads
+   as a peer section and doesn't butt against the 6-Month Trend labels. */
+#page-finance .txn-list-hdr{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding-top:26px;border-top:1px solid var(--hair)}
 #page-finance .txn-list-hdr .fin-section-title{margin:0;white-space:nowrap}
 #page-finance #txnList{background:none;border:0;border-radius:0;padding:0}
 #page-finance .txn-search{background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:6px 2px;font-size:13px}
@@ -1827,10 +1838,15 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 
 /* Outline action buttons never wrap */
 #page-finance .btn-new,#page-finance .nw-add-btn{white-space:nowrap}
-#page-finance .trend-chart{margin-bottom:10px}
-#page-finance .watchlist-input,#page-finance #watchlistTicker{
-  background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;
+#page-finance .trend-chart{margin-bottom:8px}
+#page-finance #trendLabels{gap:8px}
+#page-finance .trend-col-plot{border-bottom-color:var(--hair)}
+#page-finance .watchlist-add-row{margin-bottom:0;gap:12px}
+#page-finance .watchlist-add-row input{
+  background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:7px 2px;font-size:13px;
 }
+#page-finance .watchlist-add-row input:focus{border-bottom-color:var(--text)}
+#page-finance .watchlist-empty{text-align:left;padding:14px 0 2px;font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--sub)}
 
 
 /* ═══ EDITORIAL — shell: primary action buttons ═══

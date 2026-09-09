@@ -876,7 +876,7 @@ function renderGoals(){
     const linkedSub=g.trackContributions
       ?`<div class="goal-sub">${yearContribs.length?`${yearContribs.length} contribution${yearContribs.length!==1?'s':''} in ${year}`:`No contributions logged in ${year} yet`}</div>`
       :(linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'');
-    const pctText=done?'🎉 Goal reached!':`${Math.round(pct)}% · ${fmtM(target-current)} to go`;
+    const pctText=done?`${_ICO_CHECK}Reached`:`${Math.round(pct)}% · ${fmtM(target-current)} to go`;
     const logBtn=g.trackContributions?`<button class="goal-log-btn" onclick="event.stopPropagation();openContributionModal('${g.id}')">+ Log</button>`:'';
     // Year-end pace arrow — only meaningful for goals with an annual
     // deadline (contribution-tracked + resetAnnually implies "hit target by
@@ -933,7 +933,7 @@ function renderGoals(){
         <div class="goal-bar-fill" style="transform:scaleX(${pct/100})"></div>
       </div>
       <div class="goal-foot-row">
-        <span class="goal-pct">${pctText}</span>
+        <span class="goal-pct"${done?' style="color:var(--green)"':''}>${pctText}</span>
       </div>
     </div>`;
   }).join('');
@@ -1198,8 +1198,9 @@ function _renderOneNWCard(card){
       <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.10"/>
       <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
     </linearGradient></defs>
-    ${gy.map(g=>`<line x1="0" y1="${g.y.toFixed(1)}" x2="${W}" y2="${g.y.toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
-      <text x="4" y="${(g.y-4).toFixed(1)}" font-size="10" fill="var(--muted)">${fmtM(g.v)}</text>`).join('')}
+    ${gy.map(g=>{const t=fmtM(g.v);return`<line x1="0" y1="${g.y.toFixed(1)}" x2="${W}" y2="${g.y.toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+      <rect x="0" y="${(g.y-13).toFixed(1)}" width="${8+t.length*5.6}" height="13" fill="var(--bg)"/>
+      <text x="2" y="${(g.y-4).toFixed(1)}" font-size="10" fill="var(--muted)">${t}</text>`}).join('')}
     <polygon points="0,${(H-PAD_B).toFixed(1)} ${line} ${W},${(H-PAD_B).toFixed(1)}" fill="url(#${gradId})"/>
     <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     <circle data-role="scrubDot" cx="${pts[pts.length-1].x.toFixed(1)}" cy="${pts[pts.length-1].y.toFixed(1)}" r="3.5" fill="${color}"/>`;
@@ -1488,17 +1489,21 @@ function renderMonthlyTrend(){
     const isCurrent=mo.m===now.getMonth()&&mo.y===now.getFullYear();
     return{...mo,spent,income,isCurrent,color:DONUT_COLORS[i]};
   });
-  // Hide the whole card until there's actually spending to show —
-  // six colored stubs over $0 data just looks broken.
+  // Hide the whole card until there are at least two months with spending —
+  // a lone bar floating over five flat stubs just looks broken.
   const trendCard=document.getElementById('trendCard');
-  if(!data.some(d=>d.spent>0)){if(trendCard)trendCard.style.display='none';return;}
+  if(data.filter(d=>d.spent>0).length<2){if(trendCard)trendCard.style.display='none';return;}
   if(trendCard)trendCard.style.display='';
   const maxSpent=Math.max(...data.map(d=>d.spent),1);
   chartEl.innerHTML=data.map(d=>{
-    const h=d.spent>0?Math.max(Math.round(d.spent/maxSpent*70),4):1;
-    return`<div class="trend-bar-wrap">
-      <div class="trend-bar-val">${d.spent>0?fmtM(d.spent):''}</div>
-      <div class="trend-bar" style="height:${h}px;background:${d.spent>0?(d.isCurrent?'var(--text)':'var(--border2)'):'var(--border)'}"></div>
+    // % of the plot area; floor a real bar at 4% so tiny months stay visible.
+    const pct=d.spent>0?Math.max(d.spent/maxSpent*100,4):0;
+    const bar=d.spent>0
+      ?`<div class="trend-bar" style="height:${pct.toFixed(1)}%;background:${d.isCurrent?'var(--text)':'var(--border2)'}"></div>`
+      :'';
+    return`<div class="trend-col">
+      <div class="trend-col-val">${d.spent>0?fmtM(d.spent):''}</div>
+      <div class="trend-col-plot">${bar}</div>
     </div>`;
   }).join('');
   if(lblEl)lblEl.innerHTML=data.map(d=>`<div class="trend-bar-label" style="flex:1;text-align:center;color:${d.isCurrent?'var(--text)':'var(--muted)'}">${d.label}</div>`).join('');

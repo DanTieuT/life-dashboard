@@ -709,28 +709,6 @@
   </button>
 </nav>
 
-<!-- AI Chat FAB -->
-<button class="chat-fab" onclick="toggleChat()" id="chatFab" title="AI Assistant">💬</button>
-
-<!-- AI Chat Panel -->
-<div class="chat-panel" id="chatPanel">
-  <div class="chat-panel-hdr">
-    <div class="chat-panel-title">
-      <div class="ai-status-dot"></div>
-      AI Assistant
-    </div>
-    <button class="chat-close-btn" onclick="toggleChat()">✕</button>
-  </div>
-  <div class="chat-messages" id="chatMessages">
-    <div class="chat-msg ai">Hey Dan! Tell me what you need — I can add tasks, log habits, track spending, schedule events, and more. Try: <em>"add dentist appointment Friday"</em> or <em>"I went to the gym"</em></div>
-  </div>
-  <div class="chat-input-row">
-    <input class="chat-text-input" id="chatInput" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
-    <button class="chat-mic-btn" id="chatMicBtn" onclick="toggleMic()" title="Voice input">🎤</button>
-    <button class="chat-send-btn" id="chatSendBtn" onclick="sendChat()">Send</button>
-  </div>
-</div>
-
 <!-- MODALS -->
 <!-- Add Event -->
 <div class="modal-overlay" id="addEventModal">
@@ -1130,14 +1108,6 @@
 
 <!-- Offline Banner -->
 <div class="offline-banner" id="offlineBanner">⚡ Offline — changes will sync when you reconnect</div>
-
-<!-- Quick Add FAB -->
-<button class="quick-fab" id="quickFab" onclick="toggleQuickSheet()" title="Quick add">＋</button>
-<div class="quick-action-sheet" id="quickActionSheet">
-  <button class="quick-action-item" onclick="closeQuickSheet();openNewTaskModal()">✅ Task</button>
-  <button class="quick-action-item" onclick="closeQuickSheet();openHabitLogSheet()">💪 Habit Log</button>
-  <button class="quick-action-item" onclick="closeQuickSheet();openTxnModal()">💸 Transaction</button>
-</div>
 
 <script type="module" src="/js/main.js"></script>
 </body>
