@@ -345,23 +345,37 @@ function renderFinanceTab(){
 
   renderWatchlistSection();
 
-  // ── Payday Bar ──────────────────────────────────────────────────
+  // Shared date context (used by the spending pace tick below)
   const now=new Date();
   const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
   const isCurrentMonth=currentMonth===now.getMonth()&&currentYear===now.getFullYear();
-  const dayOfMonth=isCurrentMonth?now.getDate():1;
-  const paidDay=1; // pay period starts 1st
-  const nextPayDay=new Date(currentYear,currentMonth+1,1);
-  const daysLeft=Math.max(0,Math.ceil((nextPayDay-now)/(1000*60*60*24)));
-  const pct=Math.round((dayOfMonth-1)/(daysInMonth-1)*100);
+
+  // ── Payday ──────────────────────────────────────────────────────
+  // Countdown + a hairline track that fills as the pay period elapses.
+  // Source of truth is nextPaydayInfo() (inferred from real paychecks) so
+  // this agrees with the Runway card rather than assuming a 1st-of-month cycle.
   const pEl=id=>document.getElementById(id);
-  if(pEl('paydayDays')) pEl('paydayDays').textContent=daysLeft;
-  if(pEl('paydayDaysText')) pEl('paydayDaysText').textContent='days';
-  if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
-  // One status line: paycheck watch + extra income, joined.
+  const pay=nextPaydayInfo();
+  const paydayCard=pEl('paydayCard');
+  if(paydayCard){
+    if(!pay){ paydayCard.style.display='none'; }
+    else{
+      paydayCard.style.display='';
+      const nowMs=Date.now();
+      const lastMs=txnLocalDate(pay.last).getTime();
+      const nextMs=pay.next.getTime();
+      const pct=Math.max(0,Math.min(100,Math.round((nowMs-lastMs)/(nextMs-lastMs)*100)));
+      const d=Math.max(0,pay.daysUntil);
+      if(pEl('paydayWhen')) pEl('paydayWhen').textContent=pay.next.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+      if(pEl('paydayIn')) pEl('paydayIn').textContent=d===0?'today':d===1?'tomorrow':`in ${d} days`;
+      if(pEl('paydayFill')) pEl('paydayFill').style.width=pct+'%';
+      if(pEl('paydayEndA')) pEl('paydayEndA').textContent=_shortDate(txnLocalDate(pay.last));
+      if(pEl('paydayEndB')) pEl('paydayEndB').textContent=_shortDate(pay.next);
+    }
+  }
+  // Optional caption below the track: extra income, or a missed-paycheck warning.
   const statusEl=pEl('paydayStatus');
   if(statusEl){
-    const pay=nextPaydayInfo();
     let missed=false;
     const parts=[];
     if(pay&&pay.daysSinceLast<=10) parts.push(`${_ICO_CHECK}Paycheck ${fmtM(pay.lastAmount)} on ${_shortDate(txnLocalDate(pay.last))}`);
@@ -849,8 +863,8 @@ function renderGoals(){
     let monthlyHtml='';
     if(monthAgo!==null){
       const diff=current-monthAgo;
-      const mColor=diff>0?'var(--green)':diff<0?'var(--red)':'var(--sub)';
-      const mText=diff>0?`+ ${fmt(diff)} this month`:diff<0?`- ${fmt(Math.abs(diff))} this month`:'no change this month';
+      const mColor=diff>0?'var(--green)':diff<0?'var(--red)':'var(--muted)';
+      const mText=diff>0?`+${fmt(diff)} this month`:diff<0?`−${fmt(Math.abs(diff))} this month`:'no change this month';
       monthlyHtml=`<span class="goal-monthly-change" style="color:${mColor}">${mText}</span>`;
     }
     // Linked account names (balance-linked goals) or contribution count
@@ -863,7 +877,7 @@ function renderGoals(){
       ?`<div class="goal-sub">${yearContribs.length?`${yearContribs.length} contribution${yearContribs.length!==1?'s':''} in ${year}`:`No contributions logged in ${year} yet`}</div>`
       :(linkedNames.length?`<div class="goal-sub" title="${escHtml(linkedNames.join(', '))}">Linked: ${linkedNames.join(', ')}</div>`:'');
     const pctText=done?'🎉 Goal reached!':`${Math.round(pct)}% · ${fmtM(target-current)} to go`;
-    const logBtn=g.trackContributions?`<button class="goal-log-btn" style="color:${color}" onclick="openContributionModal('${g.id}')">+ Log contribution</button>`:'';
+    const logBtn=g.trackContributions?`<button class="goal-log-btn" onclick="event.stopPropagation();openContributionModal('${g.id}')">+ Log</button>`:'';
     // Year-end pace arrow — only meaningful for goals with an annual
     // deadline (contribution-tracked + resetAnnually implies "hit target by
     // Dec 31"). Shows where current should be today to stay on pace,
@@ -901,31 +915,26 @@ function renderGoals(){
         extraLine=`<div class="goal-extra"><b>${fmtM(room)}</b> room left of ${fmtM(g.annualLimit)} · deadline Apr 15 ${y+1}</div>`;
       }
     }
-    return `<div class="goal-card">
+    // This screen stays deliberately spare — name, progress, and this month's
+    // movement. Linked accounts, contribution history, pace-to-date and the
+    // per-month set-aside all live in the goal detail (tap the card).
+    void linkedSub; void paceArrow; void paceText; void extraLine;
+    return `<div class="goal-card" onclick="openGoalModal('${g.id}')">
       <div class="goal-top">
-        <button class="goal-icon" style="background:${color}22;color:${color}" onclick="openGoalModal('${g.id}')" title="Edit ${escHtml(g.name)}">${g.emoji||'🎯'}</button>
-        <div style="flex:1">
-          <div class="goal-name">${g.name}</div>
-          ${linkedSub}
-        </div>
+        <span class="goal-name">${g.name}</span>
         ${logBtn}
       </div>
       <div class="goal-amounts">
-        <div class="goal-current" style="color:${color}">${fmtM(current)}</div>
-        <div class="goal-target">of ${fmtM(target)}</div>
+        <span class="goal-current">${fmtM(current)}</span>
+        <span class="goal-target">of ${fmtM(target)}</span>
+        ${monthlyHtml}
       </div>
-      <div class="goal-bar-track-wrap">
-        ${paceArrow}
-        <div class="goal-bar-track">
-          <div class="goal-bar-fill" style="transform:scaleX(${pct/100});background:${color}"></div>
-        </div>
+      <div class="goal-bar-track">
+        <div class="goal-bar-fill" style="transform:scaleX(${pct/100})"></div>
       </div>
       <div class="goal-foot-row">
         <span class="goal-pct">${pctText}</span>
-        ${paceText}
-        ${monthlyHtml}
       </div>
-      ${extraLine}
     </div>`;
   }).join('');
 }
@@ -1254,16 +1263,17 @@ function _renderNWDeltaAlloc(card,hist,accounts,nw,hidden){
       }
       if(buckets[b]!=null)buckets[b]+=a.balance;
     });
-    // Editorial: a ruled list — marker + label + serif figure + percent —
-    // not a stacked colour bar. Markers are an ink→bone tonal ramp, not hues.
-    const MARK=['#2a2723','#847c6c','#c9a37a','#d8d2c4','#e6e1d6'];
+    // Editorial: a segmented hairline bar you read the proportions off in one
+    // glance, plus a legend carrying the figures. Tonal ink ramp, no hue.
+    const MARK=['var(--m1)','var(--m2)','var(--m3)','var(--m4)','var(--m5)'];
     const entries=Object.entries(buckets).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
     const total=entries.reduce((s,[,v])=>s+v,0)||1;
-    aRow.innerHTML=`<div class="nw-alloc-list">${entries.map(([k,v],i)=>
-      `<div class="nw-alloc-item"><span class="nw-alloc-mark" style="background:${MARK[i%MARK.length]}"></span>`
-      +`<span class="nw-alloc-name">${k}</span>`
-      +`<span class="nw-alloc-val">${fmtM(v)}</span>`
-      +`<span class="nw-alloc-pct">${Math.round(v/total*100)}%</span></div>`).join('')}</div>`;
+    const pct=v=>Math.round(v/total*100);
+    aRow.innerHTML=`<div class="nw-alloc-bar" role="img" aria-label="${entries.map(([k,v])=>pct(v)+'% '+k).join(', ')}">${
+      entries.map(([k,v],i)=>`<i style="flex:${(v/total*100).toFixed(2)};background:${MARK[i%MARK.length]}" title="${k} ${fmtM(v)}"></i>`).join('')
+    }</div><div class="nw-alloc-legend">${
+      entries.map(([k,v],i)=>`<span class="nw-alloc-leg"><i style="background:${MARK[i%MARK.length]}"></i>${k} <b>${fmtM(v)}</b> &middot; ${pct(v)}%</span>`).join('')
+    }</div>`;
   }
 }
 function _attachNWScrub(svg,card){
@@ -1652,16 +1662,44 @@ function trailingBurn(days){
   return netSpend((appData.transactions||[]).filter(t=>txnLocalDate(t.date)>=cutoff));
 }
 
-// Next expected payday — assumes a monthly cadence on the same day of month
-// as the most recent paycheck. Null if no paycheck history.
+// Next expected payday. Cadence is inferred from the median gap between
+// recent paychecks (weekly / biweekly / semi-monthly / monthly); falls back
+// to a monthly cadence on the same day of month. Null if no paycheck history.
 function nextPaydayInfo(){
   const checks=(appData.transactions||[]).filter(t=>t.type==='in'&&isPaycheckLike(t.name)).sort((a,b)=>a.date<b.date?1:-1);
   if(!checks.length)return null;
   const last=checks[0],ld=txnLocalDate(last.date);
   const today=new Date();today.setHours(0,0,0,0);
-  let next=new Date(ld.getFullYear(),ld.getMonth()+1,ld.getDate());
-  while(next<=today)next=new Date(next.getFullYear(),next.getMonth()+1,next.getDate());
-  return {last:last.date,lastAmount:last.amount,next,
+
+  // Median gap between the last few checks, snapped to a common pay cadence.
+  const gaps=[];
+  for(let i=1;i<Math.min(checks.length,5);i++){
+    gaps.push(Math.round((txnLocalDate(checks[i-1].date)-txnLocalDate(checks[i].date))/86400000));
+  }
+  let step=0;
+  if(gaps.length){
+    gaps.sort((a,b)=>a-b);
+    const med=gaps[Math.floor(gaps.length/2)];
+    step=[7,14,15,30].reduce((best,c)=>Math.abs(c-med)<Math.abs(best-med)?c:best,30);
+    if(med<5||med>45)step=0; // irregular — fall back to monthly
+  }
+
+  let next;
+  if(step===15){ // semi-monthly: 1st & 15th-ish
+    next=new Date(ld); next.setDate(ld.getDate()>=15?1:15);
+    if(next<=ld) next.setMonth(next.getMonth()+1);
+  }else if(step){
+    next=new Date(ld); next.setDate(next.getDate()+step);
+  }else{
+    next=new Date(ld.getFullYear(),ld.getMonth()+1,ld.getDate());
+  }
+  let guard=0;
+  while(next<=today && guard++<400){
+    if(step===15){ next.setDate(next.getDate()===1?15:1); if(next.getDate()===1)next.setMonth(next.getMonth()+1); }
+    else if(step){ next.setDate(next.getDate()+step); }
+    else{ next.setMonth(next.getMonth()+1); }
+  }
+  return {last:last.date,lastAmount:last.amount,next,step:step||30,
     daysUntil:Math.ceil((next-today)/86400000),
     daysSinceLast:Math.floor((today-ld)/86400000)};
 }

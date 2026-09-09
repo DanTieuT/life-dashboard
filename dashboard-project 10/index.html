@@ -325,19 +325,16 @@
         </div>
       </div>
 
-      <!-- Payday Bar -->
+      <!-- Payday -->
       <div class="payday-card" id="paydayCard">
-        <div class="payday-left">
-          <div class="payday-label">Next Payday</div>
-          <div class="payday-days-line">
-            <span class="payday-days-num" id="paydayDays">—</span>
-            <span class="payday-days-text" id="paydayDaysText">days</span>
-          </div>
+        <div class="payday-label">Next Payday</div>
+        <div class="payday-when-row">
+          <span class="payday-when" id="paydayWhen">&mdash;</span>
+          <span class="payday-in" id="paydayIn"></span>
         </div>
-        <div class="payday-right">
-          <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
-          <div class="payday-status" id="paydayStatus" style="display:none"></div>
-        </div>
+        <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
+        <div class="payday-ends"><span id="paydayEndA"></span><span id="paydayEndB"></span></div>
+        <div class="payday-status" id="paydayStatus" style="display:none"></div>
       </div>
 
       <!-- Spending Card (total + by-category breakdown, merged — was two cards) -->

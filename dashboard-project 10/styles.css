@@ -33,6 +33,8 @@
   --purple:#6d5296;--indigo:#3f4d8a;
 
   --accent:#9a3b1b;--accent-weak:#f1e6de;
+  /* Tonal marker ramp — ink to bone, for allocation / category bands (no hue) */
+  --m1:#2a2723;--m2:#7c7360;--m3:#c9a37a;--m4:#ded7c8;--m5:#ebe6da;
 
   --card-shadow:0 1px 2px rgba(42,39,35,.045);
   --card-shadow-hover:0 2px 10px rgba(42,39,35,.06);
@@ -71,6 +73,7 @@
   --purple:#a996c9;--indigo:#8f9bd0;
 
   --accent:#df9163;--accent-weak:#33261d;
+  --m1:#ece6da;--m2:#a99f89;--m3:#8a7355;--m4:#40382a;--m5:#332d21;
 
   --card-shadow:0 1px 2px rgba(0,0,0,.3);
   --card-shadow-hover:0 2px 12px rgba(0,0,0,.4);
@@ -1635,8 +1638,6 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 #page-finance .cc-num,
 #page-finance .txn-amount,
 #page-finance .accounts-table-bal,
-#page-finance .goal-bar-current,
-#page-finance .goal-bar-target,
 #page-finance .month-label-big{
   font-family:var(--font-serif);
   font-weight:500;
@@ -1755,14 +1756,15 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 #page-finance .btn-new{border-radius:var(--radius-sm);font-weight:500}
 
 /* Allocation — a ruled list (markup in finance.js): marker · name · figure · % */
+/* Allocation — segmented hairline bar (tonal ink, no hue) + a legend that
+   carries the figures. Markup in finance.js. */
 #page-finance .nw-alloc{margin-top:18px}
-#page-finance .nw-alloc-list{display:flex;flex-direction:column}
-#page-finance .nw-alloc-item{display:flex;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--hair)}
-#page-finance .nw-alloc-item:last-child{border-bottom:0}
-#page-finance .nw-alloc-mark{width:7px;height:7px;border-radius:1px;flex-shrink:0;align-self:center}
-#page-finance .nw-alloc-name{flex:1;font-size:13px}
-#page-finance .nw-alloc-val{font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;font-size:14px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-#page-finance .nw-alloc-pct{font-size:12px;color:var(--sub);width:34px;text-align:right;font-variant-numeric:tabular-nums}
+#page-finance .nw-alloc-bar{display:flex;height:4px;border-radius:2px;overflow:hidden;gap:1px;background:var(--bg)}
+#page-finance .nw-alloc-bar > i{display:block;min-width:2px}
+#page-finance .nw-alloc-legend{display:flex;flex-wrap:wrap;gap:9px 22px;margin-top:14px}
+#page-finance .nw-alloc-leg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub)}
+#page-finance .nw-alloc-leg > i{width:7px;height:7px;border-radius:1px;flex-shrink:0}
+#page-finance .nw-alloc-leg b{font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;color:var(--text);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 #page-finance .nw-delta-row{gap:22px;margin-top:12px}
 #page-finance .nw-range-bar{margin-bottom:2px}
 
@@ -1774,16 +1776,37 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 }
 #page-finance .fin-collapse-hdr{align-items:center;gap:10px}
 
-/* Payday — a quiet countdown line: "in 22 days" + the pay date, no track rule */
+/* Payday — pay date + countdown, and a 3px hairline track that fills as the
+   pay period elapses (dated ends). */
 #page-finance .payday-card{display:block}
-#page-finance .payday-left,#page-finance .payday-right{min-width:0;width:auto}
-#page-finance .payday-label{margin-bottom:8px}
-#page-finance .payday-days-line{display:flex;align-items:baseline;gap:6px;margin:0}
-#page-finance .payday-days-num{font-size:21px;color:var(--text)}
-#page-finance .payday-days-text{font-size:14px;color:var(--sub)}
-#page-finance .payday-pay-date{font-size:13px;color:var(--sub);margin-top:3px}
-#page-finance .payday-track{display:none}
-#page-finance .payday-status{text-align:left;margin-top:6px;font-weight:400;font-size:12px;color:var(--sub)}
+#page-finance .payday-label{margin-bottom:10px}
+#page-finance .payday-when-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+#page-finance .payday-when{font-family:var(--font-serif);font-optical-sizing:auto;font-size:16px;font-weight:500;letter-spacing:-.01em;color:var(--text)}
+#page-finance .payday-in{font-size:13px;color:var(--accent);flex-shrink:0}
+#page-finance .payday-track{display:block;height:3px;width:100%;margin:0;border-radius:2px;background:var(--track);overflow:hidden}
+#page-finance .payday-fill{height:100%;background:var(--text)}
+#page-finance .payday-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+#page-finance .payday-status{text-align:left;margin-top:10px;font-weight:400;font-size:12px;color:var(--sub);display:flex;align-items:center;flex-wrap:wrap}
+#page-finance .payday-status:empty{display:none}
+
+/* Goals — stacked, each with a pace line and this-month progress.
+   (markup: renderGoals() in finance.js) */
+#page-finance #goalsGrid{display:flex;flex-direction:column;gap:0}
+#page-finance .goal-card{padding:16px 0 0!important;margin:0;border-top:1px solid var(--hair);cursor:pointer;transition:opacity .12s var(--ease-out)}
+#page-finance .goal-card:first-child{border-top:0;padding-top:8px!important}
+#page-finance .goal-card:hover{opacity:.78}
+#page-finance .goal-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+#page-finance .goal-name{font-size:13px;font-weight:400;color:var(--sub)}
+#page-finance .goal-log-btn{font:inherit;font-size:12px;font-weight:400;color:var(--sub);background:none;border:0;padding:0;cursor:pointer;flex-shrink:0}
+#page-finance .goal-log-btn:hover{color:var(--accent)}
+#page-finance .goal-amounts{display:flex;align-items:baseline;gap:7px;margin:0}
+#page-finance .goal-current{font-family:var(--font-serif);font-optical-sizing:auto;font-size:22px;font-weight:500;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums}
+#page-finance .goal-target{font-size:14px;color:var(--sub);font-variant-numeric:tabular-nums}
+#page-finance .goal-monthly-change{margin-left:auto;font-size:12px;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums}
+#page-finance .goal-bar-track{height:3px;margin:11px 0 0;background:var(--track)}
+#page-finance .goal-bar-fill{background:var(--text)}
+#page-finance .goal-foot-row{margin-top:9px;font-size:12px;color:var(--sub);gap:6px 14px}
+#page-finance .goal-pct{color:var(--sub)}
 
 /* Recent transactions header + de-carded list */
 #page-finance .txn-list-hdr{display:flex;align-items:center;gap:14px;margin-bottom:6px}
@@ -1826,7 +1849,7 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 /* Drawn status marks (replacing ✓ / ⚠ glyphs) + the meta-dot separator */
 .fin-ico{width:.95em;height:.95em;display:inline-block;vertical-align:-.14em;margin-right:.35em;flex-shrink:0}
 .fin-dot{margin:0 .5em;color:var(--muted)}
-#page-finance .payday-status,#page-finance .goal-extra{display:flex;align-items:center;flex-wrap:wrap}
+#page-finance .payday-status{display:flex;align-items:center;flex-wrap:wrap}
 #page-finance .runway-verdict .fin-ico,#page-finance #runwayHdrSum .fin-ico{margin-right:0}
 
 /* Ledger figures — tabular lining numerals so columns align vertically */
