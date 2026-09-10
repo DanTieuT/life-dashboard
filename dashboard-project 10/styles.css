@@ -1613,8 +1613,11 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 #page-finance .fin-collapse-hdr:active{background:none}
 /* the body element is [data-role="finBody"], not .fin-collapse-body — its base
    rule adds 14px/16px padding that indented every collapsible section's content
-   and opened a gap under the header. Flush it to the section's own edge. */
-#page-finance [data-role="finBody"]{padding:0}
+   and opened a gap under the header. Flush the sides to the section edge, but
+   keep a bottom gap so the last line of content doesn't hug the next section's
+   divider (the divider is the NEXT section's border-top, ~0px above it
+   otherwise). Collapsed sections skip this — finBody is display:none. */
+#page-finance [data-role="finBody"]{padding:0 0 22px}
 
 /* Section titles — Newsreader, sentence case: the editorial running head.
    The small tracked-caps treatment is reserved for the secondary right-side
@@ -1945,8 +1948,9 @@ input[type="date"].form-input,input[type="time"].form-input,input[type="datetime
    hairline + serif header + chevron). Inside, each .fin-sub is a lighter
    sub-section: hairline rule + small tracked-caps label, no serif head, no
    nested chevron. Sub-sections that hide until they have data still do. */
-#page-finance .fin-tier3 > [data-role="finBody"]{padding-top:2px}
-#page-finance .fin-sub{padding:22px 0 0;border-top:1px solid var(--hair)}
+/* tier3 body: no extra bottom gap here — each .fin-sub carries its own */
+#page-finance .fin-tier3 > [data-role="finBody"]{padding:2px 0 0}
+#page-finance .fin-sub{padding:22px 0 18px;border-top:1px solid var(--hair)}
 #page-finance .fin-sub:first-child{border-top:0;padding-top:4px}
 #page-finance .fin-sub-hdr{
   font-family:-apple-system,system-ui,sans-serif;
