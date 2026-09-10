@@ -1698,7 +1698,9 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
    (the label carries an inline min-width:120px;text-align:center from the
    markup — neutralise it so "September 2026" sits next to the ‹ arrow rather
    than floating in a centred 120px box). */
-#page-finance .fin-header-row{margin-bottom:0}
+/* the Net Worth card has no bottom padding, so the month selector + New
+   Transaction row would otherwise butt straight against the allocation bar */
+#page-finance .fin-header-row{margin-top:22px;margin-bottom:0}
 #page-finance .fin-header-row .month-nav{margin:0;gap:4px}
 #page-finance .month-nav-btn{
   background:none;border:0;color:var(--muted);font-size:17px;padding:4px 8px;border-radius:6px;
