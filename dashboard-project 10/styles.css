@@ -58,6 +58,8 @@
 
   /* Translucent chrome */
   --material-bg:rgba(247,246,243,.78);
+  /* bottom nav: near-opaque so an iOS backdrop-filter glitch can't show through */
+  --material-bg-nav:rgba(247,246,243,.94);
   --material-blur:blur(20px) saturate(180%);
   --material-edge:rgba(255,255,255,.6);
   --edge-shadow:0 12px 22px -18px rgba(42,39,35,.28);
@@ -87,13 +89,14 @@
   --invert-bg:#ece6da;--invert-text:#17150f;
 
   --material-bg:rgba(23,21,15,.72);
+  --material-bg-nav:rgba(23,21,15,.94);
   --material-edge:rgba(255,255,255,.07);
   --edge-shadow:0 12px 22px -18px rgba(0,0,0,.55);
   --scrim:rgba(0,0,0,.5);
 }
 @media (prefers-reduced-transparency: reduce){
-  :root{--material-bg:#f4f2ec;--material-blur:none}
-  [data-theme="dark"]{--material-bg:#1c1a12}
+  :root{--material-bg:#f4f2ec;--material-bg-nav:#f4f2ec;--material-blur:none}
+  [data-theme="dark"]{--material-bg:#1c1a12;--material-bg-nav:#1c1a12}
 }
 .auth-logo-gem{background:var(--accent-weak);}
 .mc-today .mc-num{color:#fff;}
@@ -1238,9 +1241,17 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   .bottom-nav{
     display:flex;position:fixed;bottom:0;left:0;right:0;
     padding:4px 8px calc(20px + env(safe-area-inset-bottom));
-    background:var(--material-bg);backdrop-filter:var(--material-blur);
+    background:var(--material-bg-nav);backdrop-filter:var(--material-blur);
     -webkit-backdrop-filter:var(--material-blur);
     border-top:1px solid var(--hair);z-index:200;
+    /* iOS Safari mis-positions a position:fixed + -webkit-backdrop-filter
+       bar to the middle of the page during momentum scroll, snapping back
+       when scrolling stops. Forcing its own compositing layer pins it to
+       the viewport; the near-opaque --material-bg-nav also means a blur
+       hiccup can't leave it see-through. */
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
+    will-change:transform;
   }
   .bottom-tab{
     flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
