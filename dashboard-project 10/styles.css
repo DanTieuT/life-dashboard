@@ -1922,11 +1922,23 @@ input[type="date"].form-input,input[type="time"].form-input,input[type="datetime
    section; reference data and occasional tools moved into a single collapsed
    "Accounts & tools" group so the daily scroll is ~4 sections, not ~13. */
 
-/* This Month — payday sub-block, a hairline, then the spend pace + saved line */
+/* This Month — payday sub-block, a hairline, then the spend pace. Tight
+   internal rhythm: this is the section checked most, it should read at a
+   glance without a lot of scrolling. */
 #page-finance .tm-payday{display:block}
-#page-finance .tm-payday-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
-#page-finance .tm-rule{height:1px;background:var(--hair);margin:18px 0 2px}
-#page-finance .tm-saved-line{font-size:13px;color:var(--sub);margin-top:8px}
+#page-finance .tm-payday-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+#page-finance .payday-ends{margin-top:5px}
+#page-finance .payday-status{margin-top:7px}
+#page-finance .tm-rule{height:1px;background:var(--hair);margin:12px 0 0}
+#page-finance .spend-total-row{margin:11px 0 6px}
+#page-finance .spend-total-track-wrap{padding-top:4px}
+#page-finance .spend-safe-line{margin:7px 0 0}
+#page-finance #catBarChart{margin-top:12px}
+/* income-saved: a quiet summary line, ruled off below the category list */
+#page-finance .tm-saved-line{
+  font-size:13px;color:var(--sub);
+  margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);
+}
 #page-finance .tm-saved-line b{font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;color:var(--text);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 
 /* Accounts & tools group — the wrapper is a normal .fin-collapsible (top

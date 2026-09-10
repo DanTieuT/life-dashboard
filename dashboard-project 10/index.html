@@ -355,8 +355,23 @@
             <div class="spend-total-track"><div class="spend-total-fill" id="spendingTotalFill"></div></div>
           </div>
           <div class="spend-safe-line" id="spendSafeLine" style="display:none"></div>
+          <div id="catBarChart"></div>
           <div class="tm-saved-line" id="tmSavedLine" style="display:none"></div>
-          <div id="catBarChart" style="margin-top:14px"></div>
+        </div>
+      </div>
+
+      <!-- ── Goals ── -->
+      <div class="fin-collapsible" data-fin-id="goals">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          Goals
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="goals-body-hdr">
+            <div class="section-sub" id="goalsSub">Track what you're building toward.</div>
+            <button class="btn-new" onclick="openGoalModal()">+ New Goal</button>
+          </div>
+          <div id="goalsGrid"></div>
         </div>
       </div>
 
@@ -377,38 +392,6 @@
           </div>
           <div class="runway-sub" id="runwaySub"></div>
           <div class="runway-bills" id="runwayBills"></div>
-        </div>
-      </div>
-
-      <!-- ── Goals ── -->
-      <div class="fin-collapsible" data-fin-id="goals">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Goals
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="goals-body-hdr">
-            <div class="section-sub" id="goalsSub">Track what you're building toward.</div>
-            <button class="btn-new" onclick="openGoalModal()">+ New Goal</button>
-          </div>
-          <div id="goalsGrid"></div>
-        </div>
-      </div>
-
-      <!-- Recent Transactions -->
-      <div class="fin-collapsible" data-fin-id="recent">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          <span>Recent</span>
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="txn-list-hdr">
-            <div class="txn-search-wrap" style="flex:1;margin:0">
-              <input class="txn-search" id="txnSearch" placeholder="Search transactions..." oninput="renderFinanceTab()">
-              <span class="txn-count" id="txnCount"></span>
-            </div>
-          </div>
-          <div id="txnList"></div>
         </div>
       </div>
 
@@ -485,6 +468,23 @@
             <div id="recurringTxnList"></div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- Recent Transactions — the ledger, last on the scroll -->
+      <div class="fin-collapsible" data-fin-id="recent">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Recent</span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="txn-list-hdr">
+            <div class="txn-search-wrap" style="flex:1;margin:0">
+              <input class="txn-search" id="txnSearch" placeholder="Search transactions..." oninput="renderFinanceTab()">
+              <span class="txn-count" id="txnCount"></span>
+            </div>
+          </div>
+          <div id="txnList"></div>
         </div>
       </div>
 

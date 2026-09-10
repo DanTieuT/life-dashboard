@@ -373,17 +373,16 @@ function renderFinanceTab(){
       if(pEl('paydayEndB')) pEl('paydayEndB').textContent=_shortDate(pay.next);
     }
   }
-  // Optional caption below the track: extra income, or a missed-paycheck warning.
+  // Optional caption below the track: last-paid confirmation, extra income
+  // this month (green), or a missed-paycheck warning.
   const statusEl=pEl('paydayStatus');
   if(statusEl){
     let missed=false;
     const parts=[];
-    if(pay&&pay.daysSinceLast<=10) parts.push(`${_ICO_CHECK}Paycheck ${fmtM(pay.lastAmount)} on ${_shortDate(txnLocalDate(pay.last))}`);
+    if(pay&&pay.daysSinceLast<=10) parts.push(`${_ICO_CHECK}Paid ${_shortDate(txnLocalDate(pay.last))}`);
     else if(pay&&pay.daysSinceLast>=38){ parts.push(`${_ICO_WARN}No paycheck in ${pay.daysSinceLast} days`); missed=true; }
-    if(extraIncome>0) parts.push(`+${fmtM(extraIncome)} extra`);
+    if(extraIncome>0) parts.push(`<span style="color:var(--green)">+${fmtM(extraIncome)} extra income</span>`);
     statusEl.innerHTML=parts.join('<span class="fin-dot">·</span>');
-    // Editorial: a missed paycheck stays red; the healthy case is quiet
-    // (the CSS sets --sub) — no green wash on a routine "got paid" line.
     statusEl.style.color=missed?'var(--red)':'';
     statusEl.style.display=parts.length?'':'none';
   }
@@ -1806,8 +1805,8 @@ function renderSpendingExtras(){
       const perDay=free/daysLeft;
       safeEl.style.display='';
       safeEl.innerHTML=free>=0
-        ? `<b style="color:var(--green)">${fmtM(perDay)}/day</b> safe for the next ${daysLeft} day${daysLeft===1?'':'s'}${billTotal>0?` · ${fmtM(billTotal)} in bills still due`:''}`
-        : `<b style="color:var(--red)">${fmtM(Math.abs(free))} over</b> after ${fmtM(billTotal)} of bills still due`;
+        ? `<b style="color:var(--green)">${fmtM(perDay)}/day</b> safe for the next ${daysLeft} day${daysLeft===1?'':'s'}`
+        : `<b style="color:var(--red)">${fmtM(Math.abs(free))} over</b> for the month`;
     } else safeEl.style.display='none';
   }
 }
