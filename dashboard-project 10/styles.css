@@ -50,7 +50,7 @@
   /* Surfaces — warm bone */
   --bg:#f7f6f3;--card:#ffffff;--card2:#f2f0ea;--card3:#fcfcfb;
   --border:#e6e1d6;--border2:#d8d2c4;
-  --text:#2a2723;--sub:#6a6153;--muted:#79715f;
+  --text:#2a2723;--sub:#655d4f;--muted:#6f6857;
   --track:#ece8de;--seg-active:#ffffff;
   --divider:rgba(42,39,35,.10);--pill-bg:#f2f0ea;
   --hair:#ece8de;
@@ -80,7 +80,7 @@
 
   --bg:#17150f;--card:#201d16;--card2:#26221a;--card3:#141209;
   --border:#2f2b22;--border2:#3d382c;
-  --text:#ece6da;--sub:#a49c8b;--muted:#6d6656;
+  --text:#ece6da;--sub:#b0a793;--muted:#8a8271;
   --track:#282318;--seg-active:#2f2b22;
   --divider:rgba(236,230,218,.12);--pill-bg:#26221a;
   --hair:#282318;
@@ -1816,12 +1816,9 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 #page-finance .goal-foot-row{margin-top:9px;font-size:12px;color:var(--sub);gap:6px 14px}
 #page-finance .goal-pct{color:var(--sub)}
 
-/* Recent transactions header + de-carded list.
-   Recent is a bare div, not a .fin-collapsible, so it doesn't pick up the
-   section rule above — give it the same top hairline + 26px lead so it reads
-   as a peer section and doesn't butt against the 6-Month Trend labels. */
-#page-finance .txn-list-hdr{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding-top:26px;border-top:1px solid var(--hair)}
-#page-finance .txn-list-hdr .fin-section-title{margin:0;white-space:nowrap}
+/* Recent transactions — now a normal collapsible section ("Recent" is the
+   header); the row inside its body just holds the search field. */
+#page-finance .txn-list-hdr{display:flex;align-items:center;gap:14px;margin-bottom:10px}
 #page-finance #txnList{background:none;border:0;border-radius:0;padding:0}
 #page-finance .txn-search{background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:6px 2px;font-size:13px}
 #page-finance .txn-search:focus{border-bottom-color:var(--text);outline:none}
@@ -1862,6 +1859,30 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 }
 #page-finance .btn-new{border-radius:var(--radius-sm)}
 
+/* ═══ EDITORIAL — modals ═══
+   Serif title, hairline-underline text inputs (matching the Finance search /
+   watchlist fields) instead of the filled iOS boxes. Date/time/select keep a
+   light box so they stay recognisably tappable. Global — every modal moves
+   to the editorial world together. */
+.modal{border-radius:var(--radius-lg)}
+.modal-title{font-family:var(--font-serif);font-optical-sizing:auto;font-size:22px;font-weight:500;letter-spacing:-.02em;margin-bottom:20px}
+.form-label{color:var(--sub)}
+.form-input{
+  background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;
+  padding:8px 2px;font-size:14px;
+}
+.form-input:focus,.form-input:focus-visible{border-color:var(--text);border-bottom-color:var(--text)}
+.form-input::placeholder{color:var(--muted)}
+textarea.form-input{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px}
+input[type="date"].form-input,input[type="time"].form-input,input[type="datetime-local"].form-input,
+.form-select{
+  background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;
+}
+.btn-cancel{background:none;border:0;color:var(--sub);padding:10px 14px}
+.btn-cancel:hover{color:var(--text)}
+.btn-save:hover{background:var(--text)}
+#goalDeleteBtn{color:var(--red)!important}
+
 /* Drawn status marks (replacing ✓ / ⚠ glyphs) + the meta-dot separator */
 .fin-ico{width:.95em;height:.95em;display:inline-block;vertical-align:-.14em;margin-right:.35em;flex-shrink:0}
 .fin-dot{margin:0 .5em;color:var(--muted)}
@@ -1883,3 +1904,37 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
   font-family:var(--font-serif);font-style:italic;font-optical-sizing:auto;
   font-size:14px;color:var(--sub);letter-spacing:0;
 }
+
+
+/* ═══ EDITORIAL — Finance restructure: This Month + Accounts & tools ═══
+   Payday + spending pace + saved-this-month merged into one "This Month"
+   section; reference data and occasional tools moved into a single collapsed
+   "Accounts & tools" group so the daily scroll is ~4 sections, not ~13. */
+
+/* This Month — payday sub-block, a hairline, then the spend pace + saved line */
+#page-finance .tm-payday{display:block}
+#page-finance .tm-payday-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+#page-finance .tm-rule{height:1px;background:var(--hair);margin:18px 0 2px}
+#page-finance .tm-saved-line{font-size:13px;color:var(--sub);margin-top:8px}
+#page-finance .tm-saved-line b{font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;color:var(--text);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+
+/* Accounts & tools group — the wrapper is a normal .fin-collapsible (top
+   hairline + serif header + chevron). Inside, each .fin-sub is a lighter
+   sub-section: hairline rule + small tracked-caps label, no serif head, no
+   nested chevron. Sub-sections that hide until they have data still do. */
+#page-finance .fin-tier3 > [data-role="finBody"]{padding-top:2px}
+#page-finance .fin-sub{padding:22px 0 0;border-top:1px solid var(--hair)}
+#page-finance .fin-sub:first-child{border-top:0;padding-top:4px}
+#page-finance .fin-sub-hdr{
+  font-family:-apple-system,system-ui,sans-serif;
+  font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--sub);margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+#page-finance .fin-sub-hdr .fin-hdr-sum{letter-spacing:0;text-transform:none;font-weight:400;color:var(--muted)}
+#page-finance .fin-sub-hdr-link{
+  background:none;border:0;padding:0;cursor:pointer;font-family:inherit;
+  font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);
+}
+#page-finance .fin-sub #trendChart{margin-top:4px}
+#page-finance .fin-sub .watchlist-add-row{margin-top:0}

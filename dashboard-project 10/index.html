@@ -325,25 +325,26 @@
         </div>
       </div>
 
-      <!-- Payday -->
-      <div class="payday-card" id="paydayCard">
-        <div class="payday-label">Next Payday</div>
-        <div class="payday-when-row">
-          <span class="payday-when" id="paydayWhen">&mdash;</span>
-          <span class="payday-in" id="paydayIn"></span>
-        </div>
-        <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
-        <div class="payday-ends"><span id="paydayEndA"></span><span id="paydayEndB"></span></div>
-        <div class="payday-status" id="paydayStatus" style="display:none"></div>
-      </div>
-
-      <!-- Spending Card (total + by-category breakdown, merged — was two cards) -->
-      <div class="fin-collapsible" data-fin-id="spending">
+      <!-- This Month — payday countdown, spending pace and saved-this-month,
+           merged (was three separate sections that repeated the payday date). -->
+      <div class="fin-collapsible" data-fin-id="thismonth">
         <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          <span>Spending</span>
+          <span>This Month</span>
           <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
         </div>
         <div data-role="finBody">
+          <!-- payday sub-block keeps id="paydayCard" so renderFinanceTab's
+               show/hide-when-no-paycheck-history toggle still targets it -->
+          <div class="tm-payday" id="paydayCard">
+            <div class="tm-payday-row">
+              <span class="payday-when" id="paydayWhen">&mdash;</span>
+              <span class="payday-in" id="paydayIn"></span>
+            </div>
+            <div class="payday-track"><div class="payday-fill" id="paydayFill" style="width:50%"></div></div>
+            <div class="payday-ends"><span id="paydayEndA"></span><span id="paydayEndB"></span></div>
+            <div class="payday-status" id="paydayStatus" style="display:none"></div>
+            <div class="tm-rule"></div>
+          </div>
           <div class="spend-total-row">
             <span class="spend-total-num" id="spendingTotal">$0</span>
             <span class="spend-total-of" id="spendingOf">of $0</span>
@@ -354,6 +355,7 @@
             <div class="spend-total-track"><div class="spend-total-fill" id="spendingTotalFill"></div></div>
           </div>
           <div class="spend-safe-line" id="spendSafeLine" style="display:none"></div>
+          <div class="tm-saved-line" id="tmSavedLine" style="display:none"></div>
           <div id="catBarChart" style="margin-top:14px"></div>
         </div>
       </div>
@@ -378,61 +380,7 @@
         </div>
       </div>
 
-      <!-- Credit cards -->
-      <div class="fin-collapsible" data-fin-id="creditcards" id="ccCard" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          <span>Credit cards <span class="fin-hdr-sum" id="ccHdrSum"></span></span>
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="cc-top">
-            <div class="cc-num" id="ccNum">—</div>
-            <div class="cc-util" id="ccUtil"></div>
-          </div>
-          <div id="ccList"></div>
-        </div>
-      </div>
-
-      <!-- P2P inflow review — Venmo/Zelle/etc. that could be income OR a
-           friend paying Dan back. He classifies each one himself. -->
-      <div class="fin-collapsible inflow-review-card" data-fin-id="inflowreview" id="inflowReviewCard" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          <span>Review payments received <span class="fin-hdr-sum" id="inflowHdrSum"></span></span>
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="inflow-review-sub">Venmo / Zelle / PayPal in — real income, or someone paying you back?</div>
-          <div id="inflowReviewList"></div>
-        </div>
-      </div>
-
-      <!-- Savings Rate (#30) — radial gauge; this number only moves once a
-           month so it earns a heavier treatment than a flat progress bar.
-           Collapsible like the other Finance sections. -->
-      <div class="fin-collapsible" id="savingsRateCard" data-fin-id="savingsrate" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Savings Rate
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="savings-rate-wrap">
-            <div class="savings-rate-gauge">
-              <svg width="88" height="88" viewBox="0 0 88 88">
-                <circle class="savings-rate-gauge-track" cx="44" cy="44" r="36"/>
-                <circle class="savings-rate-gauge-fill" id="savingsRateFill" cx="44" cy="44" r="36"/>
-              </svg>
-              <span id="savingsRatePct">—</span>
-            </div>
-            <div class="savings-rate-detail">
-              <div class="savings-rate-excess" id="savingsRateExcess"></div>
-              of income saved this month<br><span id="savingsRateDetail"></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Goals (folded into Finance; kept near the top per Dan's request;
-           collapsible like Accounts/Investments/Watchlist below) ── -->
+      <!-- ── Goals ── -->
       <div class="fin-collapsible" data-fin-id="goals">
         <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
           Goals
@@ -447,113 +395,98 @@
         </div>
       </div>
 
-      <!-- Stock Watchlist — dashboard-managed list of tickers Dan's tracking
-           (separate from real Plaid holdings above). Prices are fetched live
-           on demand (watchlist-quotes.js → Finnhub), not on every render, so
-           this stays visible even when empty (unlike Investments) since
-           adding the first ticker is the point of the section. -->
-      <div class="fin-collapsible" data-fin-id="watchlist" id="watchlistSection">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Watchlist
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="watchlist-add-row">
-            <input type="text" id="watchlistTickerInput" placeholder="Ticker (e.g. AAPL)" maxlength="10" autocapitalize="characters" onkeydown="if(event.key==='Enter')addWatchlistTicker()">
-            <button class="btn-new" onclick="addWatchlistTicker()">+ Add</button>
-          </div>
-          <div id="watchlistRow"></div>
-        </div>
-      </div>
-
-      <!-- Investments (collapsible; only shown once real holdings data exists —
-           see plaid-investments-sync.js. Hidden entirely otherwise, not an
-           empty-state, since most accounts won't have this. -->
-      <div class="fin-collapsible" data-fin-id="investments" id="investmentsSection" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Investments
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div id="investmentsCashRow" style="margin-bottom:12px"></div>
-          <div id="investmentsRow"></div>
-        </div>
-      </div>
-
-      <!-- Accounts Table (collapsible) -->
-      <div class="fin-collapsible" data-fin-id="accounts">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Accounts
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div id="acctCardsRow"></div>
-        </div>
-      </div>
-
-      <!-- 6-Month Trend (#22) — collapsible like the other Finance sections. -->
-      <div class="fin-collapsible" id="trendCard" data-fin-id="trend">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          6-Month Trend
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="trend-chart" id="trendChart"></div>
-          <div style="display:flex;justify-content:space-around" id="trendLabels"></div>
-        </div>
-      </div>
-
-      <!-- Best Card lookup (collapsible, hidden until rewards are configured) -->
-      <div class="fin-collapsible" id="bestCardCard" data-fin-id="bestcard" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          <span>Best Card For</span>
-          <span style="display:flex;align-items:center;gap:8px">
-            <button onclick="event.stopPropagation();openCardRewardsModal()" style="background:none;border:none;color:var(--green);font-size:13px;cursor:pointer;font-family:inherit">Edit rewards</button>
-            <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-          </span>
-        </div>
-        <div data-role="finBody">
-          <div class="bestcard-chips" id="bestCardChips"></div>
-          <div id="bestCardList"></div>
-        </div>
-      </div>
-
-      <!-- Missed rewards report (collapsible, hidden until there's data) -->
-      <div class="fin-collapsible" id="missedRewardsCard" data-fin-id="missedrewards" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          <span>Missed Rewards</span>
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div id="missedRewardsBody"></div>
-        </div>
-      </div>
-
-      <!-- Subscriptions — auto-detected from recurring merchant/amount/interval
-           patterns. Collapsible like the other Finance sections; hidden
-           entirely until detectSubscriptions() finds something (see
-           renderRecurringTxns's display toggle, unrelated to collapse state). -->
-      <div class="fin-collapsible" id="recurringTxnCard" data-fin-id="subscriptions" style="display:none">
-        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
-          Subscriptions
-          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
-        </div>
-        <div data-role="finBody">
-          <div class="sub-total" id="subTotalLine"></div>
-          <div id="recurringTxnList"></div>
-        </div>
-      </div>
-
-
       <!-- Recent Transactions -->
-      <div class="txn-list-hdr">
-        <span class="fin-section-title">Recent</span>
-        <div class="txn-search-wrap" style="flex:1;margin:0">
-          <input class="txn-search" id="txnSearch" placeholder="Search transactions..." oninput="renderFinanceTab()">
-          <span class="txn-count" id="txnCount"></span>
+      <div class="fin-collapsible" data-fin-id="recent">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Recent</span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+          <div class="txn-list-hdr">
+            <div class="txn-search-wrap" style="flex:1;margin:0">
+              <input class="txn-search" id="txnSearch" placeholder="Search transactions..." oninput="renderFinanceTab()">
+              <span class="txn-count" id="txnCount"></span>
+            </div>
+          </div>
+          <div id="txnList"></div>
         </div>
       </div>
-      <div id="txnList"></div>
+
+      <!-- ── Accounts & tools — Tier 3. One collapsed group for the reference
+           data and the once-in-a-while tools, so the daily view stays short.
+           Each child is a plain sub-section (.fin-sub), not independently
+           collapsible; the ones that hide themselves until they have data
+           still do (their render fns toggle style.display by id). -->
+      <div class="fin-collapsible fin-tier3 collapsed" data-fin-id="tools" data-fin-default="collapsed">
+        <div class="fin-collapse-hdr" onclick="toggleFinCollapse(this)">
+          <span>Accounts &amp; tools</span>
+          <button class="fin-collapse-btn" data-role="finChevron" tabindex="-1">⌃</button>
+        </div>
+        <div data-role="finBody">
+
+          <div class="fin-sub" data-fin-id="accounts">
+            <div class="fin-sub-hdr">Accounts</div>
+            <div id="acctCardsRow"></div>
+          </div>
+
+          <div class="fin-sub" id="ccCard" style="display:none">
+            <div class="fin-sub-hdr">Credit cards <span class="fin-hdr-sum" id="ccHdrSum"></span></div>
+            <div class="cc-top">
+              <div class="cc-num" id="ccNum">—</div>
+              <div class="cc-util" id="ccUtil"></div>
+            </div>
+            <div id="ccList"></div>
+          </div>
+
+          <div class="fin-sub" id="watchlistSection">
+            <div class="fin-sub-hdr">Watchlist</div>
+            <div class="watchlist-add-row">
+              <input type="text" id="watchlistTickerInput" placeholder="Ticker (e.g. AAPL)" maxlength="10" autocapitalize="characters" onkeydown="if(event.key==='Enter')addWatchlistTicker()">
+              <button class="btn-new" onclick="addWatchlistTicker()">+ Add</button>
+            </div>
+            <div id="watchlistRow"></div>
+          </div>
+
+          <div class="fin-sub" id="investmentsSection" style="display:none">
+            <div class="fin-sub-hdr">Investments</div>
+            <div id="investmentsCashRow" style="margin-bottom:12px"></div>
+            <div id="investmentsRow"></div>
+          </div>
+
+          <div class="fin-sub inflow-review-card" id="inflowReviewCard" style="display:none">
+            <div class="fin-sub-hdr">Review payments received <span class="fin-hdr-sum" id="inflowHdrSum"></span></div>
+            <div class="inflow-review-sub">Venmo / Zelle / PayPal in — real income, or someone paying you back?</div>
+            <div id="inflowReviewList"></div>
+          </div>
+
+          <div class="fin-sub" id="trendCard">
+            <div class="fin-sub-hdr">6-month spending</div>
+            <div class="trend-chart" id="trendChart"></div>
+            <div style="display:flex;justify-content:space-around" id="trendLabels"></div>
+          </div>
+
+          <div class="fin-sub" id="bestCardCard" style="display:none">
+            <div class="fin-sub-hdr">
+              <span>Best card for</span>
+              <button class="fin-sub-hdr-link" onclick="openCardRewardsModal()">Edit rewards</button>
+            </div>
+            <div class="bestcard-chips" id="bestCardChips"></div>
+            <div id="bestCardList"></div>
+          </div>
+
+          <div class="fin-sub" id="missedRewardsCard" style="display:none">
+            <div class="fin-sub-hdr">Missed rewards</div>
+            <div id="missedRewardsBody"></div>
+          </div>
+
+          <div class="fin-sub" id="recurringTxnCard" style="display:none">
+            <div class="fin-sub-hdr">Subscriptions</div>
+            <div class="sub-total" id="subTotalLine"></div>
+            <div id="recurringTxnList"></div>
+          </div>
+
+        </div>
+      </div>
 
       <!-- Hidden legacy elements for JS compat -->
       <div style="display:none">
@@ -945,10 +878,6 @@
     <div class="form-group">
       <label class="form-label">Goal Name</label>
       <input class="form-input" id="goalName" placeholder="e.g. Emergency Fund">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Emoji</label>
-      <input class="form-input" id="goalEmoji" placeholder="🎯" style="max-width:80px">
     </div>
     <div class="form-group">
       <label class="form-label">Target Amount ($)</label>

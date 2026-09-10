@@ -456,7 +456,10 @@ function renderFinanceTab(){
 // collapsing only hides the body, never the outer .fin-collapsible/.fin-card.
 function applyFinCollapseState(){
   document.querySelectorAll('.fin-collapsible').forEach(card=>{
-    const collapsed=localStorage.getItem('finCollapsed-'+card.dataset.finId)==='1';
+    const stored=localStorage.getItem('finCollapsed-'+card.dataset.finId);
+    // No stored preference yet: honour data-fin-default ("collapsed" for the
+    // Accounts & tools group), otherwise expanded.
+    const collapsed=stored===null?card.dataset.finDefault==='collapsed':stored==='1';
     card.classList.toggle('collapsed',collapsed);
   });
 }
@@ -765,7 +768,9 @@ window.deleteAccount=async function(id){
   saveData();closeModal('accountModal');renderFinanceTab();renderGoals();renderNWSparkline();toast('Account removed');
 };
 // ── GOALS ─────────────────────────────────────────────────────────
-const GOAL_COLORS=['#30d158','#0a84ff','#ff9f0a','#bf5af2','#ff453a','#64d2ff','#ff6eb4','#30d158'];
+// Editorial tonal ramp (was the iOS system palette). Only referenced as a
+// fallback tint now — goal bars themselves use --text.
+const GOAL_COLORS=['var(--accent)','#7c7360','#c9a37a','#9a8c73','#b3a17e','#847c6c','#6d6656','var(--accent)'];
 
 // Sum of a contribution-tracked goal's logged contributions, scoped to the
 // current calendar year when resetAnnually is set (the default — the whole
@@ -944,7 +949,6 @@ window.openGoalModal=function(id){
   document.getElementById('goalEditId').value=id||'';
   document.getElementById('goalModalTitle').textContent=g?'Edit Goal':'New Goal';
   document.getElementById('goalName').value=g?g.name:'';
-  document.getElementById('goalEmoji').value=g?g.emoji:'🎯';
   document.getElementById('goalTarget').value=g?g.target:'';
   document.getElementById('goalCurrent').value=g?g.current:'';
   document.getElementById('goalDeleteBtn').style.display=g?'':'none';
@@ -1010,7 +1014,6 @@ window.updateGoalCurrentFromAccounts=function(){
 
 window.saveGoal=function(){
   const name=document.getElementById('goalName').value.trim();
-  const emoji=document.getElementById('goalEmoji').value.trim()||'🎯';
   const target=parseFloat(document.getElementById('goalTarget').value)||0;
   const current=parseFloat(document.getElementById('goalCurrent').value)||0;
   const trackContributions=document.getElementById('goalTrackContributions').checked;
@@ -1029,12 +1032,12 @@ window.saveGoal=function(){
   if(editId){
     const g=appData.goals.find(x=>x.id===editId);
     if(g){
-      Object.assign(g,{name,emoji,target,trackContributions});
+      Object.assign(g,{name,target,trackContributions});
       if(trackContributions){g.resetAnnually=resetAnnually;g.contributions=g.contributions||[];g.autoMatchKeyword=autoMatchKeyword||null;g.targetDate=targetDate;g.annualLimit=annualLimit;}
       else{Object.assign(g,{current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});g.autoMatchKeyword=null;g.targetDate=null;g.annualLimit=null;}
     }
   } else {
-    const g={id:uid(),name,emoji,target,created:todayStr()};
+    const g={id:uid(),name,target,created:todayStr()};
     if(trackContributions)Object.assign(g,{trackContributions:true,resetAnnually,contributions:[],autoMatchKeyword:autoMatchKeyword||null,targetDate,annualLimit});
     else Object.assign(g,{current,linkedAccountIds,linkedAccountId:linkedAccountIds[0]||null});
     appData.goals.push(g);
@@ -1348,56 +1351,26 @@ window.classifyInflow=function(id,kind){
 };
 
 // ── #30: Savings rate ─────────────────────────────────────────────
+// Savings rate is now a single line in the "This Month" block (#tmSavedLine)
+// rather than its own radial-gauge section — the number moves once a month and
+// didn't earn that much visual weight.
 function renderSavingsRate(mt){
-  const card=document.getElementById('savingsRateCard');
-  if(!card)return;
+  const line=document.getElementById('tmSavedLine');
+  if(!line)return;
   // Income uses monthlyIncome() rather than mt directly — mt buckets purely
-  // by posted date, which would count an end-of-month paycheck (and its
-  // ~$5.5k) toward the month it happened to post in instead of the month
-  // it actually funds. See monthlyIncome()'s comment in core.js.
+  // by posted date, which would count an end-of-month paycheck toward the
+  // month it posted in instead of the month it funds. See monthlyIncome().
   const income=monthlyIncome(appData.transactions,currentMonth,currentYear);
-  // Expenses = net discretionary spend (outflows minus Savings transfers and
-  // minus refunds/reimbursements) — same figure as the spending card total.
+  // Expenses = net discretionary spend — same figure as the spending total.
   const expenses=Math.max(0,netSpend(mt));
-  if(income<=0){card.style.display='none';return;}
-  card.style.display='';
-  const rate=Math.round((income-expenses)/income*100);
-  const ratePct=document.getElementById('savingsRatePct');
-  const fill=document.getElementById('savingsRateFill');
-  const detail=document.getElementById('savingsRateDetail');
-  const excessEl=document.getElementById('savingsRateExcess');
-  // Radial gauge: circumference for the SVG circle's r=36 (see index.html).
-  // stroke-dashoffset counts down from the full circumference (empty) to 0
-  // (full loop) as the percentage climbs — same math as the mockup's gauge.
-  const GAUGE_C=2*Math.PI*36;
-  const setGauge=(pctClamped,color)=>{
-    if(!fill)return;
-    fill.style.strokeDasharray=GAUGE_C;
-    fill.style.strokeDashoffset=GAUGE_C*(1-pctClamped/100);
-    fill.style.stroke=color;
-  };
-  // A real month's rate realistically runs roughly -100% (spent double your
-  // income) to 100% (saved it all). Anything far past that floor means the
-  // income side is too small to be a real denominator yet — e.g. only a
-  // refund has posted and the paycheck hasn't landed — not that you
-  // actually overspent 20x. Say that plainly instead of a nonsense number.
-  if(rate<-200){
-    if(ratePct){ratePct.textContent='—';ratePct.style.color='var(--muted)';}
-    setGauge(0,'var(--track)');
-    if(excessEl)excessEl.textContent='';
-    if(detail)detail.textContent=`Not enough income posted yet this month (${fmtM(income)} in vs ${fmtM(expenses)} spent)`;
-    return;
-  }
-  if(ratePct)ratePct.textContent=rate+'%';
-  const color=rate>=20?'var(--text)':rate>=10?'var(--yellow)':'var(--red)';
-  if(ratePct)ratePct.style.color='var(--text)';
-  setGauge(Math.max(0,Math.min(rate,100)),color);
   const excess=income-expenses;
-  if(excessEl){
-    excessEl.textContent=excess>=0?`${fmtM(excess)} left over`:`${fmtM(Math.abs(excess))} over`;
-    excessEl.style.color=excess>=0?'var(--text)':'var(--red)';
-  }
-  if(detail)detail.textContent=`${fmtM(income)} income · ${fmtM(expenses)} expenses`;
+  const rate=income>0?Math.round(excess/income*100):0;
+  // income too small to be a real denominator yet (only a refund posted, say)
+  if(income<=0||rate<-200){line.style.display='none';return;}
+  line.style.display='';
+  line.innerHTML=excess>=0
+    ? `Kept <b>${fmtM(excess)}</b> of ${fmtM(income)} income &middot; ${rate}% saved`
+    : `<b style="color:var(--red)">${fmtM(Math.abs(excess))} over</b> &middot; spent ${fmtM(expenses)} of ${fmtM(income)}`;
 }
 
 // ── #21: Category bar chart ───────────────────────────────────────
@@ -1772,8 +1745,10 @@ function renderRunway(){
   const fill=document.getElementById('runwayFill');
   fill.style.transform='scaleX('+(Math.max(3,Math.min(100,runwayDays/daysToPayday*100))/100)+')';
   fill.style.background=covered?'var(--green)':'var(--red)';
+  // payday date/countdown lives in the This Month block right above — no need
+  // to repeat it here.
   document.getElementById('runwaySub').textContent=hidden?'Amounts hidden'
-    :`${fmtM(cash)} in checking · ${fmtM(dailyBurn)}/day recent pace · payday ${_shortDate(pay.next)} (${pay.daysUntil}d)`;
+    :`${fmtM(cash)} in checking · ${fmtM(dailyBurn)}/day recent pace`;
   const bEl=document.getElementById('runwayBills');
   bEl.innerHTML=(bills.length&&!hidden)
     ?`<div class="runway-bills-hdr">Bills before payday</div>`+bills.slice(0,4).map(b=>
