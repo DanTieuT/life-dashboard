@@ -387,6 +387,24 @@ function renderFinanceTab(){
     statusEl.style.display=parts.length?'':'none';
   }
 
+  // ── Bank-data freshness ─────────────────────────────────────────
+  // appData.plaidLastPull (epoch ms) is when Plaid last successfully pulled
+  // from the bank at the source — set server-side by plaid-sync-core.js from
+  // item.status.transactions.last_successful_update. Distinct from when this
+  // app last called Plaid. Hidden entirely when no Plaid item has reported one.
+  const freshEl=pEl('tmFresh');
+  if(freshEl){
+    const pulled=appData.plaidLastPull||0;
+    if(pulled>0){
+      const ageH=(Date.now()-pulled)/3600000;
+      freshEl.textContent=`Bank data from ${fmtTimeAgo(new Date(pulled))}`;
+      freshEl.style.color=ageH>36?'var(--yellow)':'';
+      freshEl.style.display='';
+    } else {
+      freshEl.style.display='none';
+    }
+  }
+
   // ── Spending total + progress (category breakdown renders via #21 below) ──
   const totalEl=document.getElementById('spendingTotal');
   const ofEl=document.getElementById('spendingOf');

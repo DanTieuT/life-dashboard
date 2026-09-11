@@ -76,7 +76,7 @@ window.appData = {
   intention:'', focusTasks:[], projects:[], userProjects:[], habits:[],
   events:[], transactions:[], budget:{...DEFAULT_BUDGET}, savings:{...DEFAULT_SAVINGS},
   accounts:[], goals:[], notes:[], profile:'', categoryBudgets:{}, netWorthHistory:[],
-  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}, packages:[], reminders:[], cardRewards:{}
+  rdoSchedule:{...DEFAULT_RDO_SCHEDULE}, packages:[], reminders:[], cardRewards:{}, plaidLastPull:0
 };
 window._dataLoaded=false; // true once loadData() resolves — render skeletons until then
 window.currentFilter='all';
@@ -418,6 +418,9 @@ async function loadData(){
         investmentHoldings:d.investmentHoldings||[],
         investmentHoldingsSyncedAt:d.investmentHoldingsSyncedAt||0,
         stockWatchlist:d.stockWatchlist||[],
+        // epoch ms — when Plaid last pulled fresh data from the bank (server-set
+        // by plaid-sync-core.js; the client only reads it)
+        plaidLastPull:d.plaidLastPull||0,
       };
     } else {
       // No document at this path. Almost always means we're authenticated as a

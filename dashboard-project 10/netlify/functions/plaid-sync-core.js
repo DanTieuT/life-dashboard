@@ -55,6 +55,8 @@ async function syncItems(db, itemDocs) {
     .toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
 
   let balancesUpdated = 0, txnsAdded = 0, txnsRemoved = 0, contribsAdded = 0;
+  // Per-item "when did Plaid last pull from the bank" timestamps (epoch ms).
+  const bankPullTimes = [];
 
   // A freshly-posted txn (`t`) carries pendingPlaidTxnId pointing at the
   // pending row it replaces. Update that row in place — new plaidTxnId, new
@@ -86,6 +88,19 @@ async function syncItems(db, itemDocs) {
         if (acct.type === 'debt' && a.balances.limit != null) acct.creditLimit = Math.abs(a.balances.limit);
         acct.updatedAt = Date.now();
         balancesUpdated++;
+      }
+
+      // ── When Plaid itself last pulled from this bank ──────────
+      // item.status.transactions.last_successful_update — rewritten each time
+      // Plaid successfully connects to the institution. Not the same as
+      // acct.updatedAt above (that's just now, when THIS function ran).
+      // Investments-only items won't have a transactions status; skip those.
+      try {
+        const info = await plaid.itemGet(item.accessToken);
+        const ts = info?.status?.transactions?.last_successful_update;
+        if (ts) bankPullTimes.push(Date.parse(ts));
+      } catch (e) {
+        console.error(`[plaid-sync] item/get ${itemDoc.id} failed:`, e.message);
       }
 
       // ── Transactions (cursor sync) ────────────────────────────
@@ -143,7 +158,13 @@ async function syncItems(db, itemDocs) {
     }
   }
 
-  await ref.update({ accounts, transactions, goals });
+  const payload = { accounts, transactions, goals };
+  // Store the OLDEST across items — "all your bank data is at least this
+  // fresh". A broken connection then correctly shows as stale rather than
+  // being masked by a healthy one. Only write when we actually got a value,
+  // so a total item/get outage doesn't wipe the last known time.
+  if (bankPullTimes.length) payload.plaidLastPull = Math.min(...bankPullTimes);
+  await ref.update(payload);
   const summary = `Balances: ${balancesUpdated}, +${txnsAdded} txns, -${txnsRemoved}${contribsAdded ? `, +${contribsAdded} contributions` : ''}`;
   return { summary, balancesUpdated, txnsAdded, txnsRemoved, contribsAdded };
 }

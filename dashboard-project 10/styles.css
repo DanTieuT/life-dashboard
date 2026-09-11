@@ -1945,6 +1945,11 @@ input[type="date"].form-input,input[type="time"].form-input,input[type="datetime
   margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);
 }
 #page-finance .tm-saved-line b{font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;color:var(--text);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+/* bank-data freshness — quiet footnote under the saved line */
+#page-finance .tm-fresh{
+  margin-top:6px;font-size:11px;color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
 
 /* Accounts & tools group — the wrapper is a normal .fin-collapsible (top
    hairline + serif header + chevron). Inside, each .fin-sub is a lighter

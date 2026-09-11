@@ -276,6 +276,11 @@ module.exports = {
   // Items, so a stale number here is more likely the current/available
   // fallback below picking the wrong field than a caching-frequency problem.
   getBalances: (accessToken) => call('/accounts/get', { access_token: accessToken }),
+  // /item/get carries item.status.transactions.last_successful_update — an ISO
+  // timestamp Plaid rewrites each time it successfully connects to the bank and
+  // pulls data. That's "when the bank data was last refreshed at the source",
+  // distinct from when this app last called Plaid. Free endpoint.
+  itemGet: (accessToken) => call('/item/get', { access_token: accessToken }),
   transactionsSync: (accessToken, cursor) => call('/transactions/sync', { access_token: accessToken, cursor: cursor || undefined, count: 200 }),
   // Point an already-linked Item at our webhook URL (new Items get it from
   // the link token instead).
