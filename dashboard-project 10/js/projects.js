@@ -201,7 +201,7 @@ function renderDashProjectsWidget(){
   const subEl=document.getElementById('dashProjSub');
   if(subEl)subEl.textContent=`${active.length} active build${active.length!==1?'s':''} · ${inProgress.length} in progress`;
   if(!active.length){
-    el.innerHTML='<div style="padding:24px 20px;color:var(--muted);font-size:13px;text-align:center">No active projects — <button onclick="switchTab(\'projects\')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:13px;font-family:inherit">add one →</button></div>';
+    el.innerHTML='<div style="padding:4px 0;color:var(--sub);font-size:13px;font-family:var(--font-serif);font-style:italic">No active projects — <button onclick="switchTab(\'projects\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;font-family:inherit;font-style:normal">add one →</button></div>';
     return;
   }
   el.innerHTML=active.slice(0,5).map(p=>{
