@@ -2031,7 +2031,11 @@ input[type="date"].form-input,input[type="time"].form-input,input[type="datetime
    wrapper, so it never got de-carded with the rest. Flatten it here: Net
    Worth and Budget are two independent hairline sections now. */
 #page-dashboard .money-hero{background:none;box-shadow:none;border-radius:0;margin-bottom:0;overflow:visible}
-#page-dashboard .money-hero .nw-chart-card{padding-left:0;padding-right:0;padding-bottom:0}
+/* padding-bottom:0 here used to leave the allocation legend (the card's
+   last line) sitting flush against Budget's divider right below it — same
+   "content hugs the next section's hairline" issue fixed on Finance's
+   sections, just missed here since this card isn't a .fin-collapsible. */
+#page-dashboard .money-hero .nw-chart-card{padding-left:0;padding-right:0;padding-bottom:22px}
 
 /* Today — event rows sit flush in the section body now, no side padding */
 #page-dashboard .evt-row{padding:10px 0;border-bottom:1px solid var(--hair)}
