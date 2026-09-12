@@ -345,9 +345,9 @@ input,select,textarea{font-family:inherit}
 .tasks-add-date:focus{border-color:var(--green);color:var(--text)}
 .tasks-add-btn{background:var(--green);color:#000;border:none;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:600;flex-shrink:0}
 .tasks-add-btn:hover{filter:brightness(1.1)}
-.tasks-section{margin-bottom:18px}
+.tasks-section{margin-bottom:26px}
 .tasks-section-body{background:none;border-radius:0;padding:0;box-shadow:none}
-.tasks-section-label{font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:.5px solid var(--divider);padding-bottom:5px;margin-bottom:2px}
+.tasks-section-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--hair);padding-bottom:8px;margin-bottom:4px}
 /* Wraps each row so the swipe-reveal panels (edit/delete) sit clipped
    behind it; the row is opaque and slides over them on swipe. */
 .task-swipe-wrap{position:relative;overflow:hidden}
@@ -389,9 +389,10 @@ input,select,textarea{font-family:inherit}
 #page-tasks .page-hdr-eyebrow{font-size:12px}
 #page-tasks .list-search{font-size:12px;padding:8px 12px;margin-bottom:10px}
 #page-tasks .task-filter-bar{margin-bottom:10px}
-#page-tasks .task-filter-btn{padding:6px 0;font-size:11px}
-.tasks-add-bar{display:block;width:100%;background:var(--green-dim);border:none;border-radius:8px;color:var(--green);font-size:12px;font-weight:600;text-align:center;padding:6px 12px;margin-bottom:14px;cursor:pointer;transition:filter .1s;font-family:inherit}
-.tasks-add-bar:hover{filter:brightness(1.15)}
+#page-tasks .task-filter-btn{padding:6px 13px;font-size:11px}
+/* colors come from the shared ink-fill rule above (.tasks-add-bar is
+   listed there) — this just keeps its own sizing/shape */
+.tasks-add-bar{display:block;width:100%;border-radius:var(--radius-sm);font-size:13px;font-weight:500;text-align:center;padding:9px 12px;margin-bottom:14px;cursor:pointer;transition:filter .1s;font-family:inherit}
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
 .nav-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
 
@@ -1134,8 +1135,12 @@ html.theme-switching *{
 .show-archived-btn:hover{color:var(--sub)}
 
 /* ── TASK NOTES (#13) ───────────────────────────────────────────── */
-.task-notes-indicator{font-size:12px;cursor:pointer;padding:2px 4px;opacity:.5;transition:opacity .15s;flex-shrink:0;line-height:1}
-.task-notes-indicator:hover{opacity:1}
+.task-notes-indicator{
+  background:none;border:none;color:var(--muted);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:12px;cursor:pointer;padding:2px 4px;opacity:.5;transition:opacity .15s,color .15s;flex-shrink:0;line-height:1;
+}
+.task-notes-indicator:hover{opacity:1;color:var(--text)}
 .task-notes-expand{font-size:12px;color:var(--sub);padding:4px 16px 8px 50px;line-height:1.5;display:none;word-break:break-word}
 .task-notes-expand.open{display:block}
 .task-row.has-notes .task-notes-indicator{opacity:.7}
@@ -1403,14 +1408,17 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 .habit-streak{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:700;margin-left:6px;color:var(--yellow);vertical-align:middle}
 
 /* ── LIST SEARCH (tasks / projects) ──────────────────────────────── */
-.list-search{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px}
-.list-search:focus{border-color:var(--green)}
+/* hairline-underline, matching the Finance transaction search */
+.list-search{width:100%;background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:8px 2px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px}
+.list-search:focus{border-bottom-color:var(--text)}
 .list-search::placeholder{color:var(--muted)}
 
-/* ── TASK FILTER TABS (design sync) ─────────────────────────────── */
-.task-filter-bar{display:flex;gap:6px;margin-bottom:16px}
-.task-filter-btn{flex:1;text-align:center;background:none;border:none;color:var(--sub);font-size:12px;font-weight:600;padding:7px 0;border-radius:8px;cursor:pointer;font-family:inherit;transition:background-color .15s,color .15s}
-.task-filter-btn.active{background:var(--invert-bg);color:var(--invert-text)}
+/* ── TASK FILTER TABS — outline chips, matching the Finance range chips
+   (selection is an ink outline, never a filled pill) ──────────────────── */
+.task-filter-bar{display:flex;gap:8px;margin-bottom:16px}
+.task-filter-btn{flex:0 0 auto;text-align:center;background:none;border:1px solid var(--border);color:var(--sub);font-size:12px;font-weight:500;padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s}
+.task-filter-btn.active{background:none;color:var(--text);border-color:var(--text)}
+.task-filter-btn:active{transform:scale(.96)}
 
 /* ── THIS WEEK DIGEST ────────────────────────────────────────────── */
 .week-digest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 20px 18px}
@@ -1865,11 +1873,11 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
 /* ═══ EDITORIAL — shell: primary action buttons ═══
    Ink fill, not the iOS-green slab. Placed last so it wins the cascade over
    the per-component base rules without raising specificity. */
-.btn-new,.tasks-add-btn,.btn-save,.proj-new-btn,.brain-dump-send,.note-save-btn,
+.btn-new,.tasks-add-btn,.tasks-add-bar,.btn-save,.proj-new-btn,.brain-dump-send,.note-save-btn,
 .chat-send-btn{
   background:var(--text);color:var(--bg);border:1px solid var(--text);
 }
-.btn-new:hover,.tasks-add-btn:hover,.btn-save:hover,.proj-new-btn:hover,
+.btn-new:hover,.tasks-add-btn:hover,.tasks-add-bar:hover,.btn-save:hover,.proj-new-btn:hover,
 .brain-dump-send:hover,.note-save-btn:hover,.chat-send-btn:hover{
   filter:brightness(1.12);background:var(--text);
 }

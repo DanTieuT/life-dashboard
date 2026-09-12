@@ -23,7 +23,9 @@ function taskRowHTML(t){
   const subs=t.subtasks||[];
   const subChip=subs.length?`<span class="subtask-chip">${subs.filter(s=>s.done).length}/${subs.length}</span>`:'';
   const hasExpand=!!(t.notes||subs.length);
-  const notesBadge=hasExpand?`<button class="task-notes-indicator" onclick="event.stopPropagation();toggleTaskNotes('${t.id}')" title="Show details">📝</button>`:'';
+  // Drawn icon (was the 📝 emoji) — a full-color glyph was the one loud
+  // thing on an otherwise monochrome row; this inherits currentColor.
+  const notesBadge=hasExpand?`<button class="task-notes-indicator" onclick="event.stopPropagation();toggleTaskNotes('${t.id}')" title="Show details"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg></button>`:'';
   const subRows=subs.map(s=>`<div class="subtask-row">
       <button class="subtask-check${s.done?' checked':''}" onclick="event.stopPropagation();toggleSubtask('${t.id}','${s.id}')">✓</button>
       <span class="subtask-text${s.done?' done':''}">${escHtml(s.text)}</span>
