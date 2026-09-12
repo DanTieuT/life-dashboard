@@ -114,7 +114,7 @@ components:
 
 This is a personal life dashboard set like a well-made page from a household ledger rather than a fintech console. The ground is warm bone paper (#f7f6f3), the ink is a soft near-black (#2a2723, never pure black), and information is organised in document rhythm: hairline rules between sections, not boxes around them. Every monetary figure and every section running head is set in Newsreader, a self-hosted variable display serif; labels, body copy, and controls stay in the system sans stack. One accent — a restrained rust (#9a3b1b in light, a lit #df9163 in dark) — carries links, the active tab, the net-worth trend line, and little else. Status reads as desaturated pastel, closer to a printed annual report than an iOS badge.
 
-The redesign shipped as a **token layer plus shell applied app-wide, with Finance as the first fully-rebuilt surface**. The Dashboard, Tasks, Projects, and Calendar tabs inherit the new palette, serif, translucent chrome, and primary-button treatment, but keep their older card-heavy structure until each is separately rebuilt. Where this document describes a de-carded, hairline-ruled composition, that is the Finance model and the target for the rest of the app; it is not yet the state of those tabs.
+The redesign shipped as a **token layer plus shell applied app-wide**, with Finance rebuilt first and Dashboard following the same model. Both are now de-carded, hairline-ruled documents; Tasks, Projects, and Calendar inherit the new palette, serif, translucent chrome, and primary-button treatment, but keep their older card-heavy structure until each is separately rebuilt. Where this document describes a de-carded, hairline-ruled composition, that is the Finance/Dashboard model and the target for the rest of the app.
 
 The system refuses the stack of glossy, self-contained metric cards that nearly every finance UI ships. It is calm, precise, and consistent from tab to tab; the reader trusts the numbers because the screen looks considered. Light is the default theme (no attribute); `[data-theme="dark"]` is an opt-in tuned inversion, first-class in every surface.
 
@@ -137,7 +137,7 @@ A warm monochrome field — bone, cream, and ink in the same hue family — brok
 ### Neutral
 - **Bone** (#f7f6f3): The app background — warm, paper-like. Dark: #17150f.
 - **Card White** (#ffffff): Genuine card surfaces on the not-yet-rebuilt tabs. Dark: #201d16.
-- **Fold** (#f2f0ea): Recessed fills — pill backgrounds, the active nav-tab chip, the docked FAB circles. Dark: #26221a.
+- **Fold** (#f2f0ea): Recessed fills — pill backgrounds, the active nav-tab chip. Dark: #26221a.
 - **Raised Cream** (#fcfcfb): Barely-lifted alternate surface. Dark: #141209.
 - **Ink** (#2a2723): All primary text. Dark: #ece6da.
 - **Ink Sub** (#6a6153): Secondary text, section labels, captions. Dark: #a49c8b.
@@ -192,13 +192,12 @@ One column, centered, `max-width: 960px`. Desktop padding is 32px; mobile is 14p
 
 ## Elevation & Depth
 
-Near-flat by doctrine. Finance surfaces carry **no shadow and no border** — depth is entirely a matter of hairline rules and whitespace in document rhythm. Legacy cards use one barely-there shadow (`0 1px 2px rgba(42,39,35,.045)`) and no border. The only genuinely raised elements are the "⋯" overflow menu and the two docked FAB circles.
+Near-flat by doctrine. Finance and Dashboard surfaces carry **no shadow and no border** — depth is entirely a matter of hairline rules and whitespace in document rhythm. Legacy cards (Tasks, Projects, Calendar) use one barely-there shadow (`0 1px 2px rgba(42,39,35,.045)`) and no border. The only genuinely raised element left is the "⋯" overflow menu.
 
 ### Shadow Vocabulary
 - **Card rest** (`box-shadow: 0 1px 2px rgba(42,39,35,.045)`): The single elevation for legacy cards on un-rebuilt tabs. Dark: `0 1px 2px rgba(0,0,0,.3)`.
 - **Card hover** (`box-shadow: 0 2px 10px rgba(42,39,35,.06)`): Legacy card hover only.
 - **Menu** (`box-shadow: 0 12px 34px -10px rgba(42,39,35,.3)`): The overflow menu popover.
-- **Docked FAB** (`box-shadow: 0 6px 22px -8px rgba(42,39,35,.32)` chat / `0 6px 18px -8px rgba(42,39,35,.26)` quick-add): Soft ground shadow under the two paper circles bottom-right.
 - **Scroll edge** (`--edge-shadow: 0 12px 22px -18px rgba(42,39,35,.28)`): A soft fade under sticky translucent chrome instead of a hard divider.
 
 ### Named Rules
@@ -254,7 +253,6 @@ A hairline-framed area chart (~118px). Trend polyline is always `var(--accent)` 
 - **Do** keep the net-worth trend line rust in every state; put gain/loss in the delta note, not the line color.
 - **Do** keep rust to links, the active tab, the trend line, the payday number, and pace ticks — a few glyphs per screen.
 - **Do** use the pastel wash + muted-ink pairs for all status, and drawn SVG marks (`_ICO_CHECK` / `_ICO_WARN`) for check/warning symbols.
-- **Do** dock the quick-add and JARVIS buttons as quiet `--card2` paper circles bottom-right, clear of content (they are exempt from any "no floating button" rule).
 - **Do** render translucent chrome with `var(--material-bg)` + `blur(20px) saturate(180%)` and a 1px `--hair` edge; honor reduced-transparency and reduced-motion.
 
 ### Don't:
@@ -263,4 +261,4 @@ A hairline-framed area chart (~118px). Trend polyline is always `var(--accent)` 
 - **Don't** use Unicode glyphs (✓ ⚠ ▲ ▼ ●) as icons — draw them as inline SVG.
 - **Don't** put a kicker or eyebrow above a page or section title, and don't set a section title in uppercase — the serif carries it.
 - **Don't** fill the active range chip or active nav-tab-on-Finance with a color block; selection is an ink outline / rust text.
-- **Don't** apply the de-carded Finance treatment to Dashboard, Tasks, Projects, or Calendar until each is rebuilt — they legitimately still use the legacy card + shadow model under the new tokens.
+- **Don't** apply the de-carded treatment to Tasks, Projects, or Calendar until each is rebuilt — they legitimately still use the legacy card + shadow model under the new tokens. Finance and Dashboard are both rebuilt.

@@ -6,14 +6,17 @@ const PROJECT_STAGES={
   blocked:{label:'⏸ Blocked',color:'var(--red)'},
   done:{label:'✅ Done',color:'rgba(55,217,154,.45)'},
 };
+// Desaturated editorial status — no iOS system colors (see DESIGN.md).
+// "Completed" isn't a warning or a win, just finished — a quiet ink dot,
+// not another colored pill.
 const STAGE_STATUS={
-  planning:{label:'On Track',dotColor:'#30d158',bg:'var(--green-dim)',accent:'#30d158',filterKey:'on_track'},
-  sourcing:{label:'On Track',dotColor:'#30d158',bg:'var(--green-dim)',accent:'#30d158',filterKey:'on_track'},
-  building:{label:'At Risk',dotColor:'#ff9f0a',bg:'rgba(255,159,10,.13)',accent:'#ff9f0a',filterKey:'at_risk'},
-  blocked:{label:'Blocked',dotColor:'#ff453a',bg:'var(--red-dim)',accent:'#ff453a',filterKey:'blocked'},
-  done:{label:'Completed',dotColor:'#0a84ff',bg:'var(--blue-dim)',accent:'#0a84ff',filterKey:'done'},
+  planning:{label:'On Track',dotColor:'var(--green)',bg:'var(--green-dim)',accent:'var(--green)',filterKey:'on_track'},
+  sourcing:{label:'On Track',dotColor:'var(--green)',bg:'var(--green-dim)',accent:'var(--green)',filterKey:'on_track'},
+  building:{label:'At Risk',dotColor:'var(--yellow)',bg:'var(--yellow-dim)',accent:'var(--yellow)',filterKey:'at_risk'},
+  blocked:{label:'Blocked',dotColor:'var(--red)',bg:'var(--red-dim)',accent:'var(--red)',filterKey:'blocked'},
+  done:{label:'Completed',dotColor:'var(--sub)',bg:'var(--card2)',accent:'var(--sub)',filterKey:'done'},
 };
-const PRIORITY_COLORS={high:'#ff453a',medium:'#ff9f0a',low:'#636366'};
+const PRIORITY_COLORS={high:'var(--red)',medium:'var(--yellow)',low:'var(--muted)'};
 let projGroupOpen={};
 let currentProjFilter='all';
 

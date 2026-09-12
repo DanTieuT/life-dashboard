@@ -2095,5 +2095,5 @@ function renderMissedRewards(mt){
 // ── GLOBAL EXPORTS ──
 Object.assign(window, {
   renderGoals, renderNWSparkline, logGoalBalanceHistory,
-  trackNetWorthHistory, goalCurrentBalance,
+  trackNetWorthHistory, goalCurrentBalance, applyFinCollapseState,
 });

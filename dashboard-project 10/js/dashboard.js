@@ -508,7 +508,7 @@ function renderTodaySchedule(){
       else{status='Upcoming';cls='upcoming';}
     }
     const isBold=cls==='now';
-    const calBadge=e.source==='calendar'?`<span style="font-size:9px;font-weight:700;letter-spacing:.5px;background:rgba(10,132,255,.15);color:var(--blue);padding:2px 5px;border-radius:4px;margin-left:5px">CAL</span>`:'';
+    const calBadge=e.source==='calendar'?`<span style="font-size:9px;font-weight:700;letter-spacing:.5px;background:var(--accent-weak);color:var(--accent);padding:2px 5px;border-radius:4px;margin-left:5px">CAL</span>`:'';
     const delBtn=e.source==='local'?`<button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--muted);font-size:12px;margin-left:5px">✕</button>`:'';
     const barColor=(typeof calColorFor==='function'?calColorFor(e):null)?.bg||'var(--blue)';
     return `<div class="evt-row">

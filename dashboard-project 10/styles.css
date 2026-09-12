@@ -1588,111 +1588,111 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
    EDITORIAL — Finance tab
    The ledger, not the dashboard. Cards dissolve into hairline-ruled
    sections in document rhythm; every figure is set in the display serif.
-   Scoped to #page-finance so the other tabs keep their current structure
+   Scoped to :is(#page-finance, #page-dashboard) so the other tabs keep their current structure
    until they're rebuilt. See .impeccable/surfaces/js-finance-js.md.
    ═══════════════════════════════════════════════════════════════════════ */
 
 /* Sections, not cards */
-#page-finance .fin-card,
-#page-finance .nw-chart-card,
-#page-finance .budget-wide-card,
-#page-finance .payday-card,
-#page-finance .fin-collapsible,
-#page-finance .goal-card,
-#page-finance .spending-card{
+:is(#page-finance, #page-dashboard) .fin-card,
+:is(#page-finance, #page-dashboard) .nw-chart-card,
+:is(#page-finance, #page-dashboard) .budget-wide-card,
+:is(#page-finance, #page-dashboard) .payday-card,
+:is(#page-finance, #page-dashboard) .fin-collapsible,
+:is(#page-finance, #page-dashboard) .goal-card,
+:is(#page-finance, #page-dashboard) .spending-card{
   background:none;box-shadow:none;border:0;border-radius:0;
   padding:26px 0 0;margin:0;
   border-top:1px solid var(--hair);
 }
-#page-finance .money-hero{display:block}
-#page-finance .money-hero > .nw-chart-card:first-child,
-#page-finance > .fin-card:first-of-type{border-top:0;padding-top:6px}
-#page-finance .fin-collapsible{overflow:visible}
-#page-finance .fin-collapsible:not(.collapsed) .fin-collapse-hdr{border-bottom:0}
-#page-finance .fin-collapse-hdr{padding:0 0 14px;background:none}
-#page-finance .fin-collapse-hdr:active{background:none}
+:is(#page-finance, #page-dashboard) .money-hero{display:block}
+:is(#page-finance, #page-dashboard) .money-hero > .nw-chart-card:first-child,
+:is(#page-finance, #page-dashboard) > .fin-card:first-of-type{border-top:0;padding-top:6px}
+:is(#page-finance, #page-dashboard) .fin-collapsible{overflow:visible}
+:is(#page-finance, #page-dashboard) .fin-collapsible:not(.collapsed) .fin-collapse-hdr{border-bottom:0}
+:is(#page-finance, #page-dashboard) .fin-collapse-hdr{padding:0 0 14px;background:none}
+:is(#page-finance, #page-dashboard) .fin-collapse-hdr:active{background:none}
 /* the body element is [data-role="finBody"], not .fin-collapse-body — its base
    rule adds 14px/16px padding that indented every collapsible section's content
    and opened a gap under the header. Flush the sides to the section edge, but
    keep a bottom gap so the last line of content doesn't hug the next section's
    divider (the divider is the NEXT section's border-top, ~0px above it
    otherwise). Collapsed sections skip this — finBody is display:none. */
-#page-finance [data-role="finBody"]{padding:0 0 22px}
+:is(#page-finance, #page-dashboard) [data-role="finBody"]{padding:0 0 22px}
 
 /* Section titles — Newsreader, sentence case: the editorial running head.
    The small tracked-caps treatment is reserved for the secondary right-side
    context label only. */
-#page-finance .fin-section-title,
-#page-finance .fin-collapse-hdr{
+:is(#page-finance, #page-dashboard) .fin-section-title,
+:is(#page-finance, #page-dashboard) .fin-collapse-hdr{
   font-family:var(--font-serif);font-optical-sizing:auto;
   font-size:18px;font-weight:500;letter-spacing:-.01em;text-transform:none;
   color:var(--text);
 }
-#page-finance .fin-section-title{margin-bottom:14px;align-items:baseline}
+:is(#page-finance, #page-dashboard) .fin-section-title{margin-bottom:14px;align-items:baseline}
 /* the "view all / synced 9m ago / status" bit that trails a section title */
-#page-finance .fin-section-title > *:not(:first-child),
-#page-finance .fin-collapse-hdr > .fin-collapse-sub,
-#page-finance .fin-collapse-hdr > span:last-child:not(:first-child){
+:is(#page-finance, #page-dashboard) .fin-section-title > *:not(:first-child),
+:is(#page-finance, #page-dashboard) .fin-collapse-hdr > .fin-collapse-sub,
+:is(#page-finance, #page-dashboard) .fin-collapse-hdr > span:last-child:not(:first-child){
   font-family:-apple-system,system-ui,sans-serif;font-size:11px;font-weight:600;
   letter-spacing:.11em;text-transform:uppercase;color:var(--sub);
 }
-#page-finance .payday-label,
-#page-finance .runway-bills-hdr,
-#page-finance .spend-safe-line{
+:is(#page-finance, #page-dashboard) .payday-label,
+:is(#page-finance, #page-dashboard) .runway-bills-hdr,
+:is(#page-finance, #page-dashboard) .spend-safe-line{
   font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
   color:var(--sub);
 }
 
 /* Figures — display serif, medium weight, optical tightening */
-#page-finance .nw-chart-val,
-#page-finance .budget-c-num,
-#page-finance .spend-total-num,
-#page-finance .payday-days-num,
-#page-finance .runway-num,
-#page-finance .cc-num,
-#page-finance .txn-amount,
-#page-finance .accounts-table-bal,
-#page-finance .month-label-big{
+:is(#page-finance, #page-dashboard) .nw-chart-val,
+:is(#page-finance, #page-dashboard) .budget-c-num,
+:is(#page-finance, #page-dashboard) .spend-total-num,
+:is(#page-finance, #page-dashboard) .payday-days-num,
+:is(#page-finance, #page-dashboard) .runway-num,
+:is(#page-finance, #page-dashboard) .cc-num,
+:is(#page-finance, #page-dashboard) .txn-amount,
+:is(#page-finance, #page-dashboard) .accounts-table-bal,
+:is(#page-finance, #page-dashboard) .month-label-big{
   font-family:var(--font-serif);
   font-weight:500;
   letter-spacing:-.02em;
   font-variant-numeric:normal;
 }
-#page-finance .nw-chart-val{font-size:37px;line-height:1.05}
-#page-finance .budget-c-num{font-size:31px}
-#page-finance .spend-total-num{font-size:29px}
-#page-finance .payday-days-num,
-#page-finance .runway-num,
-#page-finance .cc-num{font-size:22px;color:var(--text)}
-#page-finance .txn-amount,
-#page-finance .accounts-table-bal{font-size:15px}
-#page-finance .cat-bar-amt,#page-finance .budget-c-catrow-amt{font-family:var(--font-serif);font-weight:500;letter-spacing:-.01em;font-variant-numeric:normal}
-#page-finance .cat-bar-limit-txt{color:var(--muted)}
+:is(#page-finance, #page-dashboard) .nw-chart-val{font-size:37px;line-height:1.05}
+:is(#page-finance, #page-dashboard) .budget-c-num{font-size:31px}
+:is(#page-finance, #page-dashboard) .spend-total-num{font-size:29px}
+:is(#page-finance, #page-dashboard) .payday-days-num,
+:is(#page-finance, #page-dashboard) .runway-num,
+:is(#page-finance, #page-dashboard) .cc-num{font-size:22px;color:var(--text)}
+:is(#page-finance, #page-dashboard) .txn-amount,
+:is(#page-finance, #page-dashboard) .accounts-table-bal{font-size:15px}
+:is(#page-finance, #page-dashboard) .cat-bar-amt,:is(#page-finance, #page-dashboard) .budget-c-catrow-amt{font-family:var(--font-serif);font-weight:500;letter-spacing:-.01em;font-variant-numeric:normal}
+:is(#page-finance, #page-dashboard) .cat-bar-limit-txt{color:var(--muted)}
 
 /* Accounts — no redundant type column (name already says it) */
-#page-finance .accounts-table-type{display:none}
-#page-finance .accounts-table-row{grid-template-columns:1fr auto}
+:is(#page-finance, #page-dashboard) .accounts-table-type{display:none}
+:is(#page-finance, #page-dashboard) .accounts-table-row{grid-template-columns:1fr auto}
 
 /* Runway — drop the overlapping "PAYDAY" end label; verdict headline in serif */
-#page-finance .runway-payday-lbl{display:none}
-#page-finance .runway-top{display:flex;align-items:baseline;gap:8px}
-#page-finance .runway-num{font-size:19px;line-height:1.25}
-#page-finance .runway-verdict{font-family:inherit;font-weight:400;font-size:12px;color:var(--sub)}
+:is(#page-finance, #page-dashboard) .runway-payday-lbl{display:none}
+:is(#page-finance, #page-dashboard) .runway-top{display:flex;align-items:baseline;gap:8px}
+:is(#page-finance, #page-dashboard) .runway-num{font-size:19px;line-height:1.25}
+:is(#page-finance, #page-dashboard) .runway-verdict{font-family:inherit;font-weight:400;font-size:12px;color:var(--sub)}
 
 /* Money-in / money-out keep the pastel semantics, lose the iOS saturation */
-#page-finance .txn-amount.in,#page-finance .accounts-table-bal:not(.red){color:var(--text)}
-#page-finance .txn-amount.out{color:var(--text)}
-#page-finance .payday-days-num{color:var(--accent)}
+:is(#page-finance, #page-dashboard) .txn-amount.in,:is(#page-finance, #page-dashboard) .accounts-table-bal:not(.red){color:var(--text)}
+:is(#page-finance, #page-dashboard) .txn-amount.out{color:var(--text)}
+:is(#page-finance, #page-dashboard) .payday-days-num{color:var(--accent)}
 
 /* Delta pill → quiet inline note. Keep the direction colour the JS sets
    (green up / red down); only strip the filled-pill background. */
-#page-finance .nw-delta-pill{
+:is(#page-finance, #page-dashboard) .nw-delta-pill{
   background:none!important;
   font-family:inherit;font-weight:500;font-size:12px;padding:0;margin-left:10px;
   letter-spacing:0;
 }
-#page-finance .nw-delta-pill .fin-ico{margin-right:.3em}
-#page-finance .nw-chart-subline{font-size:12px}
+:is(#page-finance, #page-dashboard) .nw-delta-pill .fin-ico{margin-right:.3em}
+:is(#page-finance, #page-dashboard) .nw-chart-subline{font-size:12px}
 
 /* Month nav — serif, chromeless arrows, flush-left with the section edge
    (the label carries an inline min-width:120px;text-align:center from the
@@ -1700,166 +1700,166 @@ body.task-reordering .task-drag-handle{display:flex;opacity:.6}
    than floating in a centred 120px box). */
 /* the Net Worth card has no bottom padding, so the month selector + New
    Transaction row would otherwise butt straight against the allocation bar */
-#page-finance .fin-header-row{margin-top:22px;margin-bottom:0}
-#page-finance .fin-header-row .month-nav{margin:0;gap:4px}
-#page-finance .month-nav-btn{
+:is(#page-finance, #page-dashboard) .fin-header-row{margin-top:22px;margin-bottom:0}
+:is(#page-finance, #page-dashboard) .fin-header-row .month-nav{margin:0;gap:4px}
+:is(#page-finance, #page-dashboard) .month-nav-btn{
   background:none;border:0;color:var(--muted);font-size:17px;padding:4px 8px;border-radius:6px;
 }
-#page-finance .month-nav-btn:first-child{padding-left:0}
-#page-finance .month-nav-btn:hover{color:var(--accent);border-color:transparent}
-#page-finance .month-label-big{font-size:16px;color:var(--text);min-width:0;text-align:left}
+:is(#page-finance, #page-dashboard) .month-nav-btn:first-child{padding-left:0}
+:is(#page-finance, #page-dashboard) .month-nav-btn:hover{color:var(--accent);border-color:transparent}
+:is(#page-finance, #page-dashboard) .month-label-big{font-size:16px;color:var(--text);min-width:0;text-align:left}
 
 /* Range chips — press feedback, active = ink underline not a filled pill */
-#page-finance .nw-range-bar{gap:8px;margin-top:14px}
-#page-finance .nw-range-btn{
+:is(#page-finance, #page-dashboard) .nw-range-bar{gap:8px;margin-top:14px}
+:is(#page-finance, #page-dashboard) .nw-range-btn{
   flex:0 0 auto;padding:6px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);
   color:var(--sub);font-weight:500;background:none;
 }
-#page-finance .nw-range-btn.active{
+:is(#page-finance, #page-dashboard) .nw-range-btn.active{
   background:none;color:var(--text);border-color:var(--text);
 }
-#page-finance .nw-range-btn:active{transform:scale(.96)}
+:is(#page-finance, #page-dashboard) .nw-range-btn:active{transform:scale(.96)}
 
 /* Hairline tracks everywhere — 2px, no gradients, ink fill */
-#page-finance .budget-c-segbar,
-#page-finance .payday-track,
-#page-finance .runway-track,
-#page-finance .spend-total-track,
-#page-finance .cat-bar-track,
-#page-finance .budget-c-catrow-track,
-#page-finance .cc-row-bar,
-#page-finance .goal-bar-track{
+:is(#page-finance, #page-dashboard) .budget-c-segbar,
+:is(#page-finance, #page-dashboard) .payday-track,
+:is(#page-finance, #page-dashboard) .runway-track,
+:is(#page-finance, #page-dashboard) .spend-total-track,
+:is(#page-finance, #page-dashboard) .cat-bar-track,
+:is(#page-finance, #page-dashboard) .budget-c-catrow-track,
+:is(#page-finance, #page-dashboard) .cc-row-bar,
+:is(#page-finance, #page-dashboard) .goal-bar-track{
   height:2px;border-radius:2px;background:var(--track);overflow:visible;
 }
-#page-finance .budget-c-segbar{gap:0;height:3px}
-#page-finance .payday-fill{background:var(--text)}
-#page-finance .cat-bar-fill,
-#page-finance .budget-c-catrow-fill,
-#page-finance .cc-row-fill,
-#page-finance .runway-fill,
-#page-finance .spend-total-fill{background:var(--text)}
-#page-finance .cat-bar-fill[style*="var(--red)"],
-#page-finance .budget-c-catrow-fill[style*="--red"]{background:var(--red)!important}
+:is(#page-finance, #page-dashboard) .budget-c-segbar{gap:0;height:3px}
+:is(#page-finance, #page-dashboard) .payday-fill{background:var(--text)}
+:is(#page-finance, #page-dashboard) .cat-bar-fill,
+:is(#page-finance, #page-dashboard) .budget-c-catrow-fill,
+:is(#page-finance, #page-dashboard) .cc-row-fill,
+:is(#page-finance, #page-dashboard) .runway-fill,
+:is(#page-finance, #page-dashboard) .spend-total-fill{background:var(--text)}
+:is(#page-finance, #page-dashboard) .cat-bar-fill[style*="var(--red)"],
+:is(#page-finance, #page-dashboard) .budget-c-catrow-fill[style*="--red"]{background:var(--red)!important}
 
 /* Transactions — drop the emoji tile, let the row breathe */
-#page-finance .txn-icon{display:none}
-#page-finance .txn-item{
+:is(#page-finance, #page-dashboard) .txn-icon{display:none}
+:is(#page-finance, #page-dashboard) .txn-item{
   padding:12px 0;border-bottom:1px solid var(--hair);gap:14px;
   transition:transform 140ms var(--ease-out);
 }
-#page-finance .txn-item:hover,#page-finance .txn-item:active{background:none}
-#page-finance .txn-item:active{transform:scale(.99)}
-#page-finance .txn-name{font-size:14px}
-#page-finance .txn-cat{font-size:11px;color:var(--sub);margin-top:2px}
+:is(#page-finance, #page-dashboard) .txn-item:hover,:is(#page-finance, #page-dashboard) .txn-item:active{background:none}
+:is(#page-finance, #page-dashboard) .txn-item:active{transform:scale(.99)}
+:is(#page-finance, #page-dashboard) .txn-name{font-size:14px}
+:is(#page-finance, #page-dashboard) .txn-cat{font-size:11px;color:var(--sub);margin-top:2px}
 
 /* Accounts — same ruled-row treatment */
-#page-finance .accounts-table,
-#page-finance .accounts-table-wrap{background:none;border:0;box-shadow:none;padding:0}
+:is(#page-finance, #page-dashboard) .accounts-table,
+:is(#page-finance, #page-dashboard) .accounts-table-wrap{background:none;border:0;box-shadow:none;padding:0}
 /* #acctCardsRow bleeds -16px each side to cancel the old finBody padding —
    that padding is gone now, so the bleed just overflows the page. */
-#page-finance #acctCardsRow{margin:0}
-#page-finance .accounts-table-row{
+:is(#page-finance, #page-dashboard) #acctCardsRow{margin:0}
+:is(#page-finance, #page-dashboard) .accounts-table-row{
   padding:12px 0;border-bottom:1px solid var(--hair);background:none;
 }
-#page-finance .accounts-table-row:hover,#page-finance .accounts-table-row:active{background:none}
+:is(#page-finance, #page-dashboard) .accounts-table-row:hover,:is(#page-finance, #page-dashboard) .accounts-table-row:active{background:none}
 
 /* Credit-card / runway rows */
-#page-finance .cc-row{padding:9px 0;border-bottom:1px solid var(--hair)}
-#page-finance .cc-row:last-child{border-bottom:0}
+:is(#page-finance, #page-dashboard) .cc-row{padding:9px 0;border-bottom:1px solid var(--hair)}
+:is(#page-finance, #page-dashboard) .cc-row:last-child{border-bottom:0}
 
 /* Segmented budget bar → single ink bar with an on-pace tick */
-#page-finance .budget-c-segbar > *{opacity:1}
-#page-finance .budget-c-pace-tick,
-#page-finance .spend-pace-arrow{background:var(--accent);border-top-color:var(--accent)}
+:is(#page-finance, #page-dashboard) .budget-c-segbar > *{opacity:1}
+:is(#page-finance, #page-dashboard) .budget-c-pace-tick,
+:is(#page-finance, #page-dashboard) .spend-pace-arrow{background:var(--accent);border-top-color:var(--accent)}
 
 /* The "⋯" menu + its buttons */
-#page-finance .fin-more-btn{background:none;border:1px solid var(--border);color:var(--sub)}
-#page-finance .fin-more-menu{border:0;border-radius:var(--radius-sm);box-shadow:0 12px 34px -10px rgba(42,39,35,.3)}
+:is(#page-finance, #page-dashboard) .fin-more-btn{background:none;border:1px solid var(--border);color:var(--sub)}
+:is(#page-finance, #page-dashboard) .fin-more-menu{border:0;border-radius:var(--radius-sm);box-shadow:0 12px 34px -10px rgba(42,39,35,.3)}
 
 /* + Transaction button — filled ink, editorial radius */
-#page-finance .btn-new{border-radius:var(--radius-sm);font-weight:500}
+:is(#page-finance, #page-dashboard) .btn-new{border-radius:var(--radius-sm);font-weight:500}
 
 /* Allocation — a ruled list (markup in finance.js): marker · name · figure · % */
 /* Allocation — segmented hairline bar (tonal ink, no hue) + a legend that
    carries the figures. Markup in finance.js. */
-#page-finance .nw-alloc{margin-top:18px}
-#page-finance .nw-alloc-bar{display:flex;height:4px;border-radius:2px;overflow:hidden;gap:1px;background:var(--bg)}
-#page-finance .nw-alloc-bar > i{display:block;min-width:2px}
-#page-finance .nw-alloc-legend{display:flex;flex-wrap:wrap;gap:9px 22px;margin-top:14px}
-#page-finance .nw-alloc-leg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub)}
-#page-finance .nw-alloc-leg > i{width:7px;height:7px;border-radius:1px;flex-shrink:0}
-#page-finance .nw-alloc-leg b{font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;color:var(--text);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-#page-finance .nw-delta-row{gap:22px;margin-top:12px}
-#page-finance .nw-range-bar{margin-bottom:2px}
+:is(#page-finance, #page-dashboard) .nw-alloc{margin-top:18px}
+:is(#page-finance, #page-dashboard) .nw-alloc-bar{display:flex;height:4px;border-radius:2px;overflow:hidden;gap:1px;background:var(--bg)}
+:is(#page-finance, #page-dashboard) .nw-alloc-bar > i{display:block;min-width:2px}
+:is(#page-finance, #page-dashboard) .nw-alloc-legend{display:flex;flex-wrap:wrap;gap:9px 22px;margin-top:14px}
+:is(#page-finance, #page-dashboard) .nw-alloc-leg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub)}
+:is(#page-finance, #page-dashboard) .nw-alloc-leg > i{width:7px;height:7px;border-radius:1px;flex-shrink:0}
+:is(#page-finance, #page-dashboard) .nw-alloc-leg b{font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;color:var(--text);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+:is(#page-finance, #page-dashboard) .nw-delta-row{gap:22px;margin-top:12px}
+:is(#page-finance, #page-dashboard) .nw-range-bar{margin-bottom:2px}
 
 /* Collapse chevrons — hairline, quiet, small regardless of the serif header */
-#page-finance .fin-collapse-btn,#page-finance .nw-collapse-btn,
-#page-finance [data-role="collapseBtn"],#page-finance [data-role="hideBtn"]{
+:is(#page-finance, #page-dashboard) .fin-collapse-btn,:is(#page-finance, #page-dashboard) .nw-collapse-btn,
+:is(#page-finance, #page-dashboard) [data-role="collapseBtn"],:is(#page-finance, #page-dashboard) [data-role="hideBtn"]{
   background:none;border:1px solid var(--border);color:var(--muted);
   font-family:-apple-system,system-ui,sans-serif;font-size:13px;font-weight:400;
 }
-#page-finance .fin-collapse-hdr{align-items:center;gap:10px}
+:is(#page-finance, #page-dashboard) .fin-collapse-hdr{align-items:center;gap:10px}
 
 /* Payday — pay date + countdown, and a 3px hairline track that fills as the
    pay period elapses (dated ends). */
-#page-finance .payday-card{display:block}
-#page-finance .payday-label{margin-bottom:10px}
-#page-finance .payday-when-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
-#page-finance .payday-when{font-family:var(--font-serif);font-optical-sizing:auto;font-size:16px;font-weight:500;letter-spacing:-.01em;color:var(--text)}
-#page-finance .payday-in{font-size:13px;color:var(--accent);flex-shrink:0}
-#page-finance .payday-track{display:block;height:3px;width:100%;margin:0;border-radius:2px;background:var(--track);overflow:hidden}
-#page-finance .payday-fill{height:100%;background:var(--text)}
-#page-finance .payday-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
-#page-finance .payday-status{text-align:left;margin-top:10px;font-weight:400;font-size:12px;color:var(--sub);display:flex;align-items:center;flex-wrap:wrap}
-#page-finance .payday-status:empty{display:none}
+:is(#page-finance, #page-dashboard) .payday-card{display:block}
+:is(#page-finance, #page-dashboard) .payday-label{margin-bottom:10px}
+:is(#page-finance, #page-dashboard) .payday-when-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+:is(#page-finance, #page-dashboard) .payday-when{font-family:var(--font-serif);font-optical-sizing:auto;font-size:16px;font-weight:500;letter-spacing:-.01em;color:var(--text)}
+:is(#page-finance, #page-dashboard) .payday-in{font-size:13px;color:var(--accent);flex-shrink:0}
+:is(#page-finance, #page-dashboard) .payday-track{display:block;height:3px;width:100%;margin:0;border-radius:2px;background:var(--track);overflow:hidden}
+:is(#page-finance, #page-dashboard) .payday-fill{height:100%;background:var(--text)}
+:is(#page-finance, #page-dashboard) .payday-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+:is(#page-finance, #page-dashboard) .payday-status{text-align:left;margin-top:10px;font-weight:400;font-size:12px;color:var(--sub);display:flex;align-items:center;flex-wrap:wrap}
+:is(#page-finance, #page-dashboard) .payday-status:empty{display:none}
 
 /* Goals — stacked, each with a pace line and this-month progress.
    (markup: renderGoals() in finance.js) */
-#page-finance #goalsGrid{display:flex;flex-direction:column;gap:0}
-#page-finance .goal-card{padding:16px 0 0!important;margin:0;border-top:1px solid var(--hair);cursor:pointer;transition:opacity .12s var(--ease-out)}
-#page-finance .goal-card:first-child{border-top:0;padding-top:8px!important}
-#page-finance .goal-card:hover{opacity:.78}
-#page-finance .goal-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
-#page-finance .goal-name{font-size:13px;font-weight:400;color:var(--sub)}
-#page-finance .goal-log-btn{font:inherit;font-size:12px;font-weight:400;color:var(--sub);background:none;border:0;padding:0;cursor:pointer;flex-shrink:0}
-#page-finance .goal-log-btn:hover{color:var(--accent)}
-#page-finance .goal-amounts{display:flex;align-items:baseline;gap:7px;margin:0}
-#page-finance .goal-current{font-family:var(--font-serif);font-optical-sizing:auto;font-size:22px;font-weight:500;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums}
-#page-finance .goal-target{font-size:14px;color:var(--sub);font-variant-numeric:tabular-nums}
-#page-finance .goal-monthly-change{margin-left:auto;font-size:12px;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums}
-#page-finance .goal-bar-track{height:3px;margin:11px 0 0;background:var(--track)}
-#page-finance .goal-bar-fill{background:var(--text)}
-#page-finance .goal-foot-row{margin-top:9px;font-size:12px;color:var(--sub);gap:6px 14px}
-#page-finance .goal-pct{color:var(--sub)}
+:is(#page-finance, #page-dashboard) #goalsGrid{display:flex;flex-direction:column;gap:0}
+:is(#page-finance, #page-dashboard) .goal-card{padding:16px 0 0!important;margin:0;border-top:1px solid var(--hair);cursor:pointer;transition:opacity .12s var(--ease-out)}
+:is(#page-finance, #page-dashboard) .goal-card:first-child{border-top:0;padding-top:8px!important}
+:is(#page-finance, #page-dashboard) .goal-card:hover{opacity:.78}
+:is(#page-finance, #page-dashboard) .goal-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+:is(#page-finance, #page-dashboard) .goal-name{font-size:13px;font-weight:400;color:var(--sub)}
+:is(#page-finance, #page-dashboard) .goal-log-btn{font:inherit;font-size:12px;font-weight:400;color:var(--sub);background:none;border:0;padding:0;cursor:pointer;flex-shrink:0}
+:is(#page-finance, #page-dashboard) .goal-log-btn:hover{color:var(--accent)}
+:is(#page-finance, #page-dashboard) .goal-amounts{display:flex;align-items:baseline;gap:7px;margin:0}
+:is(#page-finance, #page-dashboard) .goal-current{font-family:var(--font-serif);font-optical-sizing:auto;font-size:22px;font-weight:500;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums}
+:is(#page-finance, #page-dashboard) .goal-target{font-size:14px;color:var(--sub);font-variant-numeric:tabular-nums}
+:is(#page-finance, #page-dashboard) .goal-monthly-change{margin-left:auto;font-size:12px;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums}
+:is(#page-finance, #page-dashboard) .goal-bar-track{height:3px;margin:11px 0 0;background:var(--track)}
+:is(#page-finance, #page-dashboard) .goal-bar-fill{background:var(--text)}
+:is(#page-finance, #page-dashboard) .goal-foot-row{margin-top:9px;font-size:12px;color:var(--sub);gap:6px 14px}
+:is(#page-finance, #page-dashboard) .goal-pct{color:var(--sub)}
 
 /* Recent transactions — now a normal collapsible section ("Recent" is the
    header); the row inside its body just holds the search field. */
-#page-finance .txn-list-hdr{display:flex;align-items:center;gap:14px;margin-bottom:10px}
-#page-finance #txnList{background:none;border:0;border-radius:0;padding:0}
-#page-finance .txn-search{background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:6px 2px;font-size:13px}
-#page-finance .txn-search:focus{border-bottom-color:var(--text);outline:none}
+:is(#page-finance, #page-dashboard) .txn-list-hdr{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+:is(#page-finance, #page-dashboard) #txnList{background:none;border:0;border-radius:0;padding:0}
+:is(#page-finance, #page-dashboard) .txn-search{background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:6px 2px;font-size:13px}
+:is(#page-finance, #page-dashboard) .txn-search:focus{border-bottom-color:var(--text);outline:none}
 
 /* Account rows: drop the coloured type dot (mockup has none) */
-#page-finance .accounts-table-dot{display:none}
-#page-finance .accounts-table-name{font-weight:400}
-#page-finance .accounts-table-synced{color:var(--green)}
+:is(#page-finance, #page-dashboard) .accounts-table-dot{display:none}
+:is(#page-finance, #page-dashboard) .accounts-table-name{font-weight:400}
+:is(#page-finance, #page-dashboard) .accounts-table-synced{color:var(--green)}
 
 /* Savings-rate figure joins the serif family; gauge is thinner */
-#page-finance .savings-rate-excess{font-family:var(--font-serif);font-weight:500;font-size:22px;letter-spacing:-.02em}
-#page-finance .savings-rate-gauge-fill,#page-finance .savings-rate-gauge-track{stroke-width:7}
-#page-finance .savings-rate-pct{font-family:var(--font-serif);font-weight:500}
+:is(#page-finance, #page-dashboard) .savings-rate-excess{font-family:var(--font-serif);font-weight:500;font-size:22px;letter-spacing:-.02em}
+:is(#page-finance, #page-dashboard) .savings-rate-gauge-fill,:is(#page-finance, #page-dashboard) .savings-rate-gauge-track{stroke-width:7}
+:is(#page-finance, #page-dashboard) .savings-rate-pct{font-family:var(--font-serif);font-weight:500}
 
 /* Outline action buttons never wrap */
-#page-finance .btn-new,#page-finance .nw-add-btn{white-space:nowrap}
-#page-finance .trend-chart{margin-bottom:8px}
-#page-finance #trendLabels{gap:8px}
-#page-finance .trend-col-plot{border-bottom-color:var(--hair)}
-#page-finance .watchlist-add-row{margin-bottom:0;gap:12px}
-#page-finance .watchlist-add-row input{
+:is(#page-finance, #page-dashboard) .btn-new,:is(#page-finance, #page-dashboard) .nw-add-btn{white-space:nowrap}
+:is(#page-finance, #page-dashboard) .trend-chart{margin-bottom:8px}
+:is(#page-finance, #page-dashboard) #trendLabels{gap:8px}
+:is(#page-finance, #page-dashboard) .trend-col-plot{border-bottom-color:var(--hair)}
+:is(#page-finance, #page-dashboard) .watchlist-add-row{margin-bottom:0;gap:12px}
+:is(#page-finance, #page-dashboard) .watchlist-add-row input{
   background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:7px 2px;font-size:13px;
 }
-#page-finance .watchlist-add-row input:focus{border-bottom-color:var(--text)}
-#page-finance .watchlist-empty{text-align:left;padding:14px 0 2px;font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--sub)}
+:is(#page-finance, #page-dashboard) .watchlist-add-row input:focus{border-bottom-color:var(--text)}
+:is(#page-finance, #page-dashboard) .watchlist-empty{text-align:left;padding:14px 0 2px;font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--sub)}
 
 
 /* ═══ EDITORIAL — shell: primary action buttons ═══
@@ -1966,9 +1966,73 @@ input[type="date"].form-input,input[type="time"].form-input,input[type="datetime
   display:flex;align-items:center;justify-content:space-between;gap:10px;
 }
 #page-finance .fin-sub-hdr .fin-hdr-sum{letter-spacing:0;text-transform:none;font-weight:400;color:var(--muted)}
-#page-finance .fin-sub-hdr-link{
+:is(#page-finance, #page-dashboard) .fin-sub-hdr-link{
   background:none;border:0;padding:0;cursor:pointer;font-family:inherit;
   font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);
 }
 #page-finance .fin-sub #trendChart{margin-top:4px}
 #page-finance .fin-sub .watchlist-add-row{margin-top:0}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   EDITORIAL — Dashboard tab
+   Same de-carding as Finance: Budget/Today/Focus/Projects/Habits are now
+   .fin-collapsible sections (hairline + 26px lead, no card chrome — see the
+   :is(#page-finance, #page-dashboard) rules above, which this tab now shares).
+   This block covers what's specific to Dashboard's own row content.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* the old green "View all →" link, now the one accent */
+.dash-proj-viewall{color:var(--accent)}
+.dash-proj-viewall:hover{filter:brightness(1.2)}
+
+/* .money-hero used to be one big white card wrapping Net Worth + Budget
+   together (border-top divider between them) — Finance never used this
+   wrapper, so it never got de-carded with the rest. Flatten it here: Net
+   Worth and Budget are two independent hairline sections now. */
+#page-dashboard .money-hero{background:none;box-shadow:none;border-radius:0;margin-bottom:0;overflow:visible}
+#page-dashboard .money-hero .nw-chart-card{padding-left:0;padding-right:0;padding-bottom:0}
+
+/* Today — event rows sit flush in the section body now, no side padding */
+#page-dashboard .evt-row{padding:10px 0;border-bottom:1px solid var(--hair)}
+#page-dashboard .evt-empty{padding:18px 0;text-align:left;font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--sub)}
+#page-dashboard .add-evt-btn{margin-top:14px;border-color:var(--border)}
+#page-dashboard .add-evt-btn:hover{border-color:var(--text);color:var(--text)}
+
+/* Focus tasks — same ledger-row rhythm, flush to the section edge */
+#page-dashboard .focus-item{padding:10px 0;border-bottom:1px solid var(--hair)}
+#page-dashboard .focus-item:last-child{border-bottom:0;padding-bottom:2px}
+#page-dashboard .focus-num.done{background:var(--green);border-color:var(--green)}
+
+/* Projects widget — column head is a tracked-caps label row, not a boxed
+   grid header; rows are hairline-ruled, name goes serif like every other
+   ledger figure, status pills go pill-shaped pastel (not a filled square). */
+#page-dashboard .dash-proj-cols{
+  display:grid;grid-template-columns:1fr 100px 90px;gap:12px;
+  padding:0 0 10px;margin:0;border:0;
+  font-family:-apple-system,system-ui,sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--sub);
+}
+#page-dashboard .dash-proj-row{
+  grid-template-columns:1fr 100px 90px;gap:12px;padding:13px 0;
+  border-bottom:1px solid var(--hair);border-radius:0;
+}
+#page-dashboard .dash-proj-row:last-child{border-bottom:0;padding-bottom:2px}
+#page-dashboard .dash-proj-name{font-family:var(--font-serif);font-optical-sizing:auto;font-size:15px;font-weight:500;letter-spacing:-.01em;color:var(--text)}
+#page-dashboard .proj-status-pill{border-radius:999px}
+#page-dashboard .dash-proj-prog-track{background:var(--track)}
+
+/* Habits — quiet "+ New" link replaces the ink button in the header; the
+   grid itself (habits.js) keeps its own per-habit color choices. */
+#page-dashboard .habit-empty{font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--sub);text-align:left;padding:4px 0}
+
+/* JARVIS history — de-carded to match, own toggle mechanics untouched */
+#page-dashboard .jarvis-history-wrap{
+  background:none;box-shadow:none;border:0;border-radius:0;margin:0;
+  padding:26px 0 0;border-top:1px solid var(--hair);
+}
+#page-dashboard .jarvis-history-hdr{padding:0 0 14px}
+#page-dashboard .jarvis-history-title{
+  font-family:var(--font-serif);font-optical-sizing:auto;
+  font-size:18px;font-weight:500;letter-spacing:-.01em;color:var(--text);
+}
+#page-dashboard .jarvis-history-body{padding:0 0 22px}
