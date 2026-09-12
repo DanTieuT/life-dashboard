@@ -256,7 +256,7 @@ input,select,textarea{font-family:inherit}
 .evt-time{font-size:11px;color:var(--sub);margin-top:1px}
 .evt-empty{color:var(--muted);font-size:13px;padding:20px 6px;text-align:center}
 .add-evt-btn{margin-top:14px;background:none;border:1px dashed var(--border);border-radius:10px;padding:9px;width:100%;color:var(--muted);font-size:13px;transition:border-color .2s,color .2s}
-.add-evt-btn:hover{border-color:var(--green);color:var(--green)}
+.add-evt-btn:hover{border-color:var(--text);color:var(--text)}
 
 /* ── HABIT TRACKER ───────────────────────────────────────────────── */
 .habits-section{margin-bottom:20px}
@@ -618,43 +618,52 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 /* ── CALENDAR ────────────────────────────────────────────────────── */
 .cal-fullpage{position:fixed;top:56px;left:0;right:0;bottom:0;overflow-y:auto;padding:16px 20px 28px;background:var(--bg);z-index:50}
 .cal-month-nav{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 0;margin-bottom:14px}
-.cal-nav-chevron{background:none;border:none;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.cal-month-title{background:none;border:none;color:var(--text);font-size:20px;font-weight:700;letter-spacing:.2px;cursor:pointer}
-.cal-view-toggle{display:flex;background:var(--track);border-radius:9px;padding:2px;gap:2px;margin-bottom:16px}
-.cal-view-btn{flex:1;text-align:center;font-size:13px;font-weight:600;padding:6px 0;border-radius:7px;border:none;cursor:pointer;color:var(--sub);background:none;transition:background-color .15s,color .15s,box-shadow .15s}
-.cal-view-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.cal-nav-chevron{background:none;border:none;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:color .15s}
+.cal-nav-chevron:hover{color:var(--accent)}
+/* running head, serif — matches every other section title in the app */
+.cal-month-title{background:none;border:none;color:var(--text);font-family:var(--font-serif);font-optical-sizing:auto;font-size:20px;font-weight:500;letter-spacing:-.01em;cursor:pointer}
+/* outline chips, matching Finance's range chips / the Tasks & Projects filters */
+.cal-view-toggle{display:flex;gap:8px;margin-bottom:16px}
+.cal-view-btn{flex:0 0 auto;text-align:center;font-size:13px;font-weight:500;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;color:var(--sub);background:none;transition:border-color .15s,color .15s}
+.cal-view-btn.active{background:none;color:var(--text);border-color:var(--text)}
+.cal-view-btn:active{transform:scale(.96)}
 .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
 .cal-dow-row div{text-align:center;font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;padding:4px 0}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:10px}
 .cal-day-cell{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border-radius:8px}
-.cal-day-cell.rdo-day{background:var(--green-dim)}
+/* a quiet, neutral mark — not the "positive" green wash, which would read
+   as a status rather than "this is your day off" */
+.cal-day-cell.rdo-day{background:var(--m5)}
 .cal-day-circle{width:30px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:400;color:var(--text);background:transparent}
-.cal-day-circle.today{background:var(--red);color:#fff;font-weight:600}
+/* "today" is a wayfinding mark, not a warning — the accent, not red */
+.cal-day-circle.today{background:var(--accent);color:var(--bg);font-weight:600}
 .cal-day-circle.selected{background:var(--pill-bg)}
 .cal-day-dot{width:4px;height:4px;border-radius:2px}
 
 /* ── Selected-day event list (below the month grid) ──────────────── */
-.cal-selected-day-divider{height:.5px;background:var(--divider);margin:20px 0 16px}
-.cal-selected-date-label{font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px}
+.cal-selected-day-divider{height:1px;background:var(--hair);margin:20px 0 16px}
+.cal-selected-date-label{font-family:var(--font-serif);font-optical-sizing:auto;font-size:18px;font-weight:500;letter-spacing:-.01em;color:var(--text);margin-bottom:12px}
 .cal-selected-evt-row{display:flex;gap:14px;align-items:flex-start;padding:10px 0;border-bottom:.5px solid var(--divider);cursor:pointer}
 .cal-selected-evt-row:last-of-type{border-bottom:none}
 .cal-selected-evt-time{width:62px;flex-shrink:0;font-size:12px;color:var(--sub);padding-top:1px}
 .cal-selected-evt-bar{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0}
 .cal-selected-evt-name{font-size:15px;font-weight:500;color:var(--text)}
-.cal-selected-empty{font-size:14px;color:var(--sub);padding:10px 0}
+.cal-selected-empty{font-family:var(--font-serif);font-style:italic;font-size:14px;color:var(--sub);padding:10px 0;text-align:left}
 .cal-color-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .cal-color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border-color .15s,transform .15s var(--ease-out)}
-.cal-color-swatch.selected{border-color:#fff;transform:scale(1.18)}
+/* was a literal white ring — invisible selecting a swatch on the (light,
+   in light mode) modal background it actually sits on */
+.cal-color-swatch.selected{border-color:var(--text);transform:scale(1.18)}
 
 /* ── CALENDAR TAB — WEEK VIEW (design sync) ─────────────────────── */
-.cal-week-view{background:var(--card);border:1px solid var(--border);border-radius:0 0 12px 12px;box-shadow:var(--card-shadow);overflow:hidden}
-.cal-week-dow-row{display:grid;grid-template-columns:repeat(7,1fr);padding:12px 4px;border-bottom:1px solid var(--border)}
+.cal-week-view{background:var(--card);border:1px solid var(--hair);border-radius:0 0 12px 12px;box-shadow:none;overflow:hidden}
+.cal-week-dow-row{display:grid;grid-template-columns:repeat(7,1fr);padding:12px 4px;border-bottom:1px solid var(--hair)}
 .cal-week-dow-cell{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
 .cal-week-dow-label{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--muted)}
 .cal-week-dow-num{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:400;color:var(--text)}
-.cal-week-dow-num.today{background:var(--red);color:#fff;font-weight:600}
+.cal-week-dow-num.today{background:var(--accent);color:var(--bg);font-weight:600}
 .cal-week-dow-dot{width:4px;height:4px;border-radius:2px}
-.cal-week-allday-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:6px 4px;border-bottom:1px solid var(--border)}
+.cal-week-allday-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:6px 4px;border-bottom:1px solid var(--hair)}
 .cal-week-allday-col{min-width:0;display:flex;flex-direction:column;gap:2px}
 .cal-week-allday-chip{border-radius:4px;padding:2px 5px;font-size:9px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
 .cal-week-hourly{display:flex;max-height:640px;overflow-y:auto}
@@ -666,7 +675,7 @@ input[type="time"].form-input::-webkit-calendar-picker-indicator{filter:invert(.
 .cal-week-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr);height:100%}
 .cal-week-day-col{position:relative;border-left:.5px solid var(--divider);cursor:pointer}
 .cal-week-evt-block{position:absolute;left:2px;right:2px;border-radius:4px;padding:3px 5px;box-sizing:border-box;overflow:hidden;font-size:9px;font-weight:600;line-height:1.25;cursor:pointer}
-.cal-week-now-line{position:absolute;left:0;right:0;height:1.5px;background:var(--red);z-index:2;pointer-events:none}
+.cal-week-now-line{position:absolute;left:0;right:0;height:1.5px;background:var(--accent);z-index:2;pointer-events:none}
 @media(max-width:768px){
   .cal-week-dow-label{font-size:9px}
   .cal-week-dow-num{width:26px;height:26px;font-size:13px}

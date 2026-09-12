@@ -547,10 +547,14 @@
 
   <!-- Calendar lives outside .main so it fills full width -->
   <div class="page cal-fullpage" id="page-calendar">
+    <!-- The page title used to duplicate the month nav below it (both showing
+         "September 2026") — this is now a static tab name, like every other
+         tab's header, and the month nav is the one place the month + prev/
+         next/today live. -->
     <div class="page-hdr">
       <div class="page-hdr-text">
         <div class="page-hdr-eyebrow">Calendar</div>
-        <div class="page-hdr-title" id="calMonthLabel"></div>
+        <div class="page-hdr-title">Calendar</div>
       </div>
       <div class="page-hdr-actions">
         <div class="hdr-avatar" onclick="toggleProfileDropdown()"></div>
@@ -559,11 +563,11 @@
 
     <div class="cal-month-nav">
       <button class="cal-nav-chevron" onclick="calNav(-1)" title="Previous">
-        <svg width="9" height="16" viewBox="0 0 8 14"><path d="M7 1L1 7l6 6" stroke="#FF3B30" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="9" height="16" viewBox="0 0 8 14"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <button class="cal-month-title" onclick="calGoToday()"><span id="calMonthLabelNav"></span></button>
       <button class="cal-nav-chevron" onclick="calNav(1)" title="Next">
-        <svg width="9" height="16" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="#FF3B30" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="9" height="16" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
 
