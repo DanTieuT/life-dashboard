@@ -30,7 +30,7 @@ window.setProjFilter=function(f){
 
 function projectRowHTML(p){
   const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
-  const prColor=p.priority?PRIORITY_COLORS[p.priority]:'#444';
+  const prColor=p.priority?PRIORITY_COLORS[p.priority]:'var(--muted)';
   const prLabel=p.priority?(p.priority.charAt(0).toUpperCase()+p.priority.slice(1)):'—';
   return`<div class="proj-row" onclick="openProjectModal('${p.id}')">
     <div class="proj-row-name-col">
@@ -69,7 +69,7 @@ function renderProjects(){
   const q=(document.getElementById('projSearch')?.value||'').trim().toLowerCase();
   if(q)filtered=filtered.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q)||(p.nextAction||'').toLowerCase().includes(q)||(p.notes||'').toLowerCase().includes(q));
   if(!filtered.length){
-    gridEl.innerHTML=`<div class="projects-empty-row" style="grid-column:1/-1;padding:48px 20px;text-align:center;color:var(--muted);font-size:14px">No projects${currentProjFilter!=='all'?' in this category':''} yet — hit <strong>+ New project</strong> to get started</div>`;
+    gridEl.innerHTML=`<div class="projects-empty-row" style="padding:8px 0;text-align:left;color:var(--sub);font-family:var(--font-serif);font-style:italic;font-size:14px">No projects${currentProjFilter!=='all'?' in this category':''} yet — hit <strong style="font-style:normal">+ New project</strong> to get started</div>`;
   } else {
     gridEl.innerHTML=filtered.map(projectCardHTML).join('');
   }
@@ -129,7 +129,7 @@ function projectCardHTML(p){
   const taskMeta=tasks.length?`${doneCount}/${tasks.length} tasks${dueFmt?' · Due '+dueFmt:''}`:(dueFmt?'Due '+dueFmt:'No tasks yet');
   const taskRows=tasks.map(t=>`
     <div class="proj-task-row" onclick="event.stopPropagation();toggleProjTask('${p.id}','${t.id}')">
-      <div class="proj-task-circle" style="border-color:${t.done?s.accent:'rgba(255,255,255,0.2)'};background:${t.done?s.accent:'transparent'};color:${t.done?'#000':'transparent'}">✓</div>
+      <div class="proj-task-circle" style="border-color:${t.done?s.accent:'var(--border-strong)'};background:${t.done?s.accent:'transparent'};color:${t.done?'var(--bg)':'transparent'}">✓</div>
       <span class="proj-task-name${t.done?' done':''}${t.milestone?' milestone':''}">${t.milestone?'<span class="proj-task-flag">⚑</span>':''}${t.name}</span>
       <button class="proj-task-milestone-btn${t.milestone?' on':''}" onclick="event.stopPropagation();toggleProjTaskMilestone('${p.id}','${t.id}')" title="Toggle milestone">⚑</button>
     </div>`).join('');
@@ -206,7 +206,7 @@ function renderDashProjectsWidget(){
   }
   el.innerHTML=active.slice(0,5).map(p=>{
     const s=STAGE_STATUS[p.stage]||STAGE_STATUS.planning;
-    const prColor=p.priority?PRIORITY_COLORS[p.priority]:'#444';
+    const prColor=p.priority?PRIORITY_COLORS[p.priority]:'var(--muted)';
     const prLabel=p.priority?(p.priority.charAt(0).toUpperCase()+p.priority.slice(1)):'—';
     const tasks=p.tasks||[];
     const doneCount=tasks.filter(t=>t.done).length;
