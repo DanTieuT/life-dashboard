@@ -114,7 +114,7 @@ components:
 
 This is a personal life dashboard set like a well-made page from a household ledger rather than a fintech console. The ground is warm bone paper (#f7f6f3), the ink is a soft near-black (#2a2723, never pure black), and information is organised in document rhythm: hairline rules between sections, not boxes around them. Every monetary figure and every section running head is set in Newsreader, a self-hosted variable display serif; labels, body copy, and controls stay in the system sans stack. One accent — a restrained rust (#9a3b1b in light, a lit #df9163 in dark) — carries links, the active tab, the net-worth trend line, and little else. Status reads as desaturated pastel, closer to a printed annual report than an iOS badge.
 
-The redesign shipped as a **token layer plus shell applied app-wide**, with Finance rebuilt first and Dashboard following the same model. Both are now de-carded, hairline-ruled documents; Tasks, Projects, and Calendar inherit the new palette, serif, translucent chrome, and primary-button treatment, but keep their older card-heavy structure until each is separately rebuilt. Where this document describes a de-carded, hairline-ruled composition, that is the Finance/Dashboard model and the target for the rest of the app.
+The redesign shipped tab by tab. Finance, Dashboard, and Projects are fully de-carded, hairline-ruled documents/lists — no card background, border, radius, or shadow, just `border-top` + lead space. Tasks and Calendar received the same token, color, and control pass (outline chips instead of filled pills, serif running heads, the accent instead of red for "current/active" marks, no hardcoded colors) but keep structure a flat list or a date grid was already the right shape for — a task row was never a card to de-card, and a month grid is inherently tabular. All five tabs are on one system now; where this document describes a de-carded, hairline-ruled composition, that's Finance/Dashboard/Projects specifically, not a pending state for the other two.
 
 The system refuses the stack of glossy, self-contained metric cards that nearly every finance UI ships. It is calm, precise, and consistent from tab to tab; the reader trusts the numbers because the screen looks considered. Light is the default theme (no attribute); `[data-theme="dark"]` is an opt-in tuned inversion, first-class in every surface.
 
@@ -136,7 +136,7 @@ A warm monochrome field — bone, cream, and ink in the same hue family — brok
 
 ### Neutral
 - **Bone** (#f7f6f3): The app background — warm, paper-like. Dark: #17150f.
-- **Card White** (#ffffff): Genuine card surfaces on the not-yet-rebuilt tabs. Dark: #201d16.
+- **Card White** (#ffffff): Genuine card surfaces on the Calendar week view (its own framed hourly grid). Dark: #201d16.
 - **Fold** (#f2f0ea): Recessed fills — pill backgrounds, the active nav-tab chip. Dark: #26221a.
 - **Raised Cream** (#fcfcfb): Barely-lifted alternate surface. Dark: #141209.
 - **Ink** (#2a2723): All primary text. Dark: #ece6da.
@@ -192,7 +192,7 @@ One column, centered, `max-width: 960px`. Desktop padding is 32px; mobile is 14p
 
 ## Elevation & Depth
 
-Near-flat by doctrine. Finance and Dashboard surfaces carry **no shadow and no border** — depth is entirely a matter of hairline rules and whitespace in document rhythm. Legacy cards (Tasks, Projects, Calendar) use one barely-there shadow (`0 1px 2px rgba(42,39,35,.045)`) and no border. The only genuinely raised element left is the "⋯" overflow menu.
+Near-flat by doctrine. Finance, Dashboard, and Projects surfaces carry **no shadow and no border** — depth is entirely a matter of hairline rules and whitespace in document rhythm. Tasks rows and the Calendar month grid never had card chrome to begin with. The Calendar week view keeps one framed card (a scrollable hourly grid genuinely benefits from a boundary) with a hairline border and no shadow. The only genuinely raised element left is the "⋯" overflow menu.
 
 ### Shadow Vocabulary
 - **Card rest** (`box-shadow: 0 1px 2px rgba(42,39,35,.045)`): The single elevation for legacy cards on un-rebuilt tabs. Dark: `0 1px 2px rgba(0,0,0,.3)`.
@@ -261,4 +261,4 @@ A hairline-framed area chart (~118px). Trend polyline is always `var(--accent)` 
 - **Don't** use Unicode glyphs (✓ ⚠ ▲ ▼ ●) as icons — draw them as inline SVG.
 - **Don't** put a kicker or eyebrow above a page or section title, and don't set a section title in uppercase — the serif carries it.
 - **Don't** fill the active range chip or active nav-tab-on-Finance with a color block; selection is an ink outline / rust text.
-- **Don't** apply the de-carded treatment to Tasks, Projects, or Calendar until each is rebuilt — they legitimately still use the legacy card + shadow model under the new tokens. Finance and Dashboard are both rebuilt.
+- **Don't** reintroduce filled-pill tab/filter controls, hardcoded hex colors, or `red` for a neutral "current/active" mark (that's what the accent is for) — the whole app is on one system now.
