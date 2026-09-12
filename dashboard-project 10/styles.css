@@ -371,13 +371,29 @@ input,select,textarea{font-family:inherit}
 .task-check.checked::before{background:var(--green);border-color:var(--green)}
 .task-label{flex:1;font-size:13px;font-weight:400;outline:none;background:none;border:none;color:var(--text);cursor:pointer}
 .task-label.done-text{text-decoration:line-through;color:var(--muted)}
-.due-text{font-size:10px;font-weight:500;color:var(--sub);flex-shrink:0}
+.due-text{font-size:10px;font-weight:500;color:var(--sub);flex-shrink:0;transition:opacity .15s}
 .due-text.overdue{color:var(--red)}
-.overdue-badge{font-size:9px;font-weight:700;color:var(--red);background:var(--red-dim);padding:1px 5px;border-radius:5px;flex-shrink:0;margin-left:4px}
+.overdue-badge{font-size:9px;font-weight:700;color:var(--red);background:var(--red-dim);padding:1px 5px;border-radius:5px;flex-shrink:0;margin-left:4px;transition:opacity .15s}
+/* hand the space over to edit/delete on hover instead of letting their
+   overlay boxes collide with (and only partly mask) a long due-date string */
+.task-row:hover .due-text,.task-row:hover .overdue-badge{opacity:0}
 /* pointer-events:none while hidden — an opacity-0 button still swallows taps,
    which on mobile made "tap task to complete" open the edit modal instead */
-.task-row-del,.task-row-edit{background:none;border:none;color:var(--muted);font-size:12px;padding:4px 6px;border-radius:6px;flex-shrink:0;opacity:0;pointer-events:none;transition:opacity .15s;cursor:pointer}
-.task-row:hover .task-row-del,.task-row:hover .task-row-edit{opacity:.6;pointer-events:auto}
+/* Absolutely positioned (not flex-flow) so they never reserve row space —
+   at opacity:0 a flex-flow button still ate ~60px of trailing width, which
+   is what kept the due date from actually reaching the row's right edge on
+   non-touch devices (touch never renders these at all). On hover they
+   overlay the due date; --card2 behind each one masks the text under it,
+   matching the row's own hover background. */
+.task-row-del,.task-row-edit{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:var(--card2);border:none;color:var(--muted);font-size:12px;
+  padding:4px 6px;border-radius:6px;opacity:0;pointer-events:none;
+  transition:opacity .15s;cursor:pointer;
+}
+.task-row-del{right:2px}
+.task-row-edit{right:32px}
+.task-row:hover .task-row-del,.task-row:hover .task-row-edit{opacity:1;pointer-events:auto}
 .task-row-del:hover{color:var(--red);opacity:1}
 .task-row-edit:hover{color:var(--text);opacity:1}
 .done-toggle-btn{background:none;border:none;color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;padding:0}
