@@ -829,22 +829,27 @@ function logGoalBalanceHistory(g){
   }
 }
 
-// Get balance from ~30 days ago for monthly change calc
-function goalBalanceMonthAgo(g){
+// Balance as of the 1st of the current calendar month, for a real
+// "gained this month" figure (was a rolling ~30-days-ago comparison, which
+// didn't line up with "this month" the way the label read).
+// balanceHistory is a daily {date, balance} snapshot logged by
+// logGoalBalanceHistory() every time saveData() runs — we want the most
+// recent one dated on or before the 1st.
+function goalBalanceStartOfMonth(g){
   if(!g.balanceHistory||!g.balanceHistory.length)return null;
-  const monthAgo=new Date();monthAgo.setDate(monthAgo.getDate()-30);
-  const monthAgoStr=monthAgo.toLocaleDateString('en-CA');
-  // Only trust a reference point that's actually close to 30 days back (within
-  // a 15-day buffer). Without this bound, a goal with sparse history — e.g. one
-  // logged entry from creation day, then nothing until an account got linked —
-  // would fall back to that old one-off snapshot and report a huge, misleading
-  // "change" that's really just "current balance minus whatever the goal
-  // happened to start at." No qualifying entry means we say nothing instead.
-  const minDate=new Date();minDate.setDate(minDate.getDate()-45);
+  const now=new Date();
+  const firstOfMonth=new Date(now.getFullYear(),now.getMonth(),1);
+  const firstStr=firstOfMonth.toLocaleDateString('en-CA');
+  // Don't reach back more than ~2 weeks before the 1st looking for that
+  // reference point. Without this bound, a goal with sparse history (the
+  // app not opened in a while, so no snapshot near month-start) could fall
+  // back to a much older one and silently report a multi-month change as
+  // "this month." No qualifying entry means we say nothing instead.
+  const minDate=new Date(firstOfMonth);minDate.setDate(minDate.getDate()-14);
   const minDateStr=minDate.toLocaleDateString('en-CA');
-  const older=g.balanceHistory.filter(h=>h.date<=monthAgoStr&&h.date>=minDateStr);
-  if(!older.length)return null;
-  return older[older.length-1].balance;
+  const before=g.balanceHistory.filter(h=>h.date<=firstStr&&h.date>=minDateStr);
+  if(!before.length)return null;
+  return before[before.length-1].balance;
 }
 
 // How far through the calendar year "today" is, as a percentage — the same
@@ -880,11 +885,11 @@ function renderGoals(){
     const target=g.target||1;
     const pct=Math.min(current/target*100,100);
     const done=pct>=100;
-    // Monthly change
-    const monthAgo=goalBalanceMonthAgo(g);
+    // Change since the 1st of this month (not a rolling 30 days)
+    const startOfMonth=goalBalanceStartOfMonth(g);
     let monthlyHtml='';
-    if(monthAgo!==null){
-      const diff=current-monthAgo;
+    if(startOfMonth!==null){
+      const diff=current-startOfMonth;
       const mColor=diff>0?'var(--green)':diff<0?'var(--red)':'var(--muted)';
       const mText=diff>0?`+${fmt(diff)} this month`:diff<0?`−${fmt(Math.abs(diff))} this month`:'no change this month';
       monthlyHtml=`<span class="goal-monthly-change" style="color:${mColor}">${mText}</span>`;
