@@ -162,10 +162,21 @@ function mapTransaction(pt, acct) {
   // from another account you already own and would double-count as "new"
   // income if included. Only DEPOSIT is genuinely new money in — except a
   // P2P cashout (isP2pCashIn above), which is also genuinely new.
+  //
+  // ...unless the account it landed on is a credit card/loan (type 'debt').
+  // Plaid doesn't always tag a card issuer receiving an autopay ACH as
+  // LOAN_PAYMENTS_CREDIT_CARD_PAYMENT (caught above) — sometimes it comes
+  // through as a plain TRANSFER_IN_DEPOSIT instead, which this override
+  // would otherwise wave through as fresh income. You can't receive income
+  // into a liability account; a "deposit" reducing a card balance is always
+  // a payment, so on a debt account this falls through to mapTxnCategory()
+  // instead, which returns null for TRANSFER_IN and skips it like any other
+  // internal transfer.
+  const isDebtAccount = acct && acct.type === 'debt';
   const category = isP2pCashIn ? 'Other'
     : isSavingsContribution ? 'Savings'
     : pfc.detailed === 'TRANSFER_OUT_SAVINGS' ? 'Savings'
-    : pfc.detailed === 'TRANSFER_IN_DEPOSIT' ? 'Other'
+    : (pfc.detailed === 'TRANSFER_IN_DEPOSIT' && !isDebtAccount) ? 'Other'
     : mapTxnCategory(pfc.primary);
   if (!category) return null; // transfers between accounts — skip
   return {
